@@ -3,7 +3,15 @@ Backend SaaS for automated nutritional plan calculation and clinical PDF report 
 NutriElite is a Python-based backend system designed to calculate metabolic metrics (BMR, TDEE), generate macronutrient distributions, convert values into SMAE portions, perform energy audit validation, and produce structured clinical PDF reports for nutrition professionals.
 
 
+Developed a Python backend project with automated CI pipeline using GitHub Actions and integrated SonarCloud for static code analysis and code quality monitoring.
 
+Key components:
+• Python backend structure
+• Git version control
+• GitHub repository management
+• CI pipeline with GitHub Actions
+• Static code analysis with SonarCloud
+• Automated quality checks for maintainability, reliability, and security
  Features
 
 JWT Authentication (secure login system)
