@@ -1,0 +1,12 @@
+from pydantic import BaseModel
+from typing import Literal
+
+
+class PlanRequest(BaseModel):
+    weight: float
+    height: float
+    age: int
+    gender: str
+    activity_level: float
+    goal: str
+    formula: Literal["mifflin", "harris", "schofield"]
