@@ -1,3 +1,13 @@
+## 🚀 Live API
+
+The NutriElite backend is deployed and publicly accessible.
+
+**Base URL**
+https://nutrielite-production-e88f.up.railway.app
+
+**Swagger Documentation**
+https://nutrielite-production-e88f.up.railway.app/docs
+
 Backend SaaS for automated nutritional plan calculation and clinical PDF report generation.
 
 NutriElite is a Python-based backend system designed to calculate metabolic metrics (BMR, TDEE), generate macronutrient distributions, convert values into SMAE portions, perform energy audit validation, and produce structured clinical PDF reports for nutrition professionals.
