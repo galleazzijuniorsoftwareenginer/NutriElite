@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html>
 
 <head>
@@ -73,8 +74,6 @@ word-break:break-all;
 
 <p>This interface demonstrates the workflow of the NutriElite SaaS backend.</p>
 
-<!-- REGISTER -->
-
 <div class="step">
 
 <h3>1️⃣ Register User</h3>
@@ -85,9 +84,6 @@ word-break:break-all;
 <button onclick="register()">Register</button>
 
 </div>
-
-
-<!-- LOGIN -->
 
 <div class="step">
 
@@ -101,9 +97,6 @@ word-break:break-all;
 <div id="tokenBox" class="token"></div>
 
 </div>
-
-
-<!-- GENERATE PLAN -->
 
 <div class="step">
 
@@ -148,9 +141,6 @@ word-break:break-all;
 
 <div id="results" class="result"></div>
 
-
-<!-- AUDIT -->
-
 <div class="step">
 
 <h3>4️⃣ Energy Audit</h3>
@@ -158,9 +148,6 @@ word-break:break-all;
 <button onclick="viewAudit()">View Energy Audit</button>
 
 </div>
-
-
-<!-- PDF -->
 
 <div class="step">
 
@@ -172,18 +159,16 @@ word-break:break-all;
 
 </div>
 
-
 <script>
+
+const API = window.location.origin
 
 let token = null
 let planId = null
 
-
-// REGISTER
-
 async function register(){
 
-await fetch("/register",{
+await fetch(API + "/register",{
 
 method:"POST",
 
@@ -202,13 +187,9 @@ alert("User registered successfully")
 
 }
 
-
-
-// LOGIN
-
 async function login(){
 
-const res = await fetch("/login",{
+const res = await fetch("http://127.0.0.1:8000/login",{
 
 method:"POST",
 
@@ -223,7 +204,11 @@ password:document.getElementById("login_pass").value
 
 })
 
-const data = await res.json()
+const text = await res.text()
+
+console.log("RAW RESPONSE:", text)
+
+const data = JSON.parse(text)
 
 token = data.access_token
 
@@ -232,13 +217,9 @@ document.getElementById("tokenBox").innerHTML =
 
 }
 
-
-
-// GENERATE PLAN
-
 async function generatePlan(){
 
-const res = await fetch("/plan",{
+const res = await fetch(API + "/plan",{
 
 method:"POST",
 
@@ -272,17 +253,12 @@ const data = await res.json()
 planId = data.plan_id
 
 document.getElementById("results").innerHTML =
-
 "<h2>Plan Generated</h2>" +
 "Plan ID: " + planId + "<br>" +
 "TMB: " + data.TMB + " kcal<br>" +
 "GET: " + data.GET + " kcal<br>"
 
 }
-
-
-
-// ENERGY AUDIT
 
 async function viewAudit(){
 
@@ -291,7 +267,7 @@ alert("Generate a plan first")
 return
 }
 
-const res = await fetch("/plans/" + planId + "/audit",{
+const res = await fetch(API + "/plans/" + planId + "/audit",{
 
 headers:{
 "Authorization":"Bearer " + token
@@ -302,16 +278,11 @@ headers:{
 const data = await res.json()
 
 document.getElementById("results").innerHTML +=
-
 "<hr><h3>Energy Audit</h3>" +
 "GET Planned: " + data.energy_validation.get_planned + "<br>" +
 "Kcal From Macros: " + data.energy_validation.kcal_from_macros
 
 }
-
-
-
-// DOWNLOAD PDF
 
 function downloadPDF(){
 
@@ -320,7 +291,7 @@ alert("Generate a plan first")
 return
 }
 
-window.open("/plans/" + planId + "/pdf")
+window.open(API + "/plans/" + planId + "/pdf")
 
 }
 
