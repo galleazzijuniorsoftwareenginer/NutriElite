@@ -12,6 +12,8 @@ https://nutrielite-production-e88f.up.railway.app
 **Swagger Documentation**
 https://nutrielite-production-e88f.up.railway.app/docs
 
+**APP DEMO LIVE**
+https://nutrielite-production-e88f.up.railway.app/app/
 
 **Backend SaaS for automated nutritional plan calculation and clinical PDF report generation.**
 

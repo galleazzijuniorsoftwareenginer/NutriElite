@@ -49,22 +49,32 @@ def create_plan(data, db, user_id):
 
     for item in smae_portions:
 
-        food = db.query(FoodGroup).filter(
-            FoodGroup.group_name == item["group"],
-            FoodGroup.subgroup_name == item["subgroup"]
-        ).first()
+        food_query = db.query(FoodGroup).filter(
+            FoodGroup.group_name == item["group"]
+        )
+
+        if item["subgroup"] is None:
+           food_query = food_query.filter(
+               FoodGroup.subgroup_name.is_(None)
+           )
+        else:
+           food_query = food_query.filter(
+               FoodGroup.subgroup_name == item["subgroup"]
+            )
+
+        food = food_query.first()
 
         if food:
             plan_food = PlanFoodGroup(
                 plan_id=new_plan.id,
                 food_group_id=food.id,
                 portions=item["portions"]
-            )
-            db.add(plan_food)
+        )
+        db.add(plan_food)
 
     db.commit()
 
-    return new_plan
+    return new_plan    
 
 def calculate_smae_portions(db, plan):
 
