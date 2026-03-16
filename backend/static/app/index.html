@@ -190,7 +190,7 @@ alert("User registered successfully")
 async function login(){
 
 const res = await fetch(API + "/login",{
-    
+
 method:"POST",
 
 headers:{
@@ -276,21 +276,78 @@ headers:{
 
 const data = await res.json()
 
+const protein = data.totals.protein_g
+const carbs = data.totals.carbs_g
+const fats = data.totals.fats_g
+
+const proteinKcal = protein * 4
+const carbsKcal = carbs * 4
+const fatsKcal = fats * 9
+
+const totalKcal = proteinKcal + carbsKcal + fatsKcal
+
+const proteinPct = (proteinKcal / totalKcal * 100).toFixed(1)
+const carbsPct = (carbsKcal / totalKcal * 100).toFixed(1)
+const fatsPct = (fatsKcal / totalKcal * 100).toFixed(1)
+
 document.getElementById("results").innerHTML +=
 "<hr><h3>Energy Audit</h3>" +
-"GET Planned: " + data.energy_validation.get_planned + "<br>" +
-"Kcal From Macros: " + data.energy_validation.kcal_from_macros
 
+"<table border='1' width='100%' style='margin-top:10px'>" +
+"<tr><th>Macronutrient</th><th>Grams</th><th>Kcal</th><th>%</th></tr>" +
+
+"<tr>" +
+"<td>Protein</td>" +
+"<td>" + protein.toFixed(1) + "</td>" +
+"<td>" + proteinKcal.toFixed(1) + "</td>" +
+"<td>" + proteinPct + "%</td>" +
+"</tr>" +
+
+"<tr>" +
+"<td>Fats</td>" +
+"<td>" + fats.toFixed(1) + "</td>" +
+"<td>" + fatsKcal.toFixed(1) + "</td>" +
+"<td>" + fatsPct + "%</td>" +
+"</tr>" +
+
+"<tr>" +
+"<td>Carbs</td>" +
+"<td>" + carbs.toFixed(1) + "</td>" +
+"<td>" + carbsKcal.toFixed(1) + "</td>" +
+"<td>" + carbsPct + "%</td>" +
+"</tr>" +
+
+"<tr>" +
+"<td><b>Total</b></td>" +
+"<td></td>" +
+"<td><b>" + totalKcal.toFixed(1) + "</b></td>" +
+"<td><b>100%</b></td>" +
+"</tr>" +
+
+"</table>"
 }
 
-function downloadPDF(){
+async function downloadPDF(){
 
 if(!planId){
 alert("Generate a plan first")
 return
 }
 
-window.open(API + "/plans/" + planId + "/pdf")
+const res = await fetch(API + "/plans/" + planId + "/pdf",{
+headers:{
+"Authorization":"Bearer " + token
+}
+})
+
+const blob = await res.blob()
+
+const url = window.URL.createObjectURL(blob)
+
+const a = document.createElement("a")
+a.href = url
+a.download = "nutrition_plan.pdf"
+a.click()
 
 }
 
