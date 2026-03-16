@@ -3,7 +3,7 @@
 
 <head>
 <meta charset="UTF-8">
-<title>NutriElite SaaS</title>
+<title>NutriElite SaaS Demo</title>
 
 <style>
 
@@ -22,26 +22,43 @@ border-radius:10px;
 box-shadow:0 4px 15px rgba(0,0,0,0.1);
 }
 
-input{
+h1{
+text-align:center;
+}
+
+.step{
+border-left:4px solid #2c7be5;
+padding-left:15px;
+margin-bottom:25px;
+}
+
+input,select{
 width:100%;
 padding:10px;
-margin:8px 0;
-border:1px solid #ddd;
-border-radius:6px;
+margin-top:6px;
+margin-bottom:10px;
 }
 
 button{
-padding:10px 15px;
-background:#4CAF50;
+padding:12px;
+background:#2c7be5;
 color:white;
 border:none;
-border-radius:6px;
 cursor:pointer;
-margin-top:10px;
+width:100%;
 }
 
-button:hover{
-background:#43a047;
+.result{
+background:#f0f2f5;
+padding:15px;
+margin-top:20px;
+}
+
+.token{
+background:#eef3ff;
+padding:10px;
+font-size:12px;
+word-break:break-all;
 }
 
 </style>
@@ -52,57 +69,121 @@ background:#43a047;
 
 <div class="container">
 
-<h2>NutriElite</h2>
+<h1>NutriElite API Demo</h1>
 
-<h3>Register</h3>
+<p>This interface demonstrates the workflow of the NutriElite SaaS backend.</p>
 
-<input id="reg_email" placeholder="email">
-<input id="reg_password" placeholder="password" type="password">
+<!-- REGISTER -->
+
+<div class="step">
+
+<h3>1️⃣ Register User</h3>
+
+<input id="reg_user" placeholder="username">
+<input id="reg_pass" type="password" placeholder="password">
 
 <button onclick="register()">Register</button>
 
-<hr>
+</div>
 
-<h3>Login</h3>
 
-<input id="login_email" placeholder="email">
-<input id="login_password" placeholder="password" type="password">
+<!-- LOGIN -->
+
+<div class="step">
+
+<h3>2️⃣ Login → Generate JWT Token</h3>
+
+<input id="login_user" placeholder="username">
+<input id="login_pass" type="password" placeholder="password">
 
 <button onclick="login()">Login</button>
 
-<hr>
+<div id="tokenBox" class="token"></div>
 
-<h3>Generate Plan</h3>
+</div>
+
+
+<!-- GENERATE PLAN -->
+
+<div class="step">
+
+<h3>3️⃣ Generate Nutrition Plan</h3>
 
 <input id="name" placeholder="Patient Name">
-<input id="weight" placeholder="Weight">
-<input id="height" placeholder="Height">
+<input id="email" placeholder="Patient Email">
+<input id="phone" placeholder="Patient Phone">
+
+<input id="weight" placeholder="Weight (kg)">
+<input id="height" placeholder="Height (cm)">
 <input id="age" placeholder="Age">
+
+<select id="gender">
+<option value="male">Male</option>
+<option value="female">Female</option>
+</select>
+
+<select id="activity">
+<option value="1.2">Sedentary</option>
+<option value="1.375">Light</option>
+<option value="1.55">Moderate</option>
+<option value="1.725">Active</option>
+<option value="1.9">Very Active</option>
+</select>
+
+<select id="goal">
+<option value="cut">Cut</option>
+<option value="maintenance">Maintenance</option>
+<option value="bulk">Bulk</option>
+</select>
+
+<select id="formula">
+<option value="mifflin">Mifflin</option>
+<option value="harris">Harris Benedict</option>
+<option value="schofield">Schofield</option>
+</select>
 
 <button onclick="generatePlan()">Generate Plan</button>
 
-<hr>
+</div>
 
-<h3>PDF</h3>
+<div id="results" class="result"></div>
 
-<input id="plan_id" placeholder="Plan ID">
 
-<button onclick="downloadPDF()">Download PDF</button>
+<!-- AUDIT -->
+
+<div class="step">
+
+<h3>4️⃣ Energy Audit</h3>
+
+<button onclick="viewAudit()">View Energy Audit</button>
+
+</div>
+
+
+<!-- PDF -->
+
+<div class="step">
+
+<h3>5️⃣ Export Clinical PDF</h3>
+
+<button onclick="downloadPDF()">Download Plan PDF</button>
+
+</div>
 
 </div>
 
 
 <script>
 
-const API = "https://nutrielite-production-e88f.up.railway.app"
-
 let token = null
+let planId = null
 
 
 // REGISTER
+
 async function register(){
 
-const res = await fetch(API + "/register",{
+await fetch("/register",{
 
 method:"POST",
 
@@ -111,26 +192,23 @@ headers:{
 },
 
 body:JSON.stringify({
-
-email:document.getElementById("reg_email").value,
-password:document.getElementById("reg_password").value
-
+username:document.getElementById("reg_user").value,
+password:document.getElementById("reg_pass").value
 })
 
 })
 
-const data = await res.json()
-
-alert(JSON.stringify(data))
+alert("User registered successfully")
 
 }
 
 
 
 // LOGIN
+
 async function login(){
 
-const res = await fetch(API + "/login",{
+const res = await fetch("/login",{
 
 method:"POST",
 
@@ -139,10 +217,8 @@ headers:{
 },
 
 body:JSON.stringify({
-
-email:document.getElementById("login_email").value,
-password:document.getElementById("login_password").value
-
+username:document.getElementById("login_user").value,
+password:document.getElementById("login_pass").value
 })
 
 })
@@ -151,16 +227,18 @@ const data = await res.json()
 
 token = data.access_token
 
-alert("Login successful")
+document.getElementById("tokenBox").innerHTML =
+"<strong>JWT Token:</strong><br>" + token
 
 }
 
 
 
 // GENERATE PLAN
+
 async function generatePlan(){
 
-const res = await fetch(API + "/plan",{
+const res = await fetch("/plan",{
 
 method:"POST",
 
@@ -172,9 +250,18 @@ headers:{
 body:JSON.stringify({
 
 patient_name:document.getElementById("name").value,
+patient_email:document.getElementById("email").value,
+patient_phone:document.getElementById("phone").value,
+
 weight:parseFloat(document.getElementById("weight").value),
 height:parseFloat(document.getElementById("height").value),
-age:parseInt(document.getElementById("age").value)
+age:parseInt(document.getElementById("age").value),
+
+gender:document.getElementById("gender").value,
+activity_level:parseFloat(document.getElementById("activity").value),
+
+goal:document.getElementById("goal").value,
+formula:document.getElementById("formula").value
 
 })
 
@@ -182,18 +269,58 @@ age:parseInt(document.getElementById("age").value)
 
 const data = await res.json()
 
-alert("Plan created: " + data.plan_id)
+planId = data.plan_id
+
+document.getElementById("results").innerHTML =
+
+"<h2>Plan Generated</h2>" +
+"Plan ID: " + planId + "<br>" +
+"TMB: " + data.TMB + " kcal<br>" +
+"GET: " + data.GET + " kcal<br>"
+
+}
+
+
+
+// ENERGY AUDIT
+
+async function viewAudit(){
+
+if(!planId){
+alert("Generate a plan first")
+return
+}
+
+const res = await fetch("/plans/" + planId + "/audit",{
+
+headers:{
+"Authorization":"Bearer " + token
+}
+
+})
+
+const data = await res.json()
+
+document.getElementById("results").innerHTML +=
+
+"<hr><h3>Energy Audit</h3>" +
+"GET Planned: " + data.energy_validation.get_planned + "<br>" +
+"Kcal From Macros: " + data.energy_validation.kcal_from_macros
 
 }
 
 
 
 // DOWNLOAD PDF
+
 function downloadPDF(){
 
-const id = document.getElementById("plan_id").value
+if(!planId){
+alert("Generate a plan first")
+return
+}
 
-window.open(API + "/plans/" + id + "/pdf")
+window.open("/plans/" + planId + "/pdf")
 
 }
 
