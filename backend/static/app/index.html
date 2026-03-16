@@ -325,6 +325,39 @@ document.getElementById("results").innerHTML +=
 "</tr>" +
 
 "</table>"
+let smaeHTML = "<h3 style='margin-top:30px'>SMAE Distribution</h3>"
+
+smaeHTML += "<table border='1' width='100%' style='margin-top:10px'>"
+
+smaeHTML +=
+"<tr>" +
+"<th>Group</th>" +
+"<th>Subgroup</th>" +
+"<th>Portions</th>" +
+"<th>Kcal</th>" +
+"<th>Protein</th>" +
+"<th>Fat</th>" +
+"<th>Carbs</th>" +
+"</tr>"
+
+data.smae_table.forEach(row => {
+
+smaeHTML +=
+"<tr>" +
+"<td>" + row.group + "</td>" +
+"<td>" + row.subgroup + "</td>" +
+"<td>" + row.portions + "</td>" +
+"<td>" + row.kcal + "</td>" +
+"<td>" + row.protein + "</td>" +
+"<td>" + row.fat + "</td>" +
+"<td>" + row.carbs + "</td>" +
+"</tr>"
+
+})
+
+smaeHTML += "</table>"
+
+document.getElementById("results").innerHTML += smaeHTML
 }
 
 async function downloadPDF(){
