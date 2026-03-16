@@ -2,397 +2,202 @@
 <html>
 
 <head>
-    <meta charset="UTF-8">
-    <title>NutriElite SaaS Demo</title>
+<meta charset="UTF-8">
+<title>NutriElite SaaS</title>
 
-    <style>
-        body {
-            font-family: Arial;
-            background: #f5f7fa;
-            padding: 40px;
-        }
+<style>
 
-        .container {
-            max-width: 700px;
-            margin: auto;
-            background: white;
-            padding: 35px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
+body{
+font-family:Arial;
+background:#f5f7fa;
+padding:40px;
+}
 
-        h1 {
-            text-align: center;
-        }
+.container{
+max-width:700px;
+margin:auto;
+background:white;
+padding:35px;
+border-radius:10px;
+box-shadow:0 4px 15px rgba(0,0,0,0.1);
+}
 
-        .step {
-            border-left: 4px solid #2c7be5;
-            padding-left: 15px;
-            margin-bottom: 25px;
-        }
+input{
+width:100%;
+padding:10px;
+margin:8px 0;
+border:1px solid #ddd;
+border-radius:6px;
+}
 
-        input,
-        select {
-            width: 100%;
-            padding: 10px;
-            margin-top: 6px;
-            margin-bottom: 10px;
-        }
+button{
+padding:10px 15px;
+background:#4CAF50;
+color:white;
+border:none;
+border-radius:6px;
+cursor:pointer;
+margin-top:10px;
+}
 
-        button {
-            padding: 12px;
-            background: #2c7be5;
-            color: white;
-            border: none;
-            cursor: pointer;
-            width: 100%;
-        }
+button:hover{
+background:#43a047;
+}
 
-        .result {
-            background: #f0f2f5;
-            padding: 15px;
-            margin-top: 20px;
-        }
-
-        .token {
-            background: #eef3ff;
-            padding: 10px;
-            font-size: 12px;
-            word-break: break-all;
-        }
-    </style>
+</style>
 
 </head>
 
 <body>
 
-    <div class="container">
+<div class="container">
 
-        <h1>NutriElite API Demo</h1>
+<h2>NutriElite</h2>
 
-        <p>This interface demonstrates the workflow of the NutriElite SaaS backend.</p>
+<h3>Register</h3>
 
-        <!-- REGISTER -->
+<input id="reg_email" placeholder="email">
+<input id="reg_password" placeholder="password" type="password">
 
-        <div class="step">
-
-            <h3>1️⃣ Register User</h3>
-
-            <input id="reg_user" placeholder="username">
-            <input id="reg_pass" type="password" placeholder="password">
-
-            <button onclick="register()">Register</button>
-
-        </div>
-
-        <!-- LOGIN -->
-
-        <div class="step">
-
-            <h3>2️⃣ Login → Generate JWT Token</h3>
-
-            <input id="login_user" placeholder="username">
-            <input id="login_pass" type="password" placeholder="password">
-
-            <button onclick="login()">Login</button>
-
-            <div id="tokenBox" class="token"></div>
-
-        </div>
-
-        <!-- GENERATE PLAN -->
-
-        <div class="step">
-
-            <h3>3️⃣ Generate Nutrition Plan</h3>
-
-            <input id="name" placeholder="Patient Name">
-            <input id="email" placeholder="Patient Email">
-            <input id="phone" placeholder="Patient Phone">
-
-            <input id="weight" placeholder="Weight (kg)">
-            <input id="height" placeholder="Height (cm)">
-            <input id="age" placeholder="Age">
-
-            <select id="gender">
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-            </select>
-
-            <select id="activity">
-                <option value="1.2">Sedentary</option>
-                <option value="1.375">Light</option>
-                <option value="1.55">Moderate</option>
-                <option value="1.725">Active</option>
-                <option value="1.9">Very Active</option>
-            </select>
-
-            <select id="goal">
-                <option value="cut">Cut</option>
-                <option value="maintenance">Maintenance</option>
-                <option value="bulk">Bulk</option>
-            </select>
-
-            <select id="formula">
-                <option value="mifflin">Mifflin</option>
-                <option value="harris">Harris Benedict</option>
-                <option value="schofield">Schofield</option>
-            </select>
-
-            <button onclick="generatePlan()">Generate Plan</button>
-
-        </div>
-
-        <div id="results" class="result"></div>
-
-        <!-- AUDIT -->
-
-        <div class="step">
-
-            <h3>4️⃣ Energy Audit</h3>
-
-            <button onclick="viewAudit()">View Energy Audit</button>
-
-        </div>
-
-        <!-- PDF -->
-
-        <div class="step">
-
-            <h3>5️⃣ Export Clinical PDF</h3>
-
-            <button onclick="downloadPDF()">Download Plan PDF</button>
-
-        </div>
-
-    </div>
-
-    <script>
-
-        let token = null
-        let planId = null
-
-
-        async function register() {
-
-            await fetch("/register", {
-
-                method: "POST",
-
-                headers: {
-                    "Content-Type": "application/json"
-                },
-
-                body: JSON.stringify({
-                    username: document.getElementById("reg_user").value,
-                    password: document.getElementById("reg_pass").value
-                })
-
-            })
-
-            alert("User registered successfully")
-
-        }
-
-
-        async function login() {
-
-            const res = await fetch("/login", {
-
-                method: "POST",
-
-                headers: {
-                    "Content-Type": "application/json"
-                },
-
-                body: JSON.stringify({
-                    username: document.getElementById("login_user").value,
-                    password: document.getElementById("login_pass").value
-                })
-
-            })
-
-            const data = await res.json()
-
-            token = data.access_token
-
-            document.getElementById("tokenBox").innerHTML =
-                "<strong>JWT Token:</strong><br>" + token
-
-        }
-
-
-        async function generatePlan() {
-
-            const res = await fetch("/plan", {
-
-                method: "POST",
-
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": "Bearer " + token
-                },
-
-                body: JSON.stringify({
-
-                    patient_name: document.getElementById("name").value,
-                    patient_email: document.getElementById("email").value,
-                    patient_phone: document.getElementById("phone").value,
-
-                    weight: parseFloat(document.getElementById("weight").value),
-                    height: parseFloat(document.getElementById("height").value),
-                    age: parseInt(document.getElementById("age").value),
-
-                    gender: document.getElementById("gender").value,
-                    activity_level: parseFloat(document.getElementById("activity").value),
-
-                    goal: document.getElementById("goal").value,
-                    formula: document.getElementById("formula").value
-
-                })
-
-            })
-
-            const data = await res.json()
-
-            planId = data.plan_id
-
-            document.getElementById("results").innerHTML = `
-
-<h2>INFORME NUTRICIONAL CLÍNICO</h2>
+<button onclick="register()">Register</button>
 
 <hr>
 
-<h3>Datos del Paciente</h3>
+<h3>Login</h3>
 
-Paciente: ${document.getElementById("name").value}<br>
-Edad: ${document.getElementById("age").value}<br>
-Peso: ${document.getElementById("weight").value} kg<br>
-Altura: ${document.getElementById("height").value} cm<br>
+<input id="login_email" placeholder="email">
+<input id="login_password" placeholder="password" type="password">
 
-<hr>
-
-<h3>Evaluación Metabólica</h3>
-
-TMB: ${data.TMB} kcal<br>
-GET: ${data.GET} kcal<br>
+<button onclick="login()">Login</button>
 
 <hr>
 
-<h3>Auditoría Nutricional</h3>
+<h3>Generate Plan</h3>
 
-<table border="1" width="100%" cellpadding="6">
+<input id="name" placeholder="Patient Name">
+<input id="weight" placeholder="Weight">
+<input id="height" placeholder="Height">
+<input id="age" placeholder="Age">
 
-<tr>
-<th>Macronutriente</th>
-<th>g</th>
-<th>kcal</th>
-</tr>
+<button onclick="generatePlan()">Generate Plan</button>
 
-<tr>
-<td>Proteínas</td>
-<td>${data.Protein_g}</td>
-<td>${data.Protein_g * 4}</td>
-</tr>
+<hr>
 
-<tr>
-<td>Carbohidratos</td>
-<td>${data.Carbs_g}</td>
-<td>${data.Carbs_g * 4}</td>
-</tr>
+<h3>PDF</h3>
 
-<tr>
-<td>Grasas</td>
-<td>${data.Fats_g}</td>
-<td>${data.Fats_g * 9}</td>
-</tr>
+<input id="plan_id" placeholder="Plan ID">
 
-</table>
-`
+<button onclick="downloadPDF()">Download PDF</button>
 
-        }
+</div>
 
 
-        async function viewAudit() {
+<script>
 
-const res = await fetch("/plans/" + planId + "/audit", {
-headers: {
-"Authorization": "Bearer " + token
-}
+const API = "https://nutrielite-production-e88f.up.railway.app"
+
+let token = null
+
+
+// REGISTER
+async function register(){
+
+const res = await fetch(API + "/register",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+
+email:document.getElementById("reg_email").value,
+password:document.getElementById("reg_password").value
+
+})
+
 })
 
 const data = await res.json()
 
-console.log("AUDIT RESPONSE:", data)
-
-document.getElementById("results").innerHTML += `
-
-<hr>
-
-<h3>Energy Audit</h3>
-
-<table border="1" width="100%" cellpadding="6">
-
-<tr>
-<th>Energy Validation</th>
-<th>Kcal</th>
-</tr>
-
-<tr>
-<td>Calories Planned (GET)</td>
-<td>${data.energy_validation.get_planned}</td>
-</tr>
-
-<tr>
-<td>Calories From Macros</td>
-<td>${data.energy_validation.kcal_from_macros}</td>
-</tr>
-
-</table>
-
-<br>
-
-<h3>Macronutrients From Food Table</h3>
-
-<table border="1" width="100%" cellpadding="6">
-
-<tr>
-<th>Macronutrient</th>
-<th>g</th>
-<th>kcal</th>
-</tr>
-
-<tr>
-<td>Protein</td>
-<td>${data.totals?.protein_g ?? 0}</td>
-<td>${(data.totals?.protein_g ?? 0) * 4}</td>
-</tr>
-
-<tr>
-<td>Carbs</td>
-<td>${data.totals?.carbs_g ?? 0}</td>
-<td>${(data.totals?.carbs_g ?? 0) * 4}</td>
-</tr>
-
-<tr>
-<td>Fats</td>
-<td>${data.totals?.fats_g ?? 0}</td>
-<td>${(data.totals?.fats_g ?? 0) * 9}</td>
-</tr>
-
-</table>
-
-`
+alert(JSON.stringify(data))
 
 }
 
+
+
+// LOGIN
+async function login(){
+
+const res = await fetch(API + "/login",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+
+email:document.getElementById("login_email").value,
+password:document.getElementById("login_password").value
+
+})
+
+})
+
+const data = await res.json()
+
+token = data.access_token
+
+alert("Login successful")
+
+}
+
+
+
+// GENERATE PLAN
+async function generatePlan(){
+
+const res = await fetch(API + "/plan",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json",
+"Authorization":"Bearer " + token
+},
+
+body:JSON.stringify({
+
+patient_name:document.getElementById("name").value,
+weight:parseFloat(document.getElementById("weight").value),
+height:parseFloat(document.getElementById("height").value),
+age:parseInt(document.getElementById("age").value)
+
+})
+
+})
+
+const data = await res.json()
+
+alert("Plan created: " + data.plan_id)
+
+}
+
+
+
+// DOWNLOAD PDF
 function downloadPDF(){
 
-if(!planId){
-alert("Generate a plan first")
-return
-}
+const id = document.getElementById("plan_id").value
 
-window.open("/plans/" + planId + "/pdf")
+window.open(API + "/plans/" + id + "/pdf")
 
 }
+
+</script>
+
+</body>
+</html>
