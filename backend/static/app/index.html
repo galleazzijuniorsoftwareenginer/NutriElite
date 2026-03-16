@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>NutriElite SaaS Demo</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #f5f7fa;
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: auto;
+            background: white;
+            padding: 35px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .step {
+            border-left: 4px solid #2c7be5;
+            padding-left: 15px;
+            margin-bottom: 25px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 6px;
+            margin-bottom: 10px;
+        }
+
+        button {
+            padding: 12px;
+            background: #2c7be5;
+            color: white;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .result {
+            background: #f0f2f5;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .token {
+            background: #eef3ff;
+            padding: 10px;
+            font-size: 12px;
+            word-break: break-all;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>NutriElite API Demo</h1>
+
+        <p>This interface demonstrates the workflow of the NutriElite SaaS backend.</p>
+
+        <!-- REGISTER -->
+
+        <div class="step">
+
+            <h3>1️⃣ Register User</h3>
+
+            <input id="reg_user" placeholder="username">
+            <input id="reg_pass" type="password" placeholder="password">
+
+            <button onclick="register()">Register</button>
+
+        </div>
+
+        <!-- LOGIN -->
+
+        <div class="step">
+
+            <h3>2️⃣ Login → Generate JWT Token</h3>
+
+            <input id="login_user" placeholder="username">
+            <input id="login_pass" type="password" placeholder="password">
+
+            <button onclick="login()">Login</button>
+
+            <div id="tokenBox" class="token"></div>
+
+        </div>
+
+        <!-- GENERATE PLAN -->
+
+        <div class="step">
+
+            <h3>3️⃣ Generate Nutrition Plan</h3>
+
+            <input id="name" placeholder="Patient Name">
+            <input id="email" placeholder="Patient Email">
+            <input id="phone" placeholder="Patient Phone">
+
+            <input id="weight" placeholder="Weight (kg)">
+            <input id="height" placeholder="Height (cm)">
+            <input id="age" placeholder="Age">
+
+            <select id="gender">
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+            </select>
+
+            <select id="activity">
+                <option value="1.2">Sedentary</option>
+                <option value="1.375">Light</option>
+                <option value="1.55">Moderate</option>
+                <option value="1.725">Active</option>
+                <option value="1.9">Very Active</option>
+            </select>
+
+            <select id="goal">
+                <option value="cut">Cut</option>
+                <option value="maintenance">Maintenance</option>
+                <option value="bulk">Bulk</option>
+            </select>
+
+            <select id="formula">
+                <option value="mifflin">Mifflin</option>
+                <option value="harris">Harris Benedict</option>
+                <option value="schofield">Schofield</option>
+            </select>
+
+            <button onclick="generatePlan()">Generate Plan</button>
+
+        </div>
+
+        <div id="results" class="result"></div>
+
+        <!-- AUDIT -->
+
+        <div class="step">
+
+            <h3>4️⃣ Energy Audit</h3>
+
+            <button onclick="viewAudit()">View Energy Audit</button>
+
+        </div>
+
+        <!-- PDF -->
+
+        <div class="step">
+
+            <h3>5️⃣ Export Clinical PDF</h3>
+
+            <button onclick="downloadPDF()">Download Plan PDF</button>
+
+        </div>
+
+    </div>
+
+    <script>
+
+        let token = null
+        let planId = null
+
+
+        async function register() {
+
+            await fetch("/register", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    username: document.getElementById("reg_user").value,
+                    password: document.getElementById("reg_pass").value
+                })
+
+            })
+
+            alert("User registered successfully")
+
+        }
+
+
+        async function login() {
+
+            const res = await fetch("/login", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    username: document.getElementById("login_user").value,
+                    password: document.getElementById("login_pass").value
+                })
+
+            })
+
+            const data = await res.json()
+
+            token = data.access_token
+
+            document.getElementById("tokenBox").innerHTML =
+                "<strong>JWT Token:</strong><br>" + token
+
+        }
+
+
+        async function generatePlan() {
+
+            const res = await fetch("/plan", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + token
+                },
+
+                body: JSON.stringify({
+
+                    patient_name: document.getElementById("name").value,
+                    patient_email: document.getElementById("email").value,
+                    patient_phone: document.getElementById("phone").value,
+
+                    weight: parseFloat(document.getElementById("weight").value),
+                    height: parseFloat(document.getElementById("height").value),
+                    age: parseInt(document.getElementById("age").value),
+
+                    gender: document.getElementById("gender").value,
+                    activity_level: parseFloat(document.getElementById("activity").value),
+
+                    goal: document.getElementById("goal").value,
+                    formula: document.getElementById("formula").value
+
+                })
+
+            })
+
+            const data = await res.json()
+
+            planId = data.plan_id
+
+            document.getElementById("results").innerHTML = `
+
+<h2>INFORME NUTRICIONAL CLÍNICO</h2>
+
+<hr>
+
+<h3>Datos del Paciente</h3>
+
+Paciente: ${document.getElementById("name").value}<br>
+Edad: ${document.getElementById("age").value}<br>
+Peso: ${document.getElementById("weight").value} kg<br>
+Altura: ${document.getElementById("height").value} cm<br>
+
+<hr>
+
+<h3>Evaluación Metabólica</h3>
+
+TMB: ${data.TMB} kcal<br>
+GET: ${data.GET} kcal<br>
+
+<hr>
+
+<h3>Auditoría Nutricional</h3>
+
+<table border="1" width="100%" cellpadding="6">
+
+<tr>
+<th>Macronutriente</th>
+<th>g</th>
+<th>kcal</th>
+</tr>
+
+<tr>
+<td>Proteínas</td>
+<td>${data.Protein_g}</td>
+<td>${data.Protein_g * 4}</td>
+</tr>
+
+<tr>
+<td>Carbohidratos</td>
+<td>${data.Carbs_g}</td>
+<td>${data.Carbs_g * 4}</td>
+</tr>
+
+<tr>
+<td>Grasas</td>
+<td>${data.Fats_g}</td>
+<td>${data.Fats_g * 9}</td>
+</tr>
+
+</table>
+`
+
+        }
+
+
+        async function viewAudit() {
+
+const res = await fetch("/plans/" + planId + "/audit", {
+headers: {
+"Authorization": "Bearer " + token
+}
+})
+
+const data = await res.json()
+
+console.log("AUDIT RESPONSE:", data)
+
+document.getElementById("results").innerHTML += `
+
+<hr>
+
+<h3>Energy Audit</h3>
+
+<table border="1" width="100%" cellpadding="6">
+
+<tr>
+<th>Energy Validation</th>
+<th>Kcal</th>
+</tr>
+
+<tr>
+<td>Calories Planned (GET)</td>
+<td>${data.energy_validation.get_planned}</td>
+</tr>
+
+<tr>
+<td>Calories From Macros</td>
+<td>${data.energy_validation.kcal_from_macros}</td>
+</tr>
+
+</table>
+
+<br>
+
+<h3>Macronutrients From Food Table</h3>
+
+<table border="1" width="100%" cellpadding="6">
+
+<tr>
+<th>Macronutrient</th>
+<th>g</th>
+<th>kcal</th>
+</tr>
+
+<tr>
+<td>Protein</td>
+<td>${data.totals?.protein_g ?? 0}</td>
+<td>${(data.totals?.protein_g ?? 0) * 4}</td>
+</tr>
+
+<tr>
+<td>Carbs</td>
+<td>${data.totals?.carbs_g ?? 0}</td>
+<td>${(data.totals?.carbs_g ?? 0) * 4}</td>
+</tr>
+
+<tr>
+<td>Fats</td>
+<td>${data.totals?.fats_g ?? 0}</td>
+<td>${(data.totals?.fats_g ?? 0) * 9}</td>
+</tr>
+
+</table>
+
+`
+
+}
+
+function downloadPDF(){
+
+if(!planId){
+alert("Generate a plan first")
+return
+}
+
+window.open("/plans/" + planId + "/pdf")
+
+}

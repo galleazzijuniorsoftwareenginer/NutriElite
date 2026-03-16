@@ -30,9 +30,11 @@ class UserLogin(BaseModel):
     password: str
 
 def hash_password(password: str):
+    password = password[:72]
     return pwd_context.hash(password)
 
 def verify_password(plain_password, hashed_password):
+    plain_password = plain_password[:72]
     return pwd_context.verify(plain_password, hashed_password)
 
 def create_token(data: dict):
