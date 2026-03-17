@@ -69,8 +69,8 @@ def create_plan(data, db, user_id):
                 plan_id=new_plan.id,
                 food_group_id=food.id,
                 portions=item["portions"]
-        )
-        db.add(plan_food)
+            )
+            db.add(plan_food)
 
     db.commit()
 
@@ -99,7 +99,7 @@ def calculate_smae_portions(db, plan):
         if food.group_name == "Alimentos de origen animal":
 
             if goal == "cut" and food.subgroup_name == "Muy bajo aporte grasa":
-                portion = round(protein_aoa / food.protein, 1)
+                portion = max(round(protein_aoa / food.protein, 1), 0)
                 portions.append({
                     "group": food.group_name,
                     "subgroup": food.subgroup_name,
@@ -108,7 +108,7 @@ def calculate_smae_portions(db, plan):
                 fats_target -= portion * food.fats
 
             elif goal == "bulk" and food.subgroup_name == "Moderado aporte grasa":
-                portion = round(protein_aoa / food.protein, 1)
+                portion = max(round(protein_aoa / food.protein, 1), 0)
                 portions.append({
                     "group": food.group_name,
                     "subgroup": food.subgroup_name,
@@ -118,7 +118,7 @@ def calculate_smae_portions(db, plan):
 
         if food.group_name == "Leguminosas":
             if food.protein > 0:
-                portion = round(protein_leg / food.protein, 1)
+                portion = max(round(protein_leg / food.protein, 1), 0)
                 portions.append({
                     "group": food.group_name,
                     "subgroup": None,
@@ -136,7 +136,7 @@ def calculate_smae_portions(db, plan):
 
             if goal == "cut" and food.subgroup_name == "Sin proteinas":
                 if food.fats > 0:
-                    portion = round(fats_target / food.fats, 1)
+                    portion = max(round(fats_target / food.fats, 1), 0)
                     portions.append({
                         "group": food.group_name,
                         "subgroup": food.subgroup_name,
@@ -145,7 +145,7 @@ def calculate_smae_portions(db, plan):
 
             elif goal == "bulk" and food.subgroup_name == "Con proteinas":
                 if food.fats > 0:
-                    portion = round(fats_target / food.fats, 1)
+                    portion = max(round(fats_target / food.fats, 1), 0)
                     portions.append({
                         "group": food.group_name,
                         "subgroup": food.subgroup_name,
@@ -166,7 +166,7 @@ def calculate_smae_portions(db, plan):
 
             if goal == "cut" and food.subgroup_name == "Sin grasa":
                 if food.carbs > 0:
-                    portion = round(carbs_cereal / food.carbs, 1)
+                    portion = max(round(carbs_cereal / food.carbs, 1), 0)
                     portions.append({
                         "group": food.group_name,
                         "subgroup": food.subgroup_name,
@@ -175,7 +175,7 @@ def calculate_smae_portions(db, plan):
 
             elif goal == "bulk" and food.subgroup_name == "Con grasa":
                 if food.carbs > 0:
-                    portion = round(carbs_cereal / food.carbs, 1)
+                    portion = max(round(carbs_cereal / food.carbs, 1), 0)
                     portions.append({
                         "group": food.group_name,
                         "subgroup": food.subgroup_name,
@@ -184,7 +184,7 @@ def calculate_smae_portions(db, plan):
 
         if food.group_name == "Frutas":
             if food.carbs > 0:
-                portion = round(carbs_fruit / food.carbs, 1)
+                portion = max(round(carbs_fruit / food.carbs, 1), 0)
                 portions.append({
                     "group": food.group_name,
                     "subgroup": None,

@@ -284,14 +284,15 @@ const proteinKcal = protein * 4
 const carbsKcal = carbs * 4
 const fatsKcal = fats * 9
 
-const totalKcal = proteinKcal + carbsKcal + fatsKcal
+const totalKcal = data.energy_validation.kcal_from_macros
 
 const proteinPct = (proteinKcal / totalKcal * 100).toFixed(1)
 const carbsPct = (carbsKcal / totalKcal * 100).toFixed(1)
 const fatsPct = (fatsKcal / totalKcal * 100).toFixed(1)
 
 document.getElementById("results").innerHTML +=
-"<hr><h3>Energy Audit</h3>" +
+"<hr><h3>Auditoría Nutricional</h3>" +
+"<p><strong>Planned Energy (GET):</strong> " + data.energy_validation.get_planned.toFixed(1) + " kcal</p>" +
 
 "<table border='1' width='100%' style='margin-top:10px'>" +
 "<tr><th>Macronutrient</th><th>Grams</th><th>Kcal</th><th>%</th></tr>" +
@@ -325,7 +326,7 @@ document.getElementById("results").innerHTML +=
 "</tr>" +
 
 "</table>"
-let smaeHTML = "<h3 style='margin-top:30px'>SMAE Distribution</h3>"
+let smaeHTML = "<h3 style='margin-top:30px'>Distribución SMAE</h3>"
 
 smaeHTML += "<table border='1' width='100%' style='margin-top:10px'>"
 
@@ -345,11 +346,11 @@ data.smae_table.forEach(row => {
 smaeHTML +=
 "<tr>" +
 "<td>" + row.group + "</td>" +
-"<td>" + row.subgroup + "</td>" +
+"<td>" + (row.subgroup || "-") + "</td>" +
 "<td>" + row.portions + "</td>" +
 "<td>" + row.kcal + "</td>" +
 "<td>" + row.protein + "</td>" +
-"<td>" + row.fat + "</td>" +
+"<td>" + row.fats + "</td>" +
 "<td>" + row.carbs + "</td>" +
 "</tr>"
 

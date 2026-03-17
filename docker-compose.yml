@@ -5,7 +5,7 @@ services:
     build: .
     container_name: nutrielite_api
     ports:
-      - "8000:8000"
+      - "8000:8080"
     volumes:
       - .:/app
     restart: always
