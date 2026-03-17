@@ -1,67 +1,56 @@
- **NutriElite**
+ ## NutriElite
 
-**Backend SaaS for automated nutritional plan calculation and clinical PDF report generation.**
-The NutriElite backend is deployed and publicly accessible.
+Backend SaaS for automated nutritional plan calculation and clinical PDF report generation.
 
+The NutriElite backend is a Python-based system designed to calculate metabolic metrics, generate macronutrient distributions, convert values into SMAE portions, validate nutritional energy consistency, and produce structured clinical PDF reports for nutrition professionals.
 
-Live API:
+The system is deployed in the cloud and publicly accessible.
 
-**Base URL**
+## Live API
+
+## Base URL
+
 https://nutrielite-production-e88f.up.railway.app
 
-**Swagger Documentation**
+## Swagger Documentation
+
 https://nutrielite-production-e88f.up.railway.app/docs
 
-**APP DEMO LIVE**
+## Live App Demo
+
 https://nutrielite-production-e88f.up.railway.app/app/
 
-**Backend SaaS for automated nutritional plan calculation and clinical PDF report generation.**
+## Overview
 
-is a Python-based backend system designed to calculate metabolic metrics (BMR, TDEE), generate macronutrient distributions, convert values into SMAE portions, perform energy audit validation, and produce structured clinical PDF reports for nutrition professionals.
+NutriElite is a backend SaaS platform that performs automated nutritional calculations and generates structured clinical reports.
 
+The system calculates:
 
-Developed a Python backend project with automated CI pipeline using GitHub Actions and integrated SonarCloud for static code analysis and code quality monitoring.
+Basal Metabolic Rate (BMR)
 
-Key components:
-• Python backend structure
-• Git version control
-• GitHub repository management
-• CI pipeline with GitHub Actions
-• Static code analysis with SonarCloud
-• Automated quality checks for maintainability, reliability, and security
- Features
+Total Daily Energy Expenditure (TDEE)
 
-JWT Authentication (secure login system)
+Goal-adjusted caloric intake
 
-User registration and authentication
+Macronutrient distribution
 
-BMR calculation (Harris-Benedict & Mifflin-St Jeor)
+SMAE portion conversion
 
-TDEE (Total Daily Energy Expenditure) calculation
+Energy audit validation
 
-Goal-based caloric adjustment (cut / maintenance / bulk)
+Clinical PDF report generation
 
-Automatic macronutrient distribution
-
-SMAE portion conversion logic
-
-Energy audit validation (4-4-9 rule)
-
-Dynamic PDF generation with clinical structure
-
-Relational database modeling using SQLAlchemy# NutriElite1
-
-
+## Architecture
 
 The project follows a layered backend architecture:
 
 routes/      → HTTP endpoints
-services/    → Business logic and calculations
+services/    → Business logic
 models/      → Database models (SQLAlchemy ORM)
 schemas/     → Data validation (Pydantic)
 database.py  → Database configuration
 main.py      → Application entry point
- 
+
 This architecture ensures:
 
 Maintainability
@@ -70,119 +59,215 @@ Testability
 
 Scalability
 
-Clear separation between logic and transport layers
+Clear separation of concerns
 
-
-
-Tech Stack
+## Tech Stack
 
 Python
 
 FastAPI
 
-SQLAlchemy (ORM)
+SQLAlchemy
 
 SQLite
 
 JWT Authentication
 
-ReportLab (PDF rendering engine)
+ReportLab (PDF rendering)
 
-Git
+Docker
 
+Docker Compose
 
+GitHub Actions (CI)
 
-Business Logic Overview
-Metabolic Engine
+SonarCloud (static code analysis)
+
+Railway (cloud deployment)
+
+## DevOps & CI Pipeline
+
+The project includes an automated CI pipeline.
+
+Pipeline flow:
+
+git push
+   ↓
+GitHub Actions
+   ↓
+SonarCloud static analysis
+   ↓
+Railway deployment
+
+This ensures:
+
+automated code quality monitoring
+
+maintainability analysis
+
+secure and reliable deployments
+
+## Features
+
+Authentication
+
+JWT authentication
+
+User registration
+
+Secure login system
+
+Metabolic Calculations
+
+BMR calculation
+
+Harris-Benedict
+
+Mifflin-St Jeor
+
+TDEE calculation
+
+Goal-based caloric adjustment
+
+Cut
+
+Maintenance
+
+Bulk
+
+Nutrition Logic
+
+Automatic macronutrient distribution
+
+SMAE portion conversion
+
+Energy audit validation (4-4-9 rule)
+
+Clinical Reporting
+
+Dynamic clinical PDF generation
+
+Structured nutrition reports
+
+Anthropometric evaluation (BMI classification)
+
+## Business Logic Overview
+
+Metabolic Engine Flow
 
 BMR → TDEE → Goal Adjustment → Macronutrient Distribution
 
-Macronutrient allocation is computed based on:
+Macronutrient allocation is computed using:
 
-Body weight (g/kg for protein)
+Body weight for protein (g/kg)
 
 Caloric percentage allocation for fats
 
 Remaining caloric distribution for carbohydrates
 
-Energy Audit Validation
+## Energy Audit Validation
 
-Energy consistency is validated using:
+Energy consistency is validated using the standard nutrition rule:
 
-Protein = 4 kcal/g
-Carbohydrates = 4 kcal/g
-Fats = 9 kcal/g
+Protein        = 4 kcal/g
+Carbohydrates  = 4 kcal/g
+Fats           = 9 kcal/g
 
-The system compares planned TDEE against calculated macronutrient energy output to ensure nutritional consistency.
+The system compares calculated macronutrient energy against planned caloric intake to ensure nutritional consistency.
 
-📄 PDF Output Includes
+## PDF Clinical Report Includes
 
 Patient information
 
-Anthropometric evaluation (BMI + classification)
+Anthropometric evaluation
+
+BMI classification
 
 Macronutrient audit table
 
-SMAE distribution taThis architecture ensures:
+SMAE distribution table
 
- 
+## Running Locally
 
-Installation
+Clone the repository:
+
 git clone https://github.com/galleazzijuniorsoftwareenginer/NutriElite1.git
-cd nutrielite1
+cd NutriElite1
+
+Create virtual environment:
+
 python -m venv venv
-source venv/bin/activate   # macOS / Linux
-venv\Scripts\activate      # Windows
+
+Activate environment:
+
+macOS / Linux
+
+source venv/bin/activate
+
+Windows
+
+venv\Scripts\activate
+
+Install dependencies:
+
 pip install -r requirements.txt
 
+Run the API:
 
-Running the API
-uvicorn main:app --reload
+uvicorn backend.main:app --reload
 
+API documentation:
 
-API documentation available at:
 http://127.0.0.1:8000/docs
 
+## Running with Docker
 
-Engineering Focus
+Build and start containers:
 
-This project was built to demonstrate:
+docker compose up --build
 
-API design principles
+API will be available at:
+
+http://localhost:8000/docs
+
+## Engineering Focus
+
+This project demonstrates:
+
+Backend API architecture
 
 Authentication workflows
 
 Relational database modeling
 
+Modular service-layer design
+
 Business rule implementation
 
-Modular service-layer architecture
+CI/CD integration
 
-Real-world SaaS backend structuring
+Containerized backend deployment
 
+## Future Improvements
 
+Automated meal plan generation engine
 
- Future Improvements
-
-Automated meal plan generation engine that translates macronutrient targets into structured dietary menus
-
-Food database integration with portion-level nutrient mapping
+Food database integration
 
 Intelligent macro-to-food allocation algorithm
 
-User branding (logo upload) for personalized clinical reports
+User branding for clinical reports
 
-Automated energy-closure optimization
+Energy closure optimization
 
-Unit and integration testing coverage
+Unit and integration tests
 
-Containerization and CI/CD pipeline implementation
+Full containerized production deployment
 
-Cloud deployment for production scalability
+Advanced CI/CD automation
 
+## Project Status
 
+Version 1.0
 
- Project Status
-
-Version 1.0 – Core backend and clinical logic fully implemented.
-
+Core backend architecture and clinical nutritional calculation engine fully implemented.
