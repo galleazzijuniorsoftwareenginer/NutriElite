@@ -7,577 +7,889 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg:#f7f6f3;--surface:#fff;--border:#e8e6e1;--border-strong:#d0cdc6;
-    --text:#1a1916;--text-2:#6b6860;--text-3:#9e9b95;
-    --accent:#1a6b4a;--accent-light:#e8f5ee;
-    --accent-2:#2563a8;--accent-2-light:#eff5ff;
-    --warn:#b45309;--warn-light:#fef3c7;
-    --danger:#b91c1c;--danger-light:#fef2f2;
-    --carb-color:#2563a8;--prot-color:#1a6b4a;--fat-color:#b45309;
-    --radius:10px;--radius-lg:14px;
+    --bg: #f7f6f3;
+    --surface: #ffffff;
+    --border: #e8e6e1;
+    --border-strong: #d0cdc6;
+    --text: #1a1916;
+    --text-2: #6b6860;
+    --text-3: #9e9b95;
+    --accent: #1a6b4a;
+    --accent-light: #e8f5ee;
+    --accent-2: #2563a8;
+    --accent-2-light: #eff5ff;
+    --warn: #b45309;
+    --warn-light: #fef3c7;
+    --danger: #b91c1c;
+    --danger-light: #fef2f2;
+    --carb-color: #2563a8;
+    --prot-color: #1a6b4a;
+    --fat-color: #b45309;
+    --radius: 10px;
+    --radius-lg: 14px;
   }
-  *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
-  .header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 32px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
-  .logo{font-size:17px;font-weight:600;letter-spacing:-.3px;display:flex;align-items:center;gap:8px;}
-  .logo-dot{width:8px;height:8px;background:var(--accent);border-radius:50%;}
-  .header-user{font-size:13px;color:var(--text-2);display:flex;align-items:center;gap:8px;}
-  .avatar{width:28px;height:28px;background:var(--accent-light);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--accent);}
-  .stepbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;height:48px;display:flex;align-items:center;gap:0;position:sticky;top:56px;z-index:99;}
-  .stepbar-arrow{width:32px;height:32px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--text-2);transition:all .15s;flex-shrink:0;}
-  .stepbar-arrow:hover:not(:disabled){background:var(--bg);color:var(--text);}
-  .stepbar-arrow:disabled{opacity:.3;cursor:not-allowed;}
-  .stepbar-steps{display:flex;align-items:center;gap:2px;margin:0 10px;flex:1;overflow-x:auto;}
-  .stepbar-item{display:flex;align-items:center;gap:5px;padding:5px 8px;border-radius:var(--radius);font-size:12px;color:var(--text-3);cursor:pointer;transition:all .15s;white-space:nowrap;}
-  .stepbar-item:hover{color:var(--text-2);}
-  .stepbar-item.active{background:var(--accent-light);color:var(--accent);font-weight:500;}
-  .stepbar-item.done{color:var(--accent);}
-  .stepbar-item.locked{cursor:not-allowed;}
-  .stepbar-num{width:18px;height:18px;border-radius:50%;background:var(--border);color:var(--text-3);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;}
-  .stepbar-item.active .stepbar-num{background:var(--accent);color:white;}
-  .stepbar-item.done .stepbar-num{background:var(--accent-light);color:var(--accent);}
-  .stepbar-sep{color:var(--border-strong);font-size:11px;padding:0 1px;}
-  .main{padding:28px 32px;max-width:780px;}
-  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;margin-bottom:16px;}
-  .card-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:18px;display:flex;align-items:center;gap:8px;}
-  .badge{font-size:10px;font-weight:600;background:var(--accent-light);color:var(--accent);padding:2px 8px;border-radius:20px;}
-  .badge-blue{background:var(--accent-2-light);color:var(--accent-2);}
-  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-  .form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
-  .field{display:flex;flex-direction:column;gap:5px;}
-  .field label{font-size:11px;font-weight:500;color:var(--text-2);}
-  .field input,.field select{padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);background:var(--surface);width:100%;}
-  .field input:focus,.field select:focus{outline:none;border-color:var(--accent);}
-  .btn{padding:10px 20px;border-radius:var(--radius);font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .15s;border:1px solid transparent;}
-  .btn-primary{background:var(--accent);color:white;border-color:var(--accent);}
-  .btn-primary:hover{opacity:.88;}
-  .btn-primary:disabled{opacity:.4;cursor:not-allowed;}
-  .btn-secondary{background:var(--surface);color:var(--text);border-color:var(--border-strong);}
-  .btn-secondary:hover{background:var(--bg);}
-  .btn-full{width:100%;}
-  .btn-ai{background:#1e3a5f;color:white;border-color:#1e3a5f;}
-  .btn-ai:hover{opacity:.88;}
-  .btn-ai:disabled{opacity:.4;cursor:not-allowed;}
-  .token-box{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;font-family:'DM Mono',monospace;font-size:11px;color:var(--text-2);word-break:break-all;margin-top:10px;display:none;}
-  .plan-result{display:none;background:var(--accent-light);border:1px solid #b7deca;border-radius:var(--radius);padding:14px 16px;margin-top:14px;}
-  .plan-result-title{font-size:12px;font-weight:600;color:var(--accent);margin-bottom:8px;}
-  .plan-metrics{display:flex;gap:24px;}
-  .plan-metric-val{font-size:20px;font-weight:600;font-family:'DM Mono',monospace;}
-  .plan-metric-label{font-size:11px;color:var(--text-2);}
-  .dc-total-bar{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
-  .dc-total-item{text-align:center;}
-  .dc-total-val{font-size:22px;font-weight:600;font-family:'DM Mono',monospace;}
-  .dc-total-label{font-size:11px;color:var(--text-2);margin-top:1px;}
-  .dc-macro-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;}
-  .dc-macro-card{border:1px solid var(--border);border-radius:var(--radius);padding:14px;background:var(--surface);position:relative;overflow:hidden;}
-  .dc-macro-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
-  .dc-macro-card.carb::before{background:var(--carb-color);}
-  .dc-macro-card.prot::before{background:var(--prot-color);}
-  .dc-macro-card.fat::before{background:var(--fat-color);}
-  .dc-macro-label{font-size:11px;font-weight:600;color:var(--text-2);margin-bottom:8px;}
-  .dc-pct-input-row{display:flex;align-items:baseline;gap:3px;margin-bottom:6px;}
-  .dc-pct-input{font-size:28px;font-weight:600;font-family:'DM Mono',monospace;width:64px;border:none;background:none;color:var(--text);padding:0;}
-  .dc-pct-input:focus{outline:none;}
-  .dc-pct-sym{font-size:16px;color:var(--text-2);font-weight:500;}
-  .dc-grams{font-size:15px;font-weight:600;color:var(--text);margin-bottom:3px;}
-  .dc-sub{font-size:11px;color:var(--text-2);margin-bottom:2px;}
-  .dc-bar-track{height:4px;background:var(--border);border-radius:2px;margin-top:10px;overflow:hidden;}
-  .dc-bar-fill{height:100%;border-radius:2px;transition:width .2s;}
-  .dc-bar-fill.carb{background:var(--carb-color);}
-  .dc-bar-fill.prot{background:var(--prot-color);}
-  .dc-bar-fill.fat{background:var(--fat-color);}
-  .dc-alert{padding:9px 14px;border-radius:var(--radius);font-size:12px;font-weight:500;margin-bottom:12px;display:none;}
-  .dc-alert.warn{background:var(--warn-light);color:var(--warn);display:block;}
-  .dc-alert.ok{background:var(--accent-light);color:var(--accent);display:block;}
-  .insights-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
-  .insight-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;}
-  .insight-label{font-size:11px;color:var(--text-3);margin-bottom:4px;}
-  .insight-val{font-size:14px;font-weight:600;color:var(--text);}
-  .insight-sub{font-size:11px;color:var(--text-2);margin-top:1px;}
-  .macro-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;}
-  .macro-pill{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;text-align:center;}
-  .macro-pill-val{font-size:17px;font-weight:600;font-family:'DM Mono',monospace;}
-  .macro-pill-label{font-size:10px;color:var(--text-2);margin-top:2px;}
-  .macro-pill.carb .macro-pill-val{color:var(--carb-color);}
-  .macro-pill.prot .macro-pill-val{color:var(--prot-color);}
-  .macro-pill.fat .macro-pill-val{color:var(--fat-color);}
-  table{width:100%;border-collapse:collapse;font-size:12px;}
-  th{text-align:left;padding:8px 10px;font-size:10px;font-weight:600;letter-spacing:.05em;color:var(--text-2);border-bottom:1px solid var(--border);text-transform:uppercase;}
-  td{padding:9px 10px;border-bottom:1px solid var(--border);color:var(--text);}
-  tr:last-child td{border-bottom:none;}
-  tr.total-row td{font-weight:600;background:var(--bg);}
-  .group-tag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;background:var(--accent-light);color:var(--accent);}
-  .menu-loading{display:none;align-items:center;gap:10px;padding:20px;background:var(--bg);border-radius:var(--radius);margin-bottom:12px;font-size:13px;color:var(--text-2);}
-  .menu-loading.visible{display:flex;}
-  .spinner{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;}
-  @keyframes spin{to{transform:rotate(360deg);}}
-  .menu-options{display:flex;flex-direction:column;gap:12px;margin-bottom:16px;}
-  .menu-option-card{border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;}
-  .menu-option-body{padding:14px 16px;}
-  .meal-block{margin-bottom:14px;}
-  .meal-title{font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;}
-  .meal-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;}
-  .meal-row:last-child{border-bottom:none;}
-  .meal-food{color:var(--text);flex:1;}
-  .meal-qty{color:var(--text-2);font-family:'DM Mono',monospace;font-size:11px;min-width:60px;text-align:right;margin-right:8px;}
-  .meal-swap-btn{font-size:11px;color:var(--accent-2);background:var(--accent-2-light);border:none;border-radius:6px;padding:3px 8px;cursor:pointer;font-family:'DM Sans',sans-serif;}
-  .meal-swap-btn:hover{opacity:.8;}
-  .swap-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:200;align-items:center;justify-content:center;}
-  .swap-modal.open{display:flex;}
-  .swap-box{background:var(--surface);border-radius:var(--radius-lg);padding:24px;width:400px;max-width:90vw;border:1px solid var(--border);}
-  .swap-title{font-size:14px;font-weight:600;margin-bottom:4px;}
-  .swap-sub{font-size:12px;color:var(--text-2);margin-bottom:16px;}
-  .swap-options{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
-  .swap-option{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;font-size:12px;transition:all .15s;}
-  .swap-option:hover,.swap-option.selected{border-color:var(--accent);background:var(--accent-light);}
-  .swap-option-name{font-weight:500;}
-  .swap-option-detail{color:var(--text-2);font-size:11px;}
-  .option-selector{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
-  .opt-btn{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text-2);font-family:'DM Sans',sans-serif;transition:all .15s;}
-  .opt-btn.active{background:var(--accent);color:white;border-color:var(--accent);}
-  .pdf-row{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;}
-  .section-title{font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;}
-  .loading-inline{display:none;align-items:center;gap:8px;font-size:12px;color:var(--text-2);margin:8px 0;}
-  .loading-inline.visible{display:flex;}
-  .step-panel{display:none;}
-  .step-panel.active{display:block;}
-  @media(max-width:640px){.dc-macro-grid,.form-grid,.form-grid-3{grid-template-columns:1fr;}.macro-summary{grid-template-columns:1fr 1fr;}.stepbar-item span{display:none;}}
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .logo-dot {
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+  }
+  .header-user {
+    font-size: 13px;
+    color: var(--text-2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .avatar {
+    width: 28px; height: 28px;
+    background: var(--accent-light);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600; color: var(--accent);
+  }
+
+  /* LAYOUT */
+  .layout {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    min-height: calc(100vh - 56px);
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 24px 16px;
+  }
+  .step-nav { list-style: none; }
+  .step-nav li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-2);
+    margin-bottom: 2px;
+    transition: all 0.15s;
+  }
+  .step-nav li:hover { background: var(--bg); color: var(--text); }
+  .step-nav li.active { background: var(--accent-light); color: var(--accent); font-weight: 500; }
+  .step-nav li.done { color: var(--accent); }
+  .step-num {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600; color: var(--text-2);
+    flex-shrink: 0;
+  }
+  .step-nav li.active .step-num { background: var(--accent); color: white; }
+  .step-nav li.done .step-num { background: var(--accent-light); color: var(--accent); }
+  .sidebar-section {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    padding: 20px 12px 8px;
+  }
+
+  /* MAIN */
+  .main { padding: 32px; max-width: 760px; }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title .badge {
+    font-size: 10px;
+    font-weight: 600;
+    background: var(--accent-light);
+    color: var(--accent);
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+
+  /* FORM */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label { font-size: 11px; font-weight: 500; color: var(--text-2); }
+  .field input, .field select {
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    background: var(--surface);
+    transition: border 0.15s;
+    width: 100%;
+  }
+  .field input:focus, .field select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  /* BUTTONS */
+  .btn {
+    padding: 10px 20px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1px solid transparent;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+  .btn-primary:hover { opacity: 0.88; }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-secondary {
+    background: var(--surface);
+    color: var(--text);
+    border-color: var(--border-strong);
+  }
+  .btn-secondary:hover { background: var(--bg); }
+  .btn-full { width: 100%; }
+
+  /* TOKEN */
+  .token-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text-2);
+    word-break: break-all;
+    margin-top: 10px;
+    display: none;
+  }
+
+  /* PLAN RESULT */
+  .plan-result {
+    display: none;
+    background: var(--accent-light);
+    border: 1px solid #b7deca;
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-top: 14px;
+  }
+  .plan-result-title {
+    font-size: 12px; font-weight: 600; color: var(--accent); margin-bottom: 8px;
+  }
+  .plan-metrics {
+    display: flex; gap: 20px;
+  }
+  .plan-metric { }
+  .plan-metric-val {
+    font-size: 20px; font-weight: 600; color: var(--text);
+    font-family: 'DM Mono', monospace;
+  }
+  .plan-metric-label { font-size: 11px; color: var(--text-2); }
+
+  /* DIETOCALCULO */
+  .dc-section { display: none; }
+  .dc-section.visible { display: block; }
+
+  .dc-total-bar {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .dc-total-item { text-align: center; }
+  .dc-total-val {
+    font-size: 22px; font-weight: 600;
+    font-family: 'DM Mono', monospace;
+    color: var(--text);
+  }
+  .dc-total-label { font-size: 11px; color: var(--text-2); margin-top: 1px; }
+
+  .dc-macro-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .dc-macro-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    background: var(--surface);
+    position: relative;
+    overflow: hidden;
+  }
+  .dc-macro-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .dc-macro-card.carb::before { background: var(--carb-color); }
+  .dc-macro-card.prot::before { background: var(--prot-color); }
+  .dc-macro-card.fat::before  { background: var(--fat-color); }
+
+  .dc-macro-label { font-size: 11px; font-weight: 600; color: var(--text-2); margin-bottom: 8px; }
+  .dc-pct-input-row { display: flex; align-items: baseline; gap: 3px; margin-bottom: 6px; }
+  .dc-pct-input {
+    font-size: 28px;
+    font-weight: 600;
+    font-family: 'DM Mono', monospace;
+    width: 64px;
+    border: none;
+    background: none;
+    color: var(--text);
+    padding: 0;
+  }
+  .dc-pct-input:focus { outline: none; }
+  .dc-pct-sym { font-size: 16px; color: var(--text-2); font-weight: 500; }
+  .dc-grams { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+  .dc-sub { font-size: 11px; color: var(--text-2); margin-bottom: 2px; }
+  .dc-bar-track {
+    height: 4px; background: var(--border); border-radius: 2px; margin-top: 10px; overflow: hidden;
+  }
+  .dc-bar-fill { height: 100%; border-radius: 2px; transition: width 0.2s; }
+  .dc-bar-fill.carb { background: var(--carb-color); }
+  .dc-bar-fill.prot { background: var(--prot-color); }
+  .dc-bar-fill.fat  { background: var(--fat-color); }
+
+  .dc-alert {
+    padding: 9px 14px;
+    border-radius: var(--radius);
+    font-size: 12px;
+    font-weight: 500;
+    margin-bottom: 12px;
+    display: none;
+  }
+  .dc-alert.warn { background: var(--warn-light); color: var(--warn); display: block; }
+  .dc-alert.ok   { background: var(--accent-light); color: var(--accent); display: block; }
+
+  /* EXTRA INSIGHTS */
+  .insights-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .insight-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+  }
+  .insight-label { font-size: 11px; color: var(--text-3); margin-bottom: 4px; }
+  .insight-val { font-size: 14px; font-weight: 600; color: var(--text); }
+  .insight-sub { font-size: 11px; color: var(--text-2); margin-top: 1px; }
+
+  /* AUDIT TABLE */
+  .audit-section { display: none; }
+  .audit-section.visible { display: block; }
+
+  .macro-summary {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px;
+  }
+  .macro-pill {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    text-align: center;
+  }
+  .macro-pill-val { font-size: 17px; font-weight: 600; font-family: 'DM Mono', monospace; }
+  .macro-pill-label { font-size: 10px; color: var(--text-2); margin-top: 2px; }
+  .macro-pill.carb .macro-pill-val { color: var(--carb-color); }
+  .macro-pill.prot .macro-pill-val { color: var(--prot-color); }
+  .macro-pill.fat  .macro-pill-val { color: var(--fat-color); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th {
+    text-align: left; padding: 8px 10px;
+    font-size: 10px; font-weight: 600; letter-spacing: 0.05em;
+    color: var(--text-2); border-bottom: 1px solid var(--border);
+    text-transform: uppercase;
+  }
+  td { padding: 9px 10px; border-bottom: 1px solid var(--border); color: var(--text); }
+  tr:last-child td { border-bottom: none; }
+  tr.total-row td { font-weight: 600; background: var(--bg); }
+  .group-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px; font-weight: 500;
+    background: var(--accent-light); color: var(--accent);
+  }
+
+  /* PDF BUTTON */
+  .pdf-row {
+    display: flex; gap: 10px; margin-top: 16px;
+  }
+
+  /* LOADING */
+  .loading {
+    display: none;
+    align-items: center; gap: 8px;
+    font-size: 12px; color: var(--text-2);
+    padding: 4px 0;
+  }
+  .loading.visible { display: flex; }
+  .spinner {
+    width: 14px; height: 14px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .divider { height: 1px; background: var(--border); margin: 20px 0; }
+  .section-title {
+    font-size: 12px; font-weight: 600; color: var(--text-2);
+    text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 14px;
+  }
+
+  @media (max-width: 640px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .dc-macro-grid { grid-template-columns: 1fr; }
+    .form-grid, .form-grid-3 { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
 
 <div class="header">
-  <div class="logo"><div class="logo-dot"></div>NutriElite</div>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    NutriElite
+  </div>
   <div class="header-user">
     <div class="avatar" id="avatar-initials">--</div>
     <span id="header-username">—</span>
   </div>
 </div>
 
-<div class="stepbar">
-  <button class="stepbar-arrow" id="btn-prev" onclick="navigateStep(-1)" disabled>&#8592;</button>
-  <div class="stepbar-steps">
-    <div class="stepbar-item active" data-step="1" onclick="goToStep(1)"><div class="stepbar-num">1</div><span>Auth</span></div>
-    <div class="stepbar-sep">›</div>
-    <div class="stepbar-item locked" data-step="2" onclick="goToStep(2)"><div class="stepbar-num">2</div><span>Paciente</span></div>
-    <div class="stepbar-sep">›</div>
-    <div class="stepbar-item locked" data-step="3" onclick="goToStep(3)"><div class="stepbar-num">3</div><span>Dietocálculo</span></div>
-    <div class="stepbar-sep">›</div>
-    <div class="stepbar-item locked" data-step="4" onclick="goToStep(4)"><div class="stepbar-num">4</div><span>Auditoria</span></div>
-    <div class="stepbar-sep">›</div>
-    <div class="stepbar-item locked" data-step="5" onclick="goToStep(5)"><div class="stepbar-num">5</div><span>Menu IA</span></div>
-    <div class="stepbar-sep">›</div>
-    <div class="stepbar-item locked" data-step="6" onclick="goToStep(6)"><div class="stepbar-num">6</div><span>PDF</span></div>
-  </div>
-  <button class="stepbar-arrow" id="btn-next" onclick="navigateStep(1)" disabled>&#8594;</button>
-</div>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-section">Fluxo clínico</div>
+    <ul class="step-nav">
+      <li class="active" id="nav-1"><div class="step-num">1</div> Autenticação</li>
+      <li id="nav-2"><div class="step-num">2</div> Dados do paciente</li>
+      <li id="nav-3"><div class="step-num">3</div> Dietocálculo</li>
+      <li id="nav-4"><div class="step-num">4</div> Auditoria SMAE</li>
+      <li id="nav-5"><div class="step-num">5</div> Exportar PDF</li>
+    </ul>
+  </aside>
 
-<div class="main">
+  <main class="main">
 
-  <!-- 1: AUTH -->
-  <div class="step-panel active" id="panel-1">
-    <div class="card">
-      <div class="card-title">Registrar <span class="badge">novo</span></div>
-      <div class="form-grid">
-        <div class="field"><label>Usuário</label><input id="reg_user" placeholder="nutricionista01"></div>
-        <div class="field"><label>Senha</label><input id="reg_pass" type="password" placeholder="••••••••"></div>
-      </div><br>
-      <button class="btn btn-secondary" onclick="register()">Registrar</button>
+    <!-- STEP 1: AUTH -->
+    <div id="step-auth">
+      <div class="card">
+        <div class="card-title">Registrar usuário <span class="badge">novo</span></div>
+        <div class="form-grid">
+          <div class="field"><label>Usuário</label><input id="reg_user" placeholder="nutricionista01"></div>
+          <div class="field"><label>Senha</label><input id="reg_pass" type="password" placeholder="••••••••"></div>
+        </div>
+        <br>
+        <button class="btn btn-secondary" onclick="register()">Registrar</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Login</div>
+        <div class="form-grid">
+          <div class="field"><label>Usuário</label><input id="login_user" placeholder="nutricionista01"></div>
+          <div class="field"><label>Senha</label><input id="login_pass" type="password" placeholder="••••••••"></div>
+        </div>
+        <br>
+        <button class="btn btn-primary" onclick="login()">Entrar</button>
+        <div id="tokenBox" class="token-box"></div>
+      </div>
     </div>
-    <div class="card">
-      <div class="card-title">Login</div>
-      <div class="form-grid">
-        <div class="field"><label>Usuário</label><input id="login_user" placeholder="nutricionista01"></div>
-        <div class="field"><label>Senha</label><input id="login_pass" type="password" placeholder="••••••••"></div>
-      </div><br>
-      <button class="btn btn-primary" onclick="login()">Entrar</button>
-      <div id="tokenBox" class="token-box"></div>
-    </div>
-  </div>
 
-  <!-- 2: PATIENT -->
-  <div class="step-panel" id="panel-2">
-    <div class="card">
-      <div class="card-title">Dados do paciente</div>
-      <div class="form-grid" style="margin-bottom:12px">
-        <div class="field"><label>Nome completo</label><input id="name" placeholder="Juan Pérez"></div>
-        <div class="field"><label>Email</label><input id="email" placeholder="juan@email.com"></div>
-        <div class="field"><label>Telefone</label><input id="phone" placeholder="+52 664 ..."></div>
-        <div class="field"><label>Peso (kg)</label><input id="weight" type="number" placeholder="75"></div>
-        <div class="field"><label>Altura (cm)</label><input id="height" type="number" placeholder="175"></div>
-        <div class="field"><label>Idade</label><input id="age" type="number" placeholder="28"></div>
-      </div>
-      <div class="form-grid-3" style="margin-bottom:16px">
-        <div class="field"><label>Gênero</label><select id="gender"><option value="male">Masculino</option><option value="female">Feminino</option></select></div>
-        <div class="field"><label>Atividade</label><select id="activity"><option value="1.2">Sedentário</option><option value="1.375">Leve</option><option value="1.55">Moderado</option><option value="1.725">Ativo</option><option value="1.9">Muito ativo</option><option value="3.0">Atleta</option></select></div>
-        <div class="field"><label>Objetivo</label><select id="goal"><option value="cut">Cutting</option><option value="maintenance">Manutenção</option><option value="bulk">Bulk</option></select></div>
-      </div>
-      <div class="form-grid" style="margin-bottom:16px">
-        <div class="field"><label>Fórmula</label><select id="formula"><option value="mifflin">Mifflin-St Jeor</option><option value="harris">Harris-Benedict</option></select></div>
-      </div>
-      <div class="loading-inline" id="loading-plan"><div class="spinner"></div> Calculando...</div>
-      <button class="btn btn-primary btn-full" onclick="generatePlan()">Calcular plano metabólico</button>
-      <div class="plan-result" id="plan-result">
-        <div class="plan-result-title">Plano gerado — avance para o Dietocálculo ›</div>
-        <div class="plan-metrics">
-          <div class="plan-metric"><div class="plan-metric-val" id="res-tmb">—</div><div class="plan-metric-label">TMB (kcal)</div></div>
-          <div class="plan-metric"><div class="plan-metric-val" id="res-get">—</div><div class="plan-metric-label">GET (kcal)</div></div>
-          <div class="plan-metric"><div class="plan-metric-val" id="res-id">—</div><div class="plan-metric-label">Plan ID</div></div>
+    <!-- STEP 2: PLANO -->
+    <div id="step-plan" style="display:none">
+      <div class="card">
+        <div class="card-title">Dados do paciente</div>
+        <div class="form-grid" style="margin-bottom:12px">
+          <div class="field"><label>Nome completo</label><input id="name" placeholder="Juan Pérez"></div>
+          <div class="field"><label>Email</label><input id="email" placeholder="juan@email.com"></div>
+          <div class="field"><label>Telefone</label><input id="phone" placeholder="+52 664 ..."></div>
+          <div class="field"><label>Peso (kg)</label><input id="weight" type="number" placeholder="75"></div>
+          <div class="field"><label>Altura (cm)</label><input id="height" type="number" placeholder="175"></div>
+          <div class="field"><label>Idade</label><input id="age" type="number" placeholder="28"></div>
+        </div>
+        <div class="form-grid-3" style="margin-bottom:16px">
+          <div class="field">
+            <label>Gênero</label>
+            <select id="gender">
+              <option value="male">Masculino</option>
+              <option value="female">Feminino</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Nível de atividade</label>
+            <select id="activity">
+              <option value="1.2">Sedentário</option>
+              <option value="1.375">Leve</option>
+              <option value="1.55">Moderado</option>
+              <option value="1.725">Ativo</option>
+              <option value="1.9">Muito ativo</option>
+              <option value="3.0">Atleta</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Objetivo</label>
+            <select id="goal">
+              <option value="cut">Cutting</option>
+              <option value="maintenance">Manutenção</option>
+              <option value="bulk">Bulk</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-grid" style="margin-bottom:16px">
+          <div class="field">
+            <label>Fórmula</label>
+            <select id="formula">
+              <option value="mifflin">Mifflin-St Jeor</option>
+              <option value="harris">Harris-Benedict</option>
+            </select>
+          </div>
+        </div>
+        <div class="loading" id="loading-plan">
+          <div class="spinner"></div> Calculando plano...
+        </div>
+        <button class="btn btn-primary btn-full" onclick="generatePlan()">Calcular plano metabólico</button>
+
+        <div class="plan-result" id="plan-result">
+          <div class="plan-result-title">Plano gerado com sucesso</div>
+          <div class="plan-metrics">
+            <div class="plan-metric">
+              <div class="plan-metric-val" id="res-tmb">—</div>
+              <div class="plan-metric-label">TMB (kcal)</div>
+            </div>
+            <div class="plan-metric">
+              <div class="plan-metric-val" id="res-get">—</div>
+              <div class="plan-metric-label">GET (kcal)</div>
+            </div>
+            <div class="plan-metric">
+              <div class="plan-metric-val" id="res-id">—</div>
+              <div class="plan-metric-label">Plan ID</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- 3: DIETOCALCULO -->
-  <div class="step-panel" id="panel-3">
-    <div class="card">
-      <div class="card-title">Dietocálculo <span class="badge">ajuste clínico</span></div>
-      <p style="font-size:12px;color:var(--text-2);margin-bottom:16px;">Ajuste a distribuição de macronutrientes. Valores atualizam em tempo real.</p>
-      <div class="dc-total-bar">
-        <div class="dc-total-item"><div class="dc-total-val" id="dc-kcal">—</div><div class="dc-total-label">kcal totais</div></div>
-        <div class="dc-total-item"><div class="dc-total-val" id="dc-pct-sum" style="color:var(--warn)">0%</div><div class="dc-total-label">soma %</div></div>
-        <div class="dc-total-item"><div class="dc-total-val" id="dc-peso">—</div><div class="dc-total-label">peso</div></div>
-        <div class="dc-total-item"><div class="dc-total-val" id="dc-imc">—</div><div class="dc-total-label">IMC</div></div>
-      </div>
-      <div class="dc-macro-grid">
-        <div class="dc-macro-card carb">
-          <div class="dc-macro-label">Carboidratos</div>
-          <div class="dc-pct-input-row"><input class="dc-pct-input" id="pct-carb" type="number" value="50" min="0" max="100" oninput="recalcDC()"><span class="dc-pct-sym">%</span></div>
-          <div class="dc-grams" id="dc-g-carb">— g</div>
-          <div class="dc-sub" id="dc-gkg-carb">— g/kg</div>
-          <div class="dc-sub" id="dc-kcal-carb">— kcal</div>
-          <div class="dc-bar-track"><div class="dc-bar-fill carb" id="bar-carb" style="width:50%"></div></div>
+    <!-- STEP 3: DIETOCALCULO -->
+    <div class="dc-section" id="step-dc">
+      <div class="card">
+        <div class="card-title">Dietocálculo <span class="badge">ajuste clínico</span></div>
+        <p style="font-size:12px; color:var(--text-2); margin-bottom:16px;">
+          Ajuste a distribuição de macronutrientes conforme a necessidade clínica do paciente. Os valores são recalculados em tempo real.
+        </p>
+
+        <div class="dc-total-bar">
+          <div class="dc-total-item">
+            <div class="dc-total-val" id="dc-kcal">—</div>
+            <div class="dc-total-label">kcal totais</div>
+          </div>
+          <div class="dc-total-item">
+            <div class="dc-total-val" id="dc-pct-sum" style="color: var(--warn)">0%</div>
+            <div class="dc-total-label">soma dos %</div>
+          </div>
+          <div class="dc-total-item">
+            <div class="dc-total-val" id="dc-peso">— kg</div>
+            <div class="dc-total-label">peso paciente</div>
+          </div>
+          <div class="dc-total-item">
+            <div class="dc-total-val" id="dc-imc">—</div>
+            <div class="dc-total-label">IMC</div>
+          </div>
         </div>
-        <div class="dc-macro-card prot">
-          <div class="dc-macro-label">Proteína</div>
-          <div class="dc-pct-input-row"><input class="dc-pct-input" id="pct-prot" type="number" value="30" min="0" max="100" oninput="recalcDC()"><span class="dc-pct-sym">%</span></div>
-          <div class="dc-grams" id="dc-g-prot">— g</div>
-          <div class="dc-sub" id="dc-gkg-prot">— g/kg</div>
-          <div class="dc-sub" id="dc-kcal-prot">— kcal</div>
-          <div class="dc-bar-track"><div class="dc-bar-fill prot" id="bar-prot" style="width:30%"></div></div>
+
+        <div class="dc-macro-grid">
+          <div class="dc-macro-card carb">
+            <div class="dc-macro-label">Carboidratos</div>
+            <div class="dc-pct-input-row">
+              <input class="dc-pct-input" id="pct-carb" type="number" value="50" min="0" max="100" oninput="recalcDC()">
+              <span class="dc-pct-sym">%</span>
+            </div>
+            <div class="dc-grams" id="dc-g-carb">— g</div>
+            <div class="dc-sub" id="dc-gkg-carb">— g/kg</div>
+            <div class="dc-sub" id="dc-kcal-carb">— kcal</div>
+            <div class="dc-bar-track"><div class="dc-bar-fill carb" id="bar-carb" style="width:50%"></div></div>
+          </div>
+
+          <div class="dc-macro-card prot">
+            <div class="dc-macro-label">Proteína</div>
+            <div class="dc-pct-input-row">
+              <input class="dc-pct-input" id="pct-prot" type="number" value="30" min="0" max="100" oninput="recalcDC()">
+              <span class="dc-pct-sym">%</span>
+            </div>
+            <div class="dc-grams" id="dc-g-prot">— g</div>
+            <div class="dc-sub" id="dc-gkg-prot">— g/kg</div>
+            <div class="dc-sub" id="dc-kcal-prot">— kcal</div>
+            <div class="dc-bar-track"><div class="dc-bar-fill prot" id="bar-prot" style="width:30%"></div></div>
+          </div>
+
+          <div class="dc-macro-card fat">
+            <div class="dc-macro-label">Gorduras</div>
+            <div class="dc-pct-input-row">
+              <input class="dc-pct-input" id="pct-fat" type="number" value="20" min="0" max="100" oninput="recalcDC()">
+              <span class="dc-pct-sym">%</span>
+            </div>
+            <div class="dc-grams" id="dc-g-fat">— g</div>
+            <div class="dc-sub" id="dc-gkg-fat">— g/kg</div>
+            <div class="dc-sub" id="dc-kcal-fat">— kcal</div>
+            <div class="dc-bar-track"><div class="dc-bar-fill fat" id="bar-fat" style="width:20%"></div></div>
+          </div>
         </div>
-        <div class="dc-macro-card fat">
-          <div class="dc-macro-label">Gorduras</div>
-          <div class="dc-pct-input-row"><input class="dc-pct-input" id="pct-fat" type="number" value="20" min="0" max="100" oninput="recalcDC()"><span class="dc-pct-sym">%</span></div>
-          <div class="dc-grams" id="dc-g-fat">— g</div>
-          <div class="dc-sub" id="dc-gkg-fat">— g/kg</div>
-          <div class="dc-sub" id="dc-kcal-fat">— kcal</div>
-          <div class="dc-bar-track"><div class="dc-bar-fill fat" id="bar-fat" style="width:20%"></div></div>
+
+        <div class="dc-alert" id="dc-alert"></div>
+
+        <!-- INSIGHTS EXTRAS -->
+        <div class="section-title">Indicadores clínicos</div>
+        <div class="insights-grid">
+          <div class="insight-card">
+            <div class="insight-label">Déficit / Superávit calórico</div>
+            <div class="insight-val" id="ins-deficit">—</div>
+            <div class="insight-sub" id="ins-deficit-sub">em relação ao GET</div>
+          </div>
+          <div class="insight-card">
+            <div class="insight-label">Proteína por kg de peso</div>
+            <div class="insight-val" id="ins-prot-kg">—</div>
+            <div class="insight-sub">recomendado: 1.6–2.2 g/kg</div>
+          </div>
+          <div class="insight-card">
+            <div class="insight-label">Relação proteína / carboidrato</div>
+            <div class="insight-val" id="ins-ratio">—</div>
+            <div class="insight-sub">ideal para cutting: acima de 0.4</div>
+          </div>
+          <div class="insight-card">
+            <div class="insight-label">Classificação IMC</div>
+            <div class="insight-val" id="ins-imc-class">—</div>
+            <div class="insight-sub" id="ins-imc-val">—</div>
+          </div>
+        </div>
+
+        <div class="loading" id="loading-audit">
+          <div class="spinner"></div> Gerando auditoria SMAE...
+        </div>
+        <button class="btn btn-primary btn-full" id="btn-audit" onclick="viewAudit()" disabled>
+          Gerar auditoria SMAE com esses %
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 4: AUDIT -->
+    <div class="audit-section" id="step-audit">
+      <div class="card">
+        <div class="card-title">Auditoria nutricional</div>
+        <div class="macro-summary" id="macro-summary"></div>
+        <div class="section-title">Distribuição SMAE</div>
+        <div id="smae-table-wrap"></div>
+        <div class="pdf-row">
+          <button class="btn btn-primary" onclick="downloadPDF()">Exportar PDF clínico</button>
+          <button class="btn btn-secondary" onclick="backToDC()">Ajustar % novamente</button>
         </div>
       </div>
-      <div class="dc-alert" id="dc-alert"></div>
-      <div class="section-title">Indicadores clínicos</div>
-      <div class="insights-grid">
-        <div class="insight-card"><div class="insight-label">Déficit / Superávit calórico</div><div class="insight-val" id="ins-deficit">—</div><div class="insight-sub">em relação ao GET</div></div>
-        <div class="insight-card"><div class="insight-label">Proteína por kg</div><div class="insight-val" id="ins-prot-kg">—</div><div class="insight-sub">recomendado: 1.6–2.2 g/kg</div></div>
-        <div class="insight-card"><div class="insight-label">Relação prot/carb</div><div class="insight-val" id="ins-ratio">—</div><div class="insight-sub">cutting: acima de 0.4</div></div>
-        <div class="insight-card"><div class="insight-label">IMC</div><div class="insight-val" id="ins-imc-class">—</div><div class="insight-sub" id="ins-imc-val">—</div></div>
-      </div>
-      <div class="loading-inline" id="loading-audit"><div class="spinner"></div> Gerando auditoria...</div>
-      <button class="btn btn-primary btn-full" id="btn-audit" onclick="viewAudit()" disabled>Gerar auditoria SMAE com esses %</button>
     </div>
-  </div>
 
-  <!-- 4: AUDIT -->
-  <div class="step-panel" id="panel-4">
-    <div class="card">
-      <div class="card-title">Auditoria nutricional</div>
-      <div class="macro-summary" id="macro-summary"></div>
-      <div class="section-title">Distribuição SMAE</div>
-      <div id="smae-table-wrap"></div>
-    </div>
-  </div>
-
-  <!-- 5: AI MENU -->
-  <div class="step-panel" id="panel-5">
-    <div class="card">
-      <div class="card-title">Menu gerado por IA <span class="badge badge-blue">inteligência artificial</span></div>
-      <p style="font-size:12px;color:var(--text-2);margin-bottom:16px;">3 opções de cardápio baseadas nos macros do paciente. Selecione e troque alimentos se necessário.</p>
-      <div class="menu-loading" id="menu-loading"><div class="spinner"></div> Gerando opções com IA...</div>
-      <div id="menu-not-generated">
-        <button class="btn btn-ai btn-full" onclick="generateMenu()">Gerar menu com IA</button>
-      </div>
-      <div id="menu-result" style="display:none">
-        <div class="section-title">Escolha uma opção</div>
-        <div class="option-selector" id="option-selector"></div>
-        <div class="menu-options" id="menu-options-wrap"></div>
-        <div style="background:var(--accent-light);border:1px solid #b7deca;border-radius:var(--radius);padding:10px 14px;font-size:12px;color:var(--accent);margin-bottom:4px;" id="selected-option-info">Nenhuma opção selecionada.</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 6: PDF -->
-  <div class="step-panel" id="panel-6">
-    <div class="card">
-      <div class="card-title">Exportar PDF clínico</div>
-      <p style="font-size:12px;color:var(--text-2);margin-bottom:20px;">O PDF incluirá dados do paciente, auditoria nutricional, distribuição SMAE e o cardápio selecionado.</p>
-      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:20px;">
-        <div class="section-title">Resumo</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;" id="pdf-summary"></div>
-      </div>
-      <div class="loading-inline" id="loading-pdf"><div class="spinner"></div> Gerando PDF...</div>
-      <button class="btn btn-primary btn-full" onclick="downloadPDF()">Exportar PDF clínico completo</button>
-    </div>
-  </div>
-
-</div>
-
-<!-- SWAP MODAL -->
-<div class="swap-modal" id="swap-modal">
-  <div class="swap-box">
-    <div class="swap-title" id="swap-title">Trocar alimento</div>
-    <div class="swap-sub" id="swap-sub">Escolha um substituto com macros equivalentes</div>
-    <div class="swap-options" id="swap-options-list"></div>
-    <div style="display:flex;gap:8px;">
-      <button class="btn btn-primary" style="flex:1" onclick="confirmSwap()">Confirmar troca</button>
-      <button class="btn btn-secondary" onclick="closeSwap()">Cancelar</button>
-    </div>
-  </div>
+  </main>
 </div>
 
 <script>
 const API = window.location.origin;
-let token=null,planId=null,planData=null,currentStep=1,maxStep=1;
-let auditData=null,generatedMenus=[],selectedMenuOption=0,swapContext=null,selectedSwapIdx=null;
+let token = null;
+let planId = null;
+let planData = null;
 
-function updateStepBar(){
-  document.querySelectorAll('.stepbar-item').forEach(el=>{
-    const s=parseInt(el.dataset.step);
-    el.classList.remove('active','done','locked');
-    if(s===currentStep)el.classList.add('active');
-    else if(s<currentStep)el.classList.add('done');
-    else if(s>maxStep)el.classList.add('locked');
+function setNav(step) {
+  for (let i = 1; i <= 5; i++) {
+    const el = document.getElementById('nav-' + i);
+    el.classList.remove('active', 'done');
+    if (i < step) el.classList.add('done');
+    if (i === step) el.classList.add('active');
+  }
+}
+
+async function register() {
+  const res = await fetch(API + '/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      username: document.getElementById('reg_user').value,
+      password: document.getElementById('reg_pass').value
+    })
   });
-  document.getElementById('btn-prev').disabled=currentStep<=1;
-  document.getElementById('btn-next').disabled=currentStep>=maxStep;
+  alert(res.ok ? 'Usuário registrado com sucesso!' : 'Erro ao registrar.');
 }
 
-function showPanel(step){
-  document.querySelectorAll('.step-panel').forEach(p=>p.classList.remove('active'));
-  document.getElementById('panel-'+step).classList.add('active');
-  currentStep=step;
-  updateStepBar();
-  window.scrollTo(0,0);
-  if(step===6)updatePDFSummary();
+async function login() {
+  const res = await fetch(API + '/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      username: document.getElementById('login_user').value,
+      password: document.getElementById('login_pass').value
+    })
+  });
+  const data = await res.json();
+  if (!data.access_token) { alert('Login inválido'); return; }
+  token = data.access_token;
+  const user = document.getElementById('login_user').value;
+  document.getElementById('tokenBox').style.display = 'block';
+  document.getElementById('tokenBox').textContent = 'JWT: ' + token.substring(0, 40) + '...';
+  document.getElementById('header-username').textContent = user;
+  document.getElementById('avatar-initials').textContent = user.substring(0, 2).toUpperCase();
+  document.getElementById('step-auth').style.display = 'none';
+  document.getElementById('step-plan').style.display = 'block';
+  setNav(2);
 }
 
-function goToStep(step){if(step>maxStep)return;showPanel(step);}
-function navigateStep(dir){const n=currentStep+dir;if(n<1||n>maxStep)return;showPanel(n);}
-function unlockStep(step){if(step>maxStep)maxStep=step;updateStepBar();}
+async function generatePlan() {
+  const w = parseFloat(document.getElementById('weight').value);
+  const h = parseFloat(document.getElementById('height').value);
+  if (!w || !h) { alert('Informe peso e altura'); return; }
 
-async function register(){
-  const res=await fetch(API+'/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:document.getElementById('reg_user').value,password:document.getElementById('reg_pass').value})});
-  alert(res.ok?'Usuário registrado!':'Erro ao registrar.');
-}
-
-async function login(){
-  const res=await fetch(API+'/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:document.getElementById('login_user').value,password:document.getElementById('login_pass').value})});
-  const data=await res.json();
-  if(!data.access_token){alert('Login inválido');return;}
-  token=data.access_token;
-  const user=document.getElementById('login_user').value;
-  document.getElementById('tokenBox').style.display='block';
-  document.getElementById('tokenBox').textContent='JWT: '+token.substring(0,40)+'...';
-  document.getElementById('header-username').textContent=user;
-  document.getElementById('avatar-initials').textContent=user.substring(0,2).toUpperCase();
-  unlockStep(2);showPanel(2);
-}
-
-async function generatePlan(){
-  const w=parseFloat(document.getElementById('weight').value);
-  const h=parseFloat(document.getElementById('height').value);
-  if(!w||!h){alert('Informe peso e altura');return;}
   document.getElementById('loading-plan').classList.add('visible');
-  const res=await fetch(API+'/plan',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({patient_name:document.getElementById('name').value,patient_email:document.getElementById('email').value,patient_phone:document.getElementById('phone').value,weight:w,height:h,age:parseInt(document.getElementById('age').value),gender:document.getElementById('gender').value,activity_level:parseFloat(document.getElementById('activity').value),goal:document.getElementById('goal').value,formula:document.getElementById('formula').value})});
+  const res = await fetch(API + '/plan', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify({
+      patient_name: document.getElementById('name').value,
+      patient_email: document.getElementById('email').value,
+      patient_phone: document.getElementById('phone').value,
+      weight: w,
+      height: h,
+      age: parseInt(document.getElementById('age').value),
+      gender: document.getElementById('gender').value,
+      activity_level: parseFloat(document.getElementById('activity').value),
+      goal: document.getElementById('goal').value,
+      formula: document.getElementById('formula').value
+    })
+  });
   document.getElementById('loading-plan').classList.remove('visible');
-  const data=await res.json();
-  planId=data.plan_id;planData=data;
-  document.getElementById('res-tmb').textContent=data.TMB?data.TMB.toFixed(0):'—';
-  document.getElementById('res-get').textContent=data.GET?data.GET.toFixed(0):'—';
-  document.getElementById('res-id').textContent='#'+planId;
-  document.getElementById('plan-result').style.display='block';
-  const imc=(w/((h/100)**2));
-  document.getElementById('dc-kcal').textContent=data.GET?data.GET.toFixed(0):'—';
-  document.getElementById('dc-peso').textContent=w+' kg';
-  document.getElementById('dc-imc').textContent=imc.toFixed(1);
-  const imcClass=imc<18.5?'Baixo peso':imc<25?'Normal':imc<30?'Sobrepeso':'Obesidade';
-  document.getElementById('ins-imc-class').textContent=imcClass;
-  document.getElementById('ins-imc-val').textContent='IMC: '+imc.toFixed(2);
-  unlockStep(3);recalcDC();
+  const data = await res.json();
+  planId = data.plan_id;
+  planData = data;
+
+  document.getElementById('res-tmb').textContent = data.TMB ? data.TMB.toFixed(0) : '—';
+  document.getElementById('res-get').textContent = data.GET ? data.GET.toFixed(0) : '—';
+  document.getElementById('res-id').textContent = '#' + planId;
+  document.getElementById('plan-result').style.display = 'block';
+
+  // passa para dietocalculo
+  const imc = (w / ((h / 100) ** 2));
+  document.getElementById('dc-kcal').textContent = data.GET ? data.GET.toFixed(0) : '—';
+  document.getElementById('dc-peso').textContent = w + ' kg';
+  document.getElementById('dc-imc').textContent = imc.toFixed(1);
+
+  const imcClass = imc < 18.5 ? 'Baixo peso' : imc < 25 ? 'Normal' : imc < 30 ? 'Sobrepeso' : 'Obesidade';
+  document.getElementById('ins-imc-class').textContent = imcClass;
+  document.getElementById('ins-imc-val').textContent = 'IMC: ' + imc.toFixed(2);
+
+  document.getElementById('step-plan').style.display = 'none';
+  document.getElementById('step-dc').classList.add('visible');
+  setNav(3);
+  recalcDC();
 }
 
-function recalcDC(){
-  const get=planData?planData.GET:2000;
-  const peso=planData?parseFloat(document.getElementById('weight').value):70;
-  const carbPct=parseFloat(document.getElementById('pct-carb').value)||0;
-  const protPct=parseFloat(document.getElementById('pct-prot').value)||0;
-  const fatPct=parseFloat(document.getElementById('pct-fat').value)||0;
-  const total=carbPct+protPct+fatPct;
-  const gCarb=(get*carbPct/100)/4,gProt=(get*protPct/100)/4,gFat=(get*fatPct/100)/9;
-  document.getElementById('dc-g-carb').textContent=gCarb.toFixed(1)+' g';
-  document.getElementById('dc-g-prot').textContent=gProt.toFixed(1)+' g';
-  document.getElementById('dc-g-fat').textContent=gFat.toFixed(1)+' g';
-  document.getElementById('dc-gkg-carb').textContent=(gCarb/peso).toFixed(2)+' g/kg';
-  document.getElementById('dc-gkg-prot').textContent=(gProt/peso).toFixed(2)+' g/kg';
-  document.getElementById('dc-gkg-fat').textContent=(gFat/peso).toFixed(2)+' g/kg';
-  document.getElementById('dc-kcal-carb').textContent=(gCarb*4).toFixed(0)+' kcal';
-  document.getElementById('dc-kcal-prot').textContent=(gProt*4).toFixed(0)+' kcal';
-  document.getElementById('dc-kcal-fat').textContent=(gFat*9).toFixed(0)+' kcal';
-  document.getElementById('bar-carb').style.width=Math.min(carbPct,100)+'%';
-  document.getElementById('bar-prot').style.width=Math.min(protPct,100)+'%';
-  document.getElementById('bar-fat').style.width=Math.min(fatPct,100)+'%';
-  document.getElementById('dc-pct-sum').textContent=Math.round(total)+'%';
-  const deficit=get-(gCarb*4+gProt*4+gFat*9);
-  const defEl=document.getElementById('ins-deficit');
-  defEl.textContent=(deficit>=0?'-':'+')+Math.abs(deficit).toFixed(0)+' kcal';
-  defEl.style.color=deficit>=0?'var(--accent)':'var(--danger)';
-  const protKg=gProt/peso;
-  const pkel=document.getElementById('ins-prot-kg');
-  pkel.textContent=protKg.toFixed(2)+' g/kg';
-  pkel.style.color=protKg>=1.6&&protKg<=2.4?'var(--accent)':'var(--warn)';
-  document.getElementById('ins-ratio').textContent=gCarb>0?(gProt/gCarb).toFixed(2):'—';
-  const alert=document.getElementById('dc-alert'),btn=document.getElementById('btn-audit'),rounded=Math.round(total);
-  if(rounded===100){alert.className='dc-alert ok';alert.textContent='Distribuição correta — soma 100%. Pronto para gerar auditoria.';document.getElementById('dc-pct-sum').style.color='var(--accent)';btn.disabled=false;}
-  else{alert.className='dc-alert warn';const diff=100-rounded;alert.textContent=diff>0?'Faltam '+diff+'% para fechar 100%.':'Excesso de '+Math.abs(diff)+'% — reduza algum macro.';document.getElementById('dc-pct-sum').style.color='var(--warn)';btn.disabled=true;}
+function recalcDC() {
+  const get = planData ? planData.GET : 2000;
+  const peso = planData ? parseFloat(document.getElementById('weight').value) : 70;
+
+  const carbPct = parseFloat(document.getElementById('pct-carb').value) || 0;
+  const protPct = parseFloat(document.getElementById('pct-prot').value) || 0;
+  const fatPct  = parseFloat(document.getElementById('pct-fat').value)  || 0;
+  const total = carbPct + protPct + fatPct;
+
+  const gCarb = (get * carbPct / 100) / 4;
+  const gProt = (get * protPct / 100) / 4;
+  const gFat  = (get * fatPct  / 100) / 9;
+
+  const kcalCarb = gCarb * 4;
+  const kcalProt = gProt * 4;
+  const kcalFat  = gFat  * 9;
+
+  document.getElementById('dc-g-carb').textContent  = gCarb.toFixed(1) + ' g';
+  document.getElementById('dc-g-prot').textContent  = gProt.toFixed(1) + ' g';
+  document.getElementById('dc-g-fat').textContent   = gFat.toFixed(1)  + ' g';
+
+  document.getElementById('dc-gkg-carb').textContent = (gCarb / peso).toFixed(2) + ' g/kg';
+  document.getElementById('dc-gkg-prot').textContent = (gProt / peso).toFixed(2) + ' g/kg';
+  document.getElementById('dc-gkg-fat').textContent  = (gFat  / peso).toFixed(2) + ' g/kg';
+
+  document.getElementById('dc-kcal-carb').textContent = kcalCarb.toFixed(0) + ' kcal';
+  document.getElementById('dc-kcal-prot').textContent = kcalProt.toFixed(0) + ' kcal';
+  document.getElementById('dc-kcal-fat').textContent  = kcalFat.toFixed(0)  + ' kcal';
+
+  document.getElementById('bar-carb').style.width = Math.min(carbPct, 100) + '%';
+  document.getElementById('bar-prot').style.width = Math.min(protPct, 100) + '%';
+  document.getElementById('bar-fat').style.width  = Math.min(fatPct, 100)  + '%';
+
+  document.getElementById('dc-pct-sum').textContent = Math.round(total) + '%';
+
+  // Insights
+  const deficit = get - (kcalCarb + kcalProt + kcalFat);
+  const defEl = document.getElementById('ins-deficit');
+  defEl.textContent = (deficit > 0 ? '-' : '+') + Math.abs(deficit).toFixed(0) + ' kcal';
+  defEl.style.color = deficit > 0 ? 'var(--accent)' : 'var(--danger)';
+
+  const protKg = gProt / peso;
+  const protKgEl = document.getElementById('ins-prot-kg');
+  protKgEl.textContent = protKg.toFixed(2) + ' g/kg';
+  protKgEl.style.color = protKg >= 1.6 && protKg <= 2.4 ? 'var(--accent)' : 'var(--warn)';
+
+  const ratio = gCarb > 0 ? (gProt / gCarb).toFixed(2) : '—';
+  document.getElementById('ins-ratio').textContent = ratio;
+
+  // Alert
+  const alert = document.getElementById('dc-alert');
+  const btn = document.getElementById('btn-audit');
+  const rounded = Math.round(total);
+  if (rounded === 100) {
+    alert.className = 'dc-alert ok';
+    alert.textContent = 'Distribuição correta — soma 100%. Pode gerar a auditoria.';
+    document.getElementById('dc-pct-sum').style.color = 'var(--accent)';
+    btn.disabled = false;
+  } else {
+    alert.className = 'dc-alert warn';
+    const diff = 100 - rounded;
+    alert.textContent = diff > 0
+      ? 'Faltam ' + diff + '% para fechar 100%.'
+      : 'Excesso de ' + Math.abs(diff) + '% — reduza algum macro.';
+    document.getElementById('dc-pct-sum').style.color = 'var(--warn)';
+    btn.disabled = true;
+  }
 }
 
-async function viewAudit(){
-  if(!planId)return;
+async function viewAudit() {
+  if (!planId) return;
   document.getElementById('loading-audit').classList.add('visible');
-  const res=await fetch(API+'/plans/'+planId+'/audit',{headers:{'Authorization':'Bearer '+token}});
+
+  const res = await fetch(API + '/plans/' + planId + '/audit', {
+    headers: { 'Authorization': 'Bearer ' + token }
+  });
   document.getElementById('loading-audit').classList.remove('visible');
-  auditData=await res.json();
-  const p=auditData.totals.protein_g,c=auditData.totals.carbs_g,f=auditData.totals.fats_g;
-  const totalKcal=auditData.energy_validation.kcal_from_macros;
-  const pPct=totalKcal>0?(p*4/totalKcal*100).toFixed(1):'0';
-  const cPct=totalKcal>0?(c*4/totalKcal*100).toFixed(1):'0';
-  const fPct=totalKcal>0?(f*9/totalKcal*100).toFixed(1):'0';
-  document.getElementById('macro-summary').innerHTML=`
+  const data = await res.json();
+
+  const p = data.totals.protein_g;
+  const c = data.totals.carbs_g;
+  const f = data.totals.fats_g;
+  const totalKcal = data.energy_validation.kcal_from_macros;
+  const pPct = totalKcal > 0 ? (p * 4 / totalKcal * 100).toFixed(1) : '0';
+  const cPct = totalKcal > 0 ? (c * 4 / totalKcal * 100).toFixed(1) : '0';
+  const fPct = totalKcal > 0 ? (f * 9 / totalKcal * 100).toFixed(1) : '0';
+
+  document.getElementById('macro-summary').innerHTML = `
     <div class="macro-pill carb"><div class="macro-pill-val">${c.toFixed(1)}g</div><div class="macro-pill-label">Carboidratos (${cPct}%)</div></div>
     <div class="macro-pill prot"><div class="macro-pill-val">${p.toFixed(1)}g</div><div class="macro-pill-label">Proteína (${pPct}%)</div></div>
     <div class="macro-pill fat"><div class="macro-pill-val">${f.toFixed(1)}g</div><div class="macro-pill-label">Gorduras (${fPct}%)</div></div>
-    <div class="macro-pill"><div class="macro-pill-val">${totalKcal.toFixed(0)}</div><div class="macro-pill-label">kcal totais</div></div>`;
-  let rows=auditData.smae_table.map(row=>`<tr><td><span class="group-tag">${row.group}</span></td><td>${row.subgroup||'—'}</td><td>${row.portions}</td><td>${row.kcal}</td><td>${row.protein}</td><td>${row.fats}</td><td>${row.carbs}</td></tr>`).join('');
-  rows+=`<tr class="total-row"><td colspan="3">TOTAL</td><td>${auditData.totals.kcal_from_table}</td><td>${p.toFixed(1)}</td><td>${f.toFixed(1)}</td><td>${c.toFixed(1)}</td></tr>`;
-  document.getElementById('smae-table-wrap').innerHTML=`<table><thead><tr><th>Grupo</th><th>Subgrupo</th><th>Porções</th><th>Kcal</th><th>Prot (g)</th><th>Gord (g)</th><th>Carb (g)</th></tr></thead><tbody>${rows}</tbody></table>`;
-  unlockStep(4);unlockStep(5);unlockStep(6);showPanel(4);
+    <div class="macro-pill"><div class="macro-pill-val">${totalKcal.toFixed(0)}</div><div class="macro-pill-label">kcal totais</div></div>
+  `;
+
+  let rows = data.smae_table.map(row => `
+    <tr>
+      <td><span class="group-tag">${row.group}</span></td>
+      <td>${row.subgroup || '—'}</td>
+      <td>${row.portions}</td>
+      <td>${row.kcal}</td>
+      <td>${row.protein}</td>
+      <td>${row.fats}</td>
+      <td>${row.carbs}</td>
+    </tr>
+  `).join('');
+
+  rows += `<tr class="total-row">
+    <td colspan="3">TOTAL</td>
+    <td>${data.totals.kcal_from_table}</td>
+    <td>${p.toFixed(1)}</td>
+    <td>${f.toFixed(1)}</td>
+    <td>${c.toFixed(1)}</td>
+  </tr>`;
+
+  document.getElementById('smae-table-wrap').innerHTML = `
+    <table>
+      <thead><tr>
+        <th>Grupo</th><th>Subgrupo</th><th>Porções</th>
+        <th>Kcal</th><th>Prot (g)</th><th>Gord (g)</th><th>Carb (g)</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+
+  document.getElementById('step-dc').classList.remove('visible');
+  document.getElementById('step-audit').classList.add('visible');
+  setNav(4);
 }
 
-// AI MENU
-const SWAP_DB={
-  'Frango grelhado':[{name:'Atum em água',detail:'7g prot / 1g gord'},{name:'Clara de ovo',detail:'7g prot / 0g gord'},{name:'Tilápia assada',detail:'7g prot / 1g gord'}],
-  'Arroz branco':[{name:'Batata doce',detail:'15g carb / 0g gord'},{name:'Macarrão integral',detail:'15g carb / 0g gord'},{name:'Aveia',detail:'15g carb / 2g gord'}],
-  'Azeite':[{name:'Óleo de coco',detail:'5g gord / 0g prot'},{name:'Amendoim',detail:'5g gord / 3g prot'}],
-  'default':[{name:'Substituto equivalente A',detail:'Macros similares'},{name:'Substituto equivalente B',detail:'Macros similares'},{name:'Substituto equivalente C',detail:'Macros similares'}]
-};
+function backToDC() {
+  document.getElementById('step-audit').classList.remove('visible');
+  document.getElementById('step-dc').classList.add('visible');
+  setNav(3);
+}
 
-function buildMenu(idx){
-  if(!auditData)return null;
-  const names=['Alta proteína','Balanceado','Baixo carboidrato'];
-  const meals=['Café da manhã','Almoço','Lanche','Jantar'];
-  const dist=[[.25,.35,.15,.25],[.20,.40,.10,.30],[.30,.30,.15,.25]][idx];
-  const foods={'Alimentos de origen animal':['Frango grelhado','Atum em água','Ovo cozido','Carne magra'],'Leguminosas':['Feijão carioca','Lentilha','Grão-de-bico'],'Cereales y tuberculos':['Arroz branco','Batata doce','Aveia'],'Frutas':['Banana','Maçã','Mamão'],'Verduras':['Brócolis','Espinafre','Cenoura'],'Aceites y Grasas':['Azeite','Castanha'],'Leche':['Iogurte grego','Leite desnatado'],'Azucares':['Mel','Açúcar mascavo']};
-  const allFoods=auditData.smae_table.map(row=>{const s=foods[row.group]||['Alimento'];return{food:s[idx%s.length],group:row.group,portions:row.portions,kcal:row.kcal};});
-  const mealBlocks=meals.map((meal,mi)=>{
-    const slice=allFoods.filter((_,i)=>i%meals.length===mi);
-    const items=(slice.length>0?slice:allFoods.slice(0,2)).map(f=>({food:f.food,qty:f.portions.toFixed(1)+' porção',kcal:Math.round(f.kcal*dist[mi])}));
-    return{meal,items};
+async function downloadPDF() {
+  if (!planId) return;
+  setNav(5);
+  const res = await fetch(API + '/plans/' + planId + '/pdf', {
+    headers: { 'Authorization': 'Bearer ' + token }
   });
-  return{name:'Opção '+(idx+1)+' — '+names[idx],macros:{prot:auditData.totals.protein_g.toFixed(1),carb:auditData.totals.carbs_g.toFixed(1),fat:auditData.totals.fats_g.toFixed(1),kcal:auditData.energy_validation.kcal_from_macros.toFixed(0)},meals:mealBlocks};
-}
-
-function renderMenus(){
-  const wrap=document.getElementById('menu-options-wrap');
-  const sel=document.getElementById('option-selector');
-  sel.innerHTML='';wrap.innerHTML='';
-  generatedMenus.forEach((menu,idx)=>{
-    const btn=document.createElement('button');
-    btn.className='opt-btn'+(idx===selectedMenuOption?' active':'');
-    btn.textContent='Opção '+(idx+1);
-    btn.onclick=()=>selectOpt(idx);
-    sel.appendChild(btn);
-    const card=document.createElement('div');
-    card.className='menu-option-card';card.id='mc-'+idx;
-    card.style.display=idx===selectedMenuOption?'block':'none';
-    card.innerHTML=`<div class="menu-option-body">
-      <div style="display:flex;gap:16px;margin-bottom:14px;font-size:12px;flex-wrap:wrap;">
-        <span style="color:var(--prot-color);font-weight:600">${menu.macros.prot}g prot</span>
-        <span style="color:var(--carb-color);font-weight:600">${menu.macros.carb}g carb</span>
-        <span style="color:var(--fat-color);font-weight:600">${menu.macros.fat}g gord</span>
-        <span style="color:var(--text-2)">${menu.macros.kcal} kcal</span>
-      </div>
-      ${menu.meals.map(mb=>`<div class="meal-block"><div class="meal-title">${mb.meal}</div>${mb.items.map(item=>`<div class="meal-row"><span class="meal-food" id="fn-${idx}-${btoa(item.food).replace(/=/g,'')}">${item.food}</span><span class="meal-qty">${item.qty}</span><span class="meal-qty">${item.kcal} kcal</span><button class="meal-swap-btn" onclick="openSwap(${idx},'${item.food}')">trocar</button></div>`).join('')}</div>`).join('')}
-    </div>`;
-    wrap.appendChild(card);
-  });
-  updateSelInfo();
-}
-
-function selectOpt(idx){
-  selectedMenuOption=idx;
-  document.querySelectorAll('.opt-btn').forEach((b,i)=>b.classList.toggle('active',i===idx));
-  generatedMenus.forEach((_,i)=>{const c=document.getElementById('mc-'+i);if(c)c.style.display=i===idx?'block':'none';});
-  updateSelInfo();
-}
-
-function updateSelInfo(){
-  const m=generatedMenus[selectedMenuOption];
-  if(m)document.getElementById('selected-option-info').textContent=m.name+' selecionado — '+m.macros.kcal+' kcal | '+m.macros.prot+'g prot | '+m.macros.carb+'g carb | '+m.macros.fat+'g gord';
-}
-
-function generateMenu(){
-  document.getElementById('menu-loading').classList.add('visible');
-  document.getElementById('menu-not-generated').style.display='none';
-  setTimeout(()=>{
-    generatedMenus=[0,1,2].map(i=>buildMenu(i));
-    document.getElementById('menu-loading').classList.remove('visible');
-    document.getElementById('menu-result').style.display='block';
-    renderMenus();
-  },1800);
-}
-
-function openSwap(menuIdx,foodName){
-  swapContext={menuIdx,foodName};selectedSwapIdx=null;
-  document.getElementById('swap-title').textContent='Trocar: '+foodName;
-  document.getElementById('swap-sub').textContent='Escolha um substituto com macros equivalentes';
-  const alts=SWAP_DB[foodName]||SWAP_DB['default'];
-  document.getElementById('swap-options-list').innerHTML=alts.map((a,i)=>`<div class="swap-option" id="so-${i}" onclick="selSwap(${i})"><div><div class="swap-option-name">${a.name}</div><div class="swap-option-detail">${a.detail}</div></div></div>`).join('');
-  document.getElementById('swap-modal').classList.add('open');
-}
-
-function selSwap(idx){selectedSwapIdx=idx;document.querySelectorAll('.swap-option').forEach((el,i)=>el.classList.toggle('selected',i===idx));}
-
-function confirmSwap(){
-  if(selectedSwapIdx===null){alert('Selecione um substituto');return;}
-  const alts=SWAP_DB[swapContext.foodName]||SWAP_DB['default'];
-  const newFood=alts[selectedSwapIdx].name;
-  const key=btoa(swapContext.foodName).replace(/=/g,'');
-  const el=document.getElementById('fn-'+swapContext.menuIdx+'-'+key);
-  if(el){el.textContent=newFood;el.style.color='var(--accent-2)';el.style.fontWeight='500';}
-  generatedMenus[swapContext.menuIdx].meals.forEach(mb=>mb.items.forEach(item=>{if(item.food===swapContext.foodName)item.food=newFood;}));
-  updateSelInfo();closeSwap();
-}
-
-function closeSwap(){document.getElementById('swap-modal').classList.remove('open');swapContext=null;selectedSwapIdx=null;}
-
-function updatePDFSummary(){
-  if(!planData)return;
-  const m=generatedMenus[selectedMenuOption];
-  document.getElementById('pdf-summary').innerHTML=`
-    <div><span style="color:var(--text-2);font-size:11px">Paciente</span><br><strong>${document.getElementById('name').value||'—'}</strong></div>
-    <div><span style="color:var(--text-2);font-size:11px">Plan ID</span><br><strong>#${planId}</strong></div>
-    <div><span style="color:var(--text-2);font-size:11px">GET</span><br><strong>${planData.GET?planData.GET.toFixed(0):'—'} kcal</strong></div>
-    <div><span style="color:var(--text-2);font-size:11px">Menu</span><br><strong>${m?m.name:'Nenhum selecionado'}</strong></div>`;
-}
-
-async function downloadPDF(){
-  if(!planId)return;
-  document.getElementById('loading-pdf').classList.add('visible');
-  const res=await fetch(API+'/plans/'+planId+'/pdf',{headers:{'Authorization':'Bearer '+token}});
-  document.getElementById('loading-pdf').classList.remove('visible');
-  const blob=await res.blob();
-  const url=window.URL.createObjectURL(blob);
-  const a=document.createElement('a');a.href=url;a.download='nutrielite_'+planId+'.pdf';a.click();
+  const blob = await res.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'nutrielite_plan_' + planId + '.pdf';
+  a.click();
 }
 </script>
 </body>
