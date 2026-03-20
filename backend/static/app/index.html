@@ -617,7 +617,9 @@ function updatePDFSummary(){
 async function downloadPDF(){
   if(!planId)return;
   document.getElementById('loading-pdf').classList.add('visible');
-  const res=await fetch(API+'/plans/'+planId+'/pdf',{headers:{'Authorization':'Bearer '+token}});
+  const m=generatedMenus[selectedMenuOption];
+  const menuParam=m?'?menu='+encodeURIComponent(JSON.stringify(m)):'';
+  const res=await fetch(API+'/plans/'+planId+'/pdf'+menuParam,{headers:{'Authorization':'Bearer '+token}});
   document.getElementById('loading-pdf').classList.remove('visible');
   const blob=await res.blob();
   const url=window.URL.createObjectURL(blob);
