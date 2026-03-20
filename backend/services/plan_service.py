@@ -73,7 +73,6 @@ def create_plan(data, db, user_id):
             db.add(plan_food)
 
     db.commit()
-
     return new_plan
 
 
@@ -81,206 +80,116 @@ def calculate_smae_portions(db, plan):
 
     portions = []
     goal = plan.goal.lower()
+    get = plan.get
 
     protein_target = plan.protein
     fats_target = plan.fats
     carbs_target = plan.carbs
 
     foods = db.query(FoodGroup).all()
+    foods_map = {f.group_name + "|" + (f.subgroup_name or ""): f for f in foods}
 
-    # =========================
-    # PROTEÍNA (70% AOA / 30% Leguminosas)
-    # =========================
+    def get_food(group, subgroup=None):
+        key = group + "|" + (subgroup or "")
+        return foods_map.get(key)
+
+    leche_sub = {"cut": "Descremada", "bulk": "Entera", "maintenance": "Semidescremada"}.get(goal, "Descremada")
+    leche = get_food("Leche", leche_sub)
+    if leche:
+        leche_portions = 2.0
+        portions.append({"group": "Leche", "subgroup": leche_sub, "portions": leche_portions})
+        protein_target -= leche_portions * leche.protein
+        carbs_target   -= leche_portions * leche.carbs
+        fats_target    -= leche_portions * leche.fats
 
     protein_aoa = protein_target * 0.7
     protein_leg = protein_target * 0.3
 
-    for food in foods:
+    aoa_sub = {"cut": "Muy bajo aporte grasa", "bulk": "Moderado aporte grasa", "maintenance": "Bajo aporte grasa"}.get(goal, "Muy bajo aporte grasa")
+    aoa = get_food("Alimentos de origen animal", aoa_sub)
+    if aoa and aoa.protein > 0:
+        portion = max(round(protein_aoa / aoa.protein, 1), 0)
+        portions.append({"group": aoa.group_name, "subgroup": aoa.subgroup_name, "portions": portion})
+        fats_target -= portion * aoa.fats
 
-        if food.group_name == "Alimentos de origen animal":
+    leg = get_food("Leguminosas")
+    if leg and leg.protein > 0:
+        portion = max(round(protein_leg / leg.protein, 1), 0)
+        portions.append({"group": leg.group_name, "subgroup": None, "portions": portion})
+        carbs_target -= portion * leg.carbs
+        fats_target  -= portion * leg.fats
 
-            if goal == "cut" and food.subgroup_name == "Muy bajo aporte grasa":
-                portion = max(round(protein_aoa / food.protein, 1), 0)
-                portions.append({
-                    "group": food.group_name,
-                    "subgroup": food.subgroup_name,
-                    "portions": portion
-                })
-                fats_target -= portion * food.fats
+    verd = get_food("Verduras")
+    if verd:
+        portions.append({"group": "Verduras", "subgroup": None, "portions": 4})
+        carbs_target -= 4 * verd.carbs
 
-            elif goal == "bulk" and food.subgroup_name == "Moderado aporte grasa":
-                portion = max(round(protein_aoa / food.protein, 1), 0)
-                portions.append({
-                    "group": food.group_name,
-                    "subgroup": food.subgroup_name,
-                    "portions": portion
-                })
-                fats_target -= portion * food.fats
+    azuc_sub = {"cut": "Sin grasa", "bulk": "Con grasa", "maintenance": "Sin grasa"}.get(goal, "Sin grasa")
+    azuc = get_food("Azucares", azuc_sub)
+    if azuc:
+        portions.append({"group": "Azucares", "subgroup": azuc_sub, "portions": 1.0})
+        carbs_target -= 1.0 * azuc.carbs
 
-        if food.group_name == "Leguminosas":
-            if food.protein > 0:
-                portion = max(round(protein_leg / food.protein, 1), 0)
-                portions.append({
-                    "group": food.group_name,
-                    "subgroup": None,
-                    "portions": portion
-                })
-                carbs_target -= portion * food.carbs
-                fats_target -= portion * food.fats
+    ac_sub = {"cut": "Sin proteinas", "bulk": "Con proteinas", "maintenance": "Sin proteinas"}.get(goal, "Sin proteinas")
+    ac = get_food("Aceites y Grasas", ac_sub)
+    if ac and ac.fats > 0:
+        portion = max(round(fats_target / ac.fats, 1), 0)
+        portions.append({"group": ac.group_name, "subgroup": ac.subgroup_name, "portions": portion})
+        if ac.carbs > 0:
+            carbs_target -= portion * ac.carbs
 
-    # =========================
-    # LECHE (porção fixa: 2/dia)
-    # =========================
-
-    for food in foods:
-        if food.group_name == "Leche":
-            if goal == "cut" and food.subgroup_name == "Descremada":
-                portions.append({
-                    "group": food.group_name,
-                    "subgroup": food.subgroup_name,
-                    "portions": 2.0
-                })
-                protein_target -= 2.0 * food.protein
-                carbs_target -= 2.0 * food.carbs
-                fats_target -= 2.0 * food.fats
-
-            elif goal == "bulk" and food.subgroup_name == "Entera":
-                portions.append({
-                    "group": food.group_name,
-                    "subgroup": food.subgroup_name,
-                    "portions": 2.0
-                })
-                protein_target -= 2.0 * food.protein
-                carbs_target -= 2.0 * food.carbs
-                fats_target -= 2.0 * food.fats
-
-            elif goal == "maintenance" and food.subgroup_name == "Semidescremada":
-                portions.append({
-                    "group": food.group_name,
-                    "subgroup": food.subgroup_name,
-                    "portions": 2.0
-                })
-                protein_target -= 2.0 * food.protein
-                carbs_target -= 2.0 * food.carbs
-                fats_target -= 2.0 * food.fats
-
-    # =========================
-    # GORDURA (restante via Aceites)
-    # =========================
-
-    for food in foods:
-        if food.group_name == "Aceites y Grasas":
-
-            if goal == "cut" and food.subgroup_name == "Sin proteinas":
-                if food.fats > 0:
-                    portion = max(round(fats_target / food.fats, 1), 0)
-                    portions.append({
-                        "group": food.group_name,
-                        "subgroup": food.subgroup_name,
-                        "portions": portion
-                    })
-
-            elif goal == "bulk" and food.subgroup_name == "Con proteinas":
-                if food.fats > 0:
-                    portion = max(round(fats_target / food.fats, 1), 0)
-                    portions.append({
-                        "group": food.group_name,
-                        "subgroup": food.subgroup_name,
-                        "portions": portion
-                    })
-                    carbs_target -= portion * food.carbs
-
-            elif goal == "maintenance" and food.subgroup_name == "Sin proteinas":
-                if food.fats > 0:
-                    portion = max(round(fats_target / food.fats, 1), 0)
-                    portions.append({
-                        "group": food.group_name,
-                        "subgroup": food.subgroup_name,
-                        "portions": portion
-                    })
-
-    # =========================
-    # CARBO (80% Cereales / 20% Frutas)
-    # =========================
-
+    carbs_target = max(carbs_target, 0)
     carbs_cereal = carbs_target * 0.8
-    carbs_fruit = carbs_target * 0.2
+    carbs_fruit  = carbs_target * 0.2
 
-    for food in foods:
+    cer_sub = {"cut": "Sin grasa", "bulk": "Con grasa", "maintenance": "Sin grasa"}.get(goal, "Sin grasa")
+    cer = get_food("Cereales y tuberculos", cer_sub)
+    if cer and cer.carbs > 0:
+        portion = max(round(carbs_cereal / cer.carbs, 1), 0)
+        portions.append({"group": cer.group_name, "subgroup": cer.subgroup_name, "portions": portion})
 
-        if food.group_name == "Cereales y tuberculos":
+    frut = get_food("Frutas")
+    if frut and frut.carbs > 0:
+        portion = max(round(carbs_fruit / frut.carbs, 1), 0)
+        portions.append({"group": frut.group_name, "subgroup": None, "portions": portion})
 
-            if goal == "cut" and food.subgroup_name == "Sin grasa":
-                if food.carbs > 0:
-                    portion = max(round(carbs_cereal / food.carbs, 1), 0)
-                    portions.append({
-                        "group": food.group_name,
-                        "subgroup": food.subgroup_name,
-                        "portions": portion
-                    })
+    food_lookup = {f.group_name + "|" + (f.subgroup_name or ""): f for f in foods}
 
-            elif goal == "bulk" and food.subgroup_name == "Con grasa":
-                if food.carbs > 0:
-                    portion = max(round(carbs_cereal / food.carbs, 1), 0)
-                    portions.append({
-                        "group": food.group_name,
-                        "subgroup": food.subgroup_name,
-                        "portions": portion
-                    })
+    def calc_kcal(parts):
+        total = 0
+        for p in parts:
+            key = p["group"] + "|" + (p["subgroup"] or "")
+            f = food_lookup.get(key)
+            if f:
+                total += p["portions"] * f.kcal
+        return total
 
-            elif goal == "maintenance" and food.subgroup_name == "Sin grasa":
-                if food.carbs > 0:
-                    portion = max(round(carbs_cereal / food.carbs, 1), 0)
-                    portions.append({
-                        "group": food.group_name,
-                        "subgroup": food.subgroup_name,
-                        "portions": portion
-                    })
+    total_kcal = calc_kcal(portions)
+    diff_pct = abs(total_kcal - get) / get if get > 0 else 0
 
-        if food.group_name == "Frutas":
-            if food.carbs > 0:
-                portion = max(round(carbs_fruit / food.carbs, 1), 0)
-                portions.append({
-                    "group": food.group_name,
-                    "subgroup": None,
-                    "portions": portion
-                })
+    if diff_pct > 0.03:
+        fixed_kcal = 0
+        variable_idx = []
+        for i, p in enumerate(portions):
+            if p["group"] in ("Cereales y tuberculos", "Frutas"):
+                variable_idx.append(i)
+            else:
+                key = p["group"] + "|" + (p["subgroup"] or "")
+                f = food_lookup.get(key)
+                if f:
+                    fixed_kcal += p["portions"] * f.kcal
 
-    # =========================
-    # VERDURAS FIJO
-    # =========================
+        target_variable_kcal = get - fixed_kcal
+        current_variable_kcal = 0
+        for i in variable_idx:
+            key = portions[i]["group"] + "|" + (portions[i]["subgroup"] or "")
+            f = food_lookup.get(key)
+            if f:
+                current_variable_kcal += portions[i]["portions"] * f.kcal
 
-    for food in foods:
-        if food.group_name == "Verduras":
-            portions.append({
-                "group": food.group_name,
-                "subgroup": None,
-                "portions": 4
-            })
-
-    # =========================
-    # AZUCARES (porção fixa: 1/dia)
-    # =========================
-
-    for food in foods:
-        if food.group_name == "Azucares":
-            if goal == "cut" and food.subgroup_name == "Sin grasa":
-                portions.append({
-                    "group": food.group_name,
-                    "subgroup": food.subgroup_name,
-                    "portions": 1.0
-                })
-            elif goal == "bulk" and food.subgroup_name == "Con grasa":
-                portions.append({
-                    "group": food.group_name,
-                    "subgroup": food.subgroup_name,
-                    "portions": 1.0
-                })
-            elif goal == "maintenance" and food.subgroup_name == "Sin grasa":
-                portions.append({
-                    "group": food.group_name,
-                    "subgroup": food.subgroup_name,
-                    "portions": 1.0
-                })
+        if current_variable_kcal > 0 and target_variable_kcal > 0:
+            scale = target_variable_kcal / current_variable_kcal
+            for i in variable_idx:
+                portions[i]["portions"] = max(round(portions[i]["portions"] * scale, 1), 0)
 
     return portions
