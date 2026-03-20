@@ -128,3 +128,23 @@ def seed():
 
 if __name__ == "__main__":
     seed()
+
+
+def seed_default_user():
+    from backend.models import User
+    from backend.routes.auth import hash_password
+    db = SessionLocal()
+    existing = db.query(User).filter(User.username == "admin").first()
+    if existing:
+        print("Usuário admin já existe. Pulando.")
+        db.close()
+        return
+    user = User(username="admin", password=hash_password("nutrielite2024"))
+    db.add(user)
+    db.commit()
+    db.close()
+    print("Usuário padrão criado: admin / nutrielite2024")
+
+if __name__ == "__main__":
+    seed()
+    seed_default_user()

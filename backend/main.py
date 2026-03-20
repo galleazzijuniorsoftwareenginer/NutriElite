@@ -6,7 +6,7 @@ from backend.routes.food import router as food_router
 from backend.routes import smae
 from backend.database import engine
 from backend.models import Base
-from backend.scripts.seed_smae import seed
+from backend.scripts.seed_smae import seed, seed_default_user
 
 app = FastAPI()
 
@@ -14,6 +14,7 @@ app.mount("/app", StaticFiles(directory="backend/static/app", html=True), name="
 
 Base.metadata.create_all(bind=engine)
 seed()
+seed_default_user()
 
 app.include_router(calculator_router)
 app.include_router(auth_router)

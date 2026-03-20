@@ -38,7 +38,7 @@ def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
 def create_token(data: dict):
-    expire = datetime.utcnow() + timedelta(hours=2)
+    expire = datetime.utcnow() + timedelta(hours=24)
     data.update({"exp": expire})
     return jwt.encode(data, SECRET_KEY, algorithm=ALGORITHM)
 security = HTTPBearer()
