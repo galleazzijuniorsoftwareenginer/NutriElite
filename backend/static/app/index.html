@@ -141,59 +141,71 @@
   .loading-inline.visible{display:flex;}
   .step-panel{display:none;}
   .step-panel.active{display:block;}
+  .auth-screen{display:flex;min-height:100vh;align-items:center;justify-content:center;background:var(--bg);}
+  .auth-box{width:100%;max-width:420px;padding:24px;}
+  .auth-logo{font-size:22px;font-weight:600;letter-spacing:-.3px;display:flex;align-items:center;gap:10px;margin-bottom:32px;}
+  .auth-logo-dot{width:10px;height:10px;background:var(--accent);border-radius:50%;}
+  .auth-tabs{display:flex;gap:0;margin-bottom:20px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+  .auth-tab{flex:1;padding:9px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:var(--surface);color:var(--text-2);font-family:'DM Sans',sans-serif;transition:all .15s;}
+  .auth-tab.active{background:var(--accent);color:white;}
   @media(max-width:640px){.dc-macro-grid,.form-grid,.form-grid-3{grid-template-columns:1fr;}.macro-summary{grid-template-columns:1fr 1fr;}.stepbar-item span{display:none;}}
 </style>
 </head>
 <body>
 
+<!-- AUTH SCREEN -->
+<div id="auth-screen" class="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo"><div class="auth-logo-dot"></div>NutriElite</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Entrar</button>
+      <button class="auth-tab" id="tab-register" onclick="switchTab('register')">Criar conta</button>
+    </div>
+    <div id="form-login">
+      <div class="card" style="margin-bottom:0">
+        <div class="field" style="margin-bottom:12px"><label>Usuário</label><input id="login_user" placeholder="nutricionista01"></div>
+        <div class="field" style="margin-bottom:16px"><label>Senha</label><input id="login_pass" type="password" placeholder="••••••••"></div>
+        <button class="btn btn-primary btn-full" onclick="login()">Entrar</button>
+        <div id="login-error" style="display:none;margin-top:10px;font-size:12px;color:var(--danger)"></div>
+      </div>
+    </div>
+    <div id="form-register" style="display:none">
+      <div class="card" style="margin-bottom:0">
+        <div class="field" style="margin-bottom:12px"><label>Usuário</label><input id="reg_user" placeholder="nutricionista01"></div>
+        <div class="field" style="margin-bottom:16px"><label>Senha</label><input id="reg_pass" type="password" placeholder="••••••••"></div>
+        <button class="btn btn-secondary btn-full" onclick="register()">Criar conta</button>
+        <div id="reg-msg" style="display:none;margin-top:10px;font-size:12px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ÁREA CLÍNICA -->
+<div id="clinical-area" style="display:none">
 <div class="header">
   <div class="logo"><div class="logo-dot"></div>NutriElite</div>
   <div class="header-user">
     <div class="avatar" id="avatar-initials">--</div>
     <span id="header-username">—</span>
+    <button class="btn btn-secondary" style="padding:4px 10px;font-size:11px;margin-left:8px" onclick="logout()">Sair</button>
   </div>
 </div>
-
 <div class="stepbar">
   <button class="stepbar-arrow" id="btn-prev" onclick="navigateStep(-1)" disabled>&#8592;</button>
   <div class="stepbar-steps">
-    <div class="stepbar-item active" data-step="1" onclick="goToStep(1)"><div class="stepbar-num">1</div><span>Auth</span></div>
+    <div class="stepbar-item active" data-step="2" onclick="goToStep(2)"><div class="stepbar-num">1</div><span>Paciente</span></div>
     <div class="stepbar-sep">›</div>
-    <div class="stepbar-item locked" data-step="2" onclick="goToStep(2)"><div class="stepbar-num">2</div><span>Paciente</span></div>
+    <div class="stepbar-item locked" data-step="3" onclick="goToStep(3)"><div class="stepbar-num">2</div><span>Dietocálculo</span></div>
     <div class="stepbar-sep">›</div>
-    <div class="stepbar-item locked" data-step="3" onclick="goToStep(3)"><div class="stepbar-num">3</div><span>Dietocálculo</span></div>
+    <div class="stepbar-item locked" data-step="4" onclick="goToStep(4)"><div class="stepbar-num">3</div><span>Auditoria</span></div>
     <div class="stepbar-sep">›</div>
-    <div class="stepbar-item locked" data-step="4" onclick="goToStep(4)"><div class="stepbar-num">4</div><span>Auditoria</span></div>
+    <div class="stepbar-item locked" data-step="5" onclick="goToStep(5)"><div class="stepbar-num">4</div><span>Menu IA</span></div>
     <div class="stepbar-sep">›</div>
-    <div class="stepbar-item locked" data-step="5" onclick="goToStep(5)"><div class="stepbar-num">5</div><span>Menu IA</span></div>
-    <div class="stepbar-sep">›</div>
-    <div class="stepbar-item locked" data-step="6" onclick="goToStep(6)"><div class="stepbar-num">6</div><span>PDF</span></div>
+    <div class="stepbar-item locked" data-step="6" onclick="goToStep(6)"><div class="stepbar-num">5</div><span>PDF</span></div>
   </div>
   <button class="stepbar-arrow" id="btn-next" onclick="navigateStep(1)" disabled>&#8594;</button>
 </div>
-
 <div class="main">
-
-  <!-- 1: AUTH -->
-  <div class="step-panel active" id="panel-1">
-    <div class="card">
-      <div class="card-title">Registrar <span class="badge">novo</span></div>
-      <div class="form-grid">
-        <div class="field"><label>Usuário</label><input id="reg_user" placeholder="nutricionista01"></div>
-        <div class="field"><label>Senha</label><input id="reg_pass" type="password" placeholder="••••••••"></div>
-      </div><br>
-      <button class="btn btn-secondary" onclick="register()">Registrar</button>
-    </div>
-    <div class="card">
-      <div class="card-title">Login</div>
-      <div class="form-grid">
-        <div class="field"><label>Usuário</label><input id="login_user" placeholder="nutricionista01"></div>
-        <div class="field"><label>Senha</label><input id="login_pass" type="password" placeholder="••••••••"></div>
-      </div><br>
-      <button class="btn btn-primary" onclick="login()">Entrar</button>
-      <div id="tokenBox" class="token-box"></div>
-    </div>
-  </div>
 
   <!-- 2: PATIENT -->
   <div class="step-panel" id="panel-2">
@@ -321,6 +333,7 @@
   </div>
 
 </div>
+</div><!-- /clinical-area -->
 
 <!-- SWAP MODAL -->
 <div class="swap-modal" id="swap-modal">
@@ -337,8 +350,21 @@
 
 <script>
 const API = window.location.origin;
-let token=null,planId=null,planData=null,currentStep=1,maxStep=1;
+let token=null,planId=null,planData=null,currentStep=2,maxStep=2;
 let auditData=null,generatedMenus=[],selectedMenuOption=0,swapContext=null,selectedSwapIdx=null;
+
+function switchTab(tab){
+  document.getElementById('form-login').style.display=tab==='login'?'block':'none';
+  document.getElementById('form-register').style.display=tab==='register'?'block':'none';
+  document.getElementById('tab-login').classList.toggle('active',tab==='login');
+  document.getElementById('tab-register').classList.toggle('active',tab==='register');
+}
+
+function logout(){
+  token=null;planId=null;planData=null;currentStep=2;maxStep=2;auditData=null;generatedMenus=[];
+  document.getElementById('clinical-area').style.display='none';
+  document.getElementById('auth-screen').style.display='flex';
+}
 
 function updateStepBar(){
   document.querySelectorAll('.stepbar-item').forEach(el=>{
@@ -348,7 +374,7 @@ function updateStepBar(){
     else if(s<currentStep)el.classList.add('done');
     else if(s>maxStep)el.classList.add('locked');
   });
-  document.getElementById('btn-prev').disabled=currentStep<=1;
+  document.getElementById('btn-prev').disabled=currentStep<=2;
   document.getElementById('btn-next').disabled=currentStep>=maxStep;
 }
 
@@ -361,25 +387,30 @@ function showPanel(step){
   if(step===6)updatePDFSummary();
 }
 
-function goToStep(step){if(step>maxStep)return;showPanel(step);}
-function navigateStep(dir){const n=currentStep+dir;if(n<1||n>maxStep)return;showPanel(n);}
+function goToStep(step){if(step>maxStep||step<2)return;showPanel(step);}
+function navigateStep(dir){const n=currentStep+dir;if(n<2||n>maxStep)return;showPanel(n);}
 function unlockStep(step){if(step>maxStep)maxStep=step;updateStepBar();}
 
 async function register(){
+  const msg=document.getElementById('reg-msg');
   const res=await fetch(API+'/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:document.getElementById('reg_user').value,password:document.getElementById('reg_pass').value})});
-  alert(res.ok?'Usuário registrado!':'Erro ao registrar.');
+  msg.style.display='block';
+  if(res.ok){msg.style.color='var(--accent)';msg.textContent='Conta criada! Faça login.';switchTab('login');}
+  else{msg.style.color='var(--danger)';msg.textContent='Erro ao criar conta.';}
 }
 
 async function login(){
+  const err=document.getElementById('login-error');
+  err.style.display='none';
   const res=await fetch(API+'/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:document.getElementById('login_user').value,password:document.getElementById('login_pass').value})});
   const data=await res.json();
-  if(!data.access_token){alert('Login inválido');return;}
+  if(!data.access_token){err.style.display='block';err.textContent='Usuário ou senha inválidos.';return;}
   token=data.access_token;
   const user=document.getElementById('login_user').value;
-  document.getElementById('tokenBox').style.display='block';
-  document.getElementById('tokenBox').textContent='JWT: '+token.substring(0,40)+'...';
   document.getElementById('header-username').textContent=user;
   document.getElementById('avatar-initials').textContent=user.substring(0,2).toUpperCase();
+  document.getElementById('auth-screen').style.display='none';
+  document.getElementById('clinical-area').style.display='block';
   unlockStep(2);showPanel(2);
 }
 
