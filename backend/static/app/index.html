@@ -289,7 +289,10 @@
         <div class="insight-card"><div class="insight-label">IMC</div><div class="insight-val" id="ins-imc-class">—</div><div class="insight-sub" id="ins-imc-val">—</div></div>
       </div>
       <div class="loading-inline" id="loading-audit"><div class="spinner"></div> Gerando auditoria...</div>
-      <button class="btn btn-primary btn-full" id="btn-audit" onclick="viewAudit()" disabled>Gerar auditoria SMAE com esses %</button>
+      <div style="display:flex;gap:10px;margin-top:4px;">
+        <button class="btn btn-secondary" style="padding:10px 16px;font-size:12px" onclick="showPanel(2)">← Paciente</button>
+        <button class="btn btn-primary btn-full" id="btn-audit" onclick="viewAudit()" disabled>Gerar auditoria SMAE com esses %</button>
+      </div>
     </div>
   </div>
 
@@ -300,7 +303,8 @@
       <div class="macro-summary" id="macro-summary"></div>
       <div class="section-title">Distribuição SMAE</div>
       <div id="smae-table-wrap"></div>
-      <div style="display:flex;justify-content:flex-end;margin-top:16px;">
+      <div style="display:flex;justify-content:space-between;margin-top:16px;">
+        <button class="btn btn-secondary" style="padding:8px 16px;font-size:12px" onclick="showPanel(3)">← Dietocálculo</button>
         <button class="btn btn-primary" style="padding:8px 16px;font-size:12px" onclick="showPanel(5)">Ir para Menu IA →</button>
       </div>
     </div>
