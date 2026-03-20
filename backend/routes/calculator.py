@@ -123,7 +123,8 @@ def generate_plan(
 def export_plan_pdf(
     plan_id: int,
     db: Session = Depends(get_db),
-    token: dict = Depends(verify_token)
+    token: dict = Depends(verify_token),
+    menu: str = None
 ):
 
     username = token["sub"]
@@ -139,7 +140,14 @@ def export_plan_pdf(
 
     portions = calculate_smae_portions(db, plan)
 
-    pdf_buffer = generate_plan_pdf(plan, portions)
+    import json
+    menu_data = None
+    if menu:
+        try:
+            menu_data = json.loads(menu)
+        except Exception:
+            menu_data = None
+    pdf_buffer = generate_plan_pdf(plan, portions, menu_data)
 
     return StreamingResponse(
         pdf_buffer,
