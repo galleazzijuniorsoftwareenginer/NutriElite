@@ -203,7 +203,7 @@
 </div>
 
 <!-- ÁREA CLÍNICA -->
-<div id="clinical-area" style="display:none">
+<div id="clinical-area" style="display:none;flex-direction:column;">
 <div class="header">
   <div class="logo"><div class="logo-dot"></div>NutriElite</div>
   <div class="header-user">
@@ -227,8 +227,8 @@
   </div>
   <button class="stepbar-arrow" id="btn-next" onclick="navigateStep(1)" disabled>&#8594;</button>
 </div>
-<div class="clinical-layout">
-<div class="main">
+<div style="display:flex;flex-direction:row;align-items:flex-start;flex:1;">
+<div class="main" style="flex:1;min-width:0;">
 
   <!-- 2: PATIENT -->
   <div class="step-panel" id="panel-2">
@@ -453,7 +453,7 @@
   </div>
 </div>
 
-</div><!-- /clinical-layout -->
+</div><!-- /flex-row -->
 </div><!-- /clinical-area -->
 
 <!-- SWAP MODAL -->
@@ -531,7 +531,7 @@ async function login(){
   document.getElementById('header-username').textContent=user;
   document.getElementById('avatar-initials').textContent=user.substring(0,2).toUpperCase();
   document.getElementById('auth-screen').style.display='none';
-  document.getElementById('clinical-area').style.display='block';
+  document.getElementById('clinical-area').style.display='flex';
   unlockStep(2);showPanel(2);
 }
 
