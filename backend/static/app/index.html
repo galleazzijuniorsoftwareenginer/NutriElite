@@ -37,7 +37,7 @@
   .stepbar-item.active .stepbar-num{background:var(--accent);color:white;}
   .stepbar-item.done .stepbar-num{background:var(--accent-light);color:var(--accent);}
   .stepbar-sep{color:var(--border-strong);font-size:11px;padding:0 1px;}
-  .main{padding:28px 32px;max-width:780px;}
+  .main{padding:28px 32px;}
   .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;margin-bottom:16px;}
   .card-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:18px;display:flex;align-items:center;gap:8px;}
   .badge{font-size:10px;font-weight:600;background:var(--accent-light);color:var(--accent);padding:2px 8px;border-radius:20px;}
@@ -149,6 +149,28 @@
   .auth-tab{flex:1;padding:9px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:var(--surface);color:var(--text-2);font-family:'DM Sans',sans-serif;transition:all .15s;}
   .auth-tab.active{background:var(--accent);color:white;}
   @media(max-width:640px){.dc-macro-grid,.form-grid,.form-grid-3{grid-template-columns:1fr;}.macro-summary{grid-template-columns:1fr 1fr;}.stepbar-item span{display:none;}}
+  .clinical-layout{display:grid;grid-template-columns:1fr 300px;gap:0;min-height:calc(100vh - 104px);}
+  .main{padding:28px 32px;max-width:100%;overflow-y:auto;}
+  .side-panel{background:var(--surface);border-left:1px solid var(--border);padding:20px;position:sticky;top:104px;height:calc(100vh - 104px);overflow-y:auto;}
+  .side-title{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);margin-bottom:16px;}
+  .side-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--border-radius-lg, 12px);padding:14px;margin-bottom:12px;}
+  .imc-display{text-align:center;padding:8px 0;}
+  .imc-value{font-size:42px;font-weight:600;font-family:'DM Mono',monospace;line-height:1;}
+  .imc-label{font-size:12px;margin-top:6px;font-weight:500;}
+  .imc-bar{height:8px;border-radius:4px;margin:12px 0 6px;background:linear-gradient(to right,#378ADD 18%,#639922 18% 45%,#EF9F27 45% 70%,#E24B4A 70%);}
+  .imc-marker{width:12px;height:12px;border-radius:50%;background:var(--text);border:2px solid white;margin-top:-10px;transition:margin-left .3s;}
+  .chart-wrap{position:relative;height:180px;margin:8px 0;}
+  .meal-timeline{display:flex;flex-direction:column;gap:8px;}
+  .meal-bar-row{display:flex;align-items:center;gap:8px;font-size:11px;}
+  .meal-bar-label{width:80px;color:var(--text-2);flex-shrink:0;}
+  .meal-bar-track{flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden;}
+  .meal-bar-fill{height:100%;border-radius:4px;background:var(--accent);transition:width .4s;}
+  .meal-bar-kcal{width:50px;text-align:right;color:var(--text-2);flex-shrink:0;}
+  .radar-wrap{position:relative;height:200px;}
+  .side-metric{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;}
+  .side-metric:last-child{border-bottom:none;}
+  .side-metric-val{font-weight:600;font-family:'DM Mono',monospace;}
+  @media(max-width:900px){.clinical-layout{grid-template-columns:1fr;}.side-panel{display:none;}}
 </style>
 </head>
 <body>
@@ -205,6 +227,7 @@
   </div>
   <button class="stepbar-arrow" id="btn-next" onclick="navigateStep(1)" disabled>&#8594;</button>
 </div>
+<div class="clinical-layout">
 <div class="main">
 
   <!-- 2: PATIENT -->
@@ -350,6 +373,87 @@
   </div>
 
 </div>
+</div><!-- /main -->
+
+<!-- SIDE PANEL -->
+<div class="side-panel" id="side-panel">
+  <div id="side-content-1" class="side-content">
+    <div class="side-title">Avaliação do paciente</div>
+    <div class="side-card">
+      <div class="imc-display">
+        <div class="imc-value" id="side-imc-val">—</div>
+        <div class="imc-label" id="side-imc-label" style="color:var(--text-2)">IMC</div>
+      </div>
+      <div class="imc-bar" id="imc-gradient-bar"></div>
+      <div style="position:relative;height:12px;">
+        <div class="imc-marker" id="imc-marker" style="margin-left:0%"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-3);margin-top:4px;">
+        <span>Baixo</span><span>Normal</span><span>Sobrepeso</span><span>Obesidade</span>
+      </div>
+    </div>
+    <div class="side-card">
+      <div class="side-title">Referências clínicas</div>
+      <div class="side-metric"><span>Peso ideal (IMC 22)</span><span class="side-metric-val" id="ref-peso-ideal">—</span></div>
+      <div class="side-metric"><span>Peso mín. saudável</span><span class="side-metric-val" id="ref-peso-min">—</span></div>
+      <div class="side-metric"><span>Peso máx. saudável</span><span class="side-metric-val" id="ref-peso-max">—</span></div>
+    </div>
+  </div>
+
+  <div id="side-content-2" class="side-content" style="display:none">
+    <div class="side-title">Distribuição de macros</div>
+    <div class="side-card">
+      <div class="chart-wrap"><canvas id="macro-pie-chart"></canvas></div>
+    </div>
+    <div class="side-card">
+      <div class="side-title">Referência OMS</div>
+      <div class="side-metric"><span>Carboidratos</span><span class="side-metric-val" style="color:var(--carb-color)">45–65%</span></div>
+      <div class="side-metric"><span>Proteína</span><span class="side-metric-val" style="color:var(--prot-color)">10–35%</span></div>
+      <div class="side-metric"><span>Gorduras</span><span class="side-metric-val" style="color:var(--fat-color)">20–35%</span></div>
+    </div>
+  </div>
+
+  <div id="side-content-3" class="side-content" style="display:none">
+    <div class="side-title">Radar nutricional</div>
+    <div class="side-card">
+      <div class="radar-wrap"><canvas id="radar-chart"></canvas></div>
+    </div>
+    <div class="side-card">
+      <div class="side-title">Fechamento energético</div>
+      <div class="side-metric"><span>GET planejado</span><span class="side-metric-val" id="side-get">—</span></div>
+      <div class="side-metric"><span>Total SMAE</span><span class="side-metric-val" id="side-smae-total">—</span></div>
+      <div class="side-metric"><span>Diferença</span><span class="side-metric-val" id="side-diff">—</span></div>
+    </div>
+  </div>
+
+  <div id="side-content-4" class="side-content" style="display:none">
+    <div class="side-title">Distribuição calórica</div>
+    <div class="side-card">
+      <div class="meal-timeline" id="meal-timeline"></div>
+    </div>
+    <div class="side-card">
+      <div class="side-title">Menu selecionado</div>
+      <div style="font-size:12px;color:var(--text-2)" id="side-menu-name">Nenhum selecionado</div>
+    </div>
+  </div>
+
+  <div id="side-content-5" class="side-content" style="display:none">
+    <div class="side-title">Resumo do plano</div>
+    <div class="side-card">
+      <div class="side-metric"><span>Paciente</span><span class="side-metric-val" id="side-patient-name">—</span></div>
+      <div class="side-metric"><span>TMB</span><span class="side-metric-val" id="side-tmb">—</span></div>
+      <div class="side-metric"><span>GET</span><span class="side-metric-val" id="side-get-2">—</span></div>
+      <div class="side-metric"><span>IMC</span><span class="side-metric-val" id="side-imc-2">—</span></div>
+      <div class="side-metric"><span>Objetivo</span><span class="side-metric-val" id="side-goal">—</span></div>
+    </div>
+    <div class="side-card" style="background:var(--accent-light);border-color:#b7deca;">
+      <div style="font-size:11px;color:var(--accent);font-weight:500;">Plano pronto para exportar</div>
+      <div style="font-size:11px;color:var(--accent);margin-top:4px;" id="side-menu-selected">—</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /clinical-layout -->
 </div><!-- /clinical-area -->
 
 <!-- SWAP MODAL -->
@@ -629,6 +733,217 @@ async function downloadPDF(){
   const url=window.URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=url;a.download='nutrielite_'+planId+'.pdf';a.click();
 }
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+let pieChart = null;
+let radarChart = null;
+
+function showSidePanel(step){
+  document.querySelectorAll('.side-content').forEach(el=>el.style.display='none');
+  const map={2:'1',3:'2',4:'3',5:'4',6:'5'};
+  const id=map[step];
+  if(id){
+    const el=document.getElementById('side-content-'+id);
+    if(el)el.style.display='block';
+  }
+}
+
+function updateSidePatient(w,h){
+  const imc=w/((h/100)**2);
+  const imcEl=document.getElementById('side-imc-val');
+  const labelEl=document.getElementById('side-imc-label');
+  if(!imcEl)return;
+  imcEl.textContent=imc.toFixed(1);
+  let label,color;
+  if(imc<18.5){label='Abaixo do peso';color='#378ADD';}
+  else if(imc<25){label='Normal';color='#639922';}
+  else if(imc<30){label='Sobrepeso';color='#EF9F27';}
+  else{label='Obesidade';color='#E24B4A';}
+  labelEl.textContent=label;
+  labelEl.style.color=color;
+  const pct=Math.min(Math.max((imc-15)/25*100,0),100);
+  const marker=document.getElementById('imc-marker');
+  if(marker)marker.style.marginLeft=pct+'%';
+  const pesoIdeal=(22*(h/100)**2).toFixed(1);
+  const pesoMin=(18.5*(h/100)**2).toFixed(1);
+  const pesoMax=(24.9*(h/100)**2).toFixed(1);
+  const pi=document.getElementById('ref-peso-ideal');
+  const pmin=document.getElementById('ref-peso-min');
+  const pmax=document.getElementById('ref-peso-max');
+  if(pi)pi.textContent=pesoIdeal+' kg';
+  if(pmin)pmin.textContent=pesoMin+' kg';
+  if(pmax)pmax.textContent=pesoMax+' kg';
+}
+
+function updateSideMacroPie(carbPct,protPct,fatPct){
+  const ctx=document.getElementById('macro-pie-chart');
+  if(!ctx)return;
+  if(pieChart)pieChart.destroy();
+  pieChart=new Chart(ctx,{
+    type:'doughnut',
+    data:{
+      labels:['Carboidratos','Proteína','Gorduras'],
+      datasets:[{
+        data:[carbPct,protPct,fatPct],
+        backgroundColor:['#2563a8','#1a6b4a','#b45309'],
+        borderWidth:0
+      }]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'bottom',labels:{font:{size:11},padding:8}},
+        tooltip:{callbacks:{label:ctx=>ctx.label+': '+ctx.raw+'%'}}
+      },
+      cutout:'65%'
+    }
+  });
+}
+
+function updateSideRadar(auditData, planGet){
+  const ctx=document.getElementById('radar-chart');
+  if(!ctx||!auditData)return;
+  if(radarChart)radarChart.destroy();
+  const p=auditData.totals.protein_g;
+  const c=auditData.totals.carbs_g;
+  const f=auditData.totals.fats_g;
+  const kcal=auditData.energy_validation.kcal_from_macros;
+  const protScore=Math.min((p/planGet*400)/35*100,100);
+  const carbScore=Math.min((c/planGet*400)/55*100,100);
+  const fatScore=Math.min((f/planGet*900)/30*100,100);
+  const kcalScore=Math.min(kcal/planGet*100,100);
+  const balanceScore=100-Math.abs(kcal-planGet)/planGet*100;
+  const smaeScore=auditData.smae_table.length/8*100;
+
+  const sGet=document.getElementById('side-get');
+  const sTotal=document.getElementById('side-smae-total');
+  const sDiff=document.getElementById('side-diff');
+  if(sGet)sGet.textContent=planGet.toFixed(0)+' kcal';
+  if(sTotal)sTotal.textContent=auditData.totals.kcal_from_table.toFixed(0)+' kcal';
+  if(sDiff){
+    const diff=auditData.totals.kcal_from_table-planGet;
+    sDiff.textContent=(diff>=0?'+':'')+diff.toFixed(0)+' kcal';
+    sDiff.style.color=Math.abs(diff)/planGet<0.05?'var(--accent)':'var(--warn)';
+  }
+
+  radarChart=new Chart(ctx,{
+    type:'radar',
+    data:{
+      labels:['Proteína','Carboidratos','Gorduras','Energia','Balanço','Grupos SMAE'],
+      datasets:[{
+        label:'Plano atual',
+        data:[protScore,carbScore,fatScore,kcalScore,Math.max(balanceScore,0),smaeScore],
+        backgroundColor:'rgba(26,107,74,0.15)',
+        borderColor:'#1a6b4a',
+        borderWidth:2,
+        pointBackgroundColor:'#1a6b4a',
+        pointRadius:3
+      },{
+        label:'Referência',
+        data:[100,100,100,100,100,100],
+        backgroundColor:'rgba(37,99,168,0.05)',
+        borderColor:'rgba(37,99,168,0.3)',
+        borderWidth:1,
+        borderDash:[4,4],
+        pointRadius:0
+      }]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      scales:{r:{min:0,max:100,ticks:{display:false},grid:{color:'rgba(0,0,0,0.08)'},pointLabels:{font:{size:10}}}},
+      plugins:{legend:{position:'bottom',labels:{font:{size:10},padding:6}}}
+    }
+  });
+}
+
+function updateSideMealTimeline(menu){
+  const wrap=document.getElementById('meal-timeline');
+  const nameEl=document.getElementById('side-menu-name');
+  if(!wrap||!menu)return;
+  if(nameEl)nameEl.textContent=menu.name;
+  const totalKcal=menu.meals.reduce((sum,mb)=>sum+mb.items.reduce((s,i)=>s+i.kcal,0),0);
+  wrap.innerHTML=menu.meals.map(mb=>{
+    const mealKcal=mb.items.reduce((s,i)=>s+i.kcal,0);
+    const pct=totalKcal>0?Math.round(mealKcal/totalKcal*100):0;
+    return '<div class="meal-bar-row">'+
+      '<span class="meal-bar-label">'+mb.meal+'</span>'+
+      '<div class="meal-bar-track"><div class="meal-bar-fill" style="width:'+pct+'%"></div></div>'+
+      '<span class="meal-bar-kcal">'+mealKcal+' kcal</span>'+
+    '</div>';
+  }).join('');
+}
+
+function updateSidePDF(){
+  const n=document.getElementById('side-patient-name');
+  const t=document.getElementById('side-tmb');
+  const g=document.getElementById('side-get-2');
+  const i=document.getElementById('side-imc-2');
+  const go=document.getElementById('side-goal');
+  const ms=document.getElementById('side-menu-selected');
+  if(n&&document.getElementById('name'))n.textContent=document.getElementById('name').value||'—';
+  if(t&&planData)t.textContent=planData.TMB?planData.TMB.toFixed(0)+' kcal':'—';
+  if(g&&planData)g.textContent=planData.GET?planData.GET.toFixed(0)+' kcal':'—';
+  if(i&&planData){
+    const w=parseFloat(document.getElementById('weight').value);
+    const h=parseFloat(document.getElementById('height').value);
+    if(w&&h)i.textContent=(w/((h/100)**2)).toFixed(1);
+  }
+  if(go&&planData)go.textContent=document.getElementById('goal')?document.getElementById('goal').value:'—';
+  const m=generatedMenus[selectedMenuOption];
+  if(ms)ms.textContent=m?m.name:'Nenhum menu selecionado';
+}
+
+const _origShowPanel=showPanel;
+window.showPanel=function(step){
+  _origShowPanel(step);
+  showSidePanel(step);
+  if(step===2){
+    const w=parseFloat(document.getElementById('weight').value);
+    const h=parseFloat(document.getElementById('height').value);
+    if(w&&h)updateSidePatient(w,h);
+  }
+  if(step===3){
+    const carbPct=parseFloat(document.getElementById('pct-carb').value)||0;
+    const protPct=parseFloat(document.getElementById('pct-prot').value)||0;
+    const fatPct=parseFloat(document.getElementById('pct-fat').value)||0;
+    setTimeout(()=>updateSideMacroPie(carbPct,protPct,fatPct),100);
+  }
+  if(step===4&&auditData&&planData){
+    setTimeout(()=>updateSideRadar(auditData,planData.GET),100);
+  }
+  if(step===5){
+    const m=generatedMenus[selectedMenuOption];
+    if(m)updateSideMealTimeline(m);
+  }
+  if(step===6)updateSidePDF();
+};
+
+document.addEventListener('input',function(e){
+  if(['weight','height'].includes(e.target.id)){
+    const w=parseFloat(document.getElementById('weight').value);
+    const h=parseFloat(document.getElementById('height').value);
+    if(w&&h&&currentStep===2)updateSidePatient(w,h);
+  }
+  if(['pct-carb','pct-prot','pct-fat'].includes(e.target.id)&&currentStep===3){
+    const c=parseFloat(document.getElementById('pct-carb').value)||0;
+    const p=parseFloat(document.getElementById('pct-prot').value)||0;
+    const f=parseFloat(document.getElementById('pct-fat').value)||0;
+    clearTimeout(window._pieTimer);
+    window._pieTimer=setTimeout(()=>updateSideMacroPie(c,p,f),300);
+  }
+});
+
+const _origSelectOpt=selectOpt;
+window.selectOpt=function(idx){
+  _origSelectOpt(idx);
+  const m=generatedMenus[idx];
+  if(m&&currentStep===5)updateSideMealTimeline(m);
+};
+
+showSidePanel(2);
 </script>
 </body>
 </html>
