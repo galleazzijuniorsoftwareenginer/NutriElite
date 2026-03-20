@@ -227,7 +227,7 @@
   </div>
   <button class="stepbar-arrow" id="btn-next" onclick="navigateStep(1)" disabled>&#8594;</button>
 </div>
-<div id="layout-row" style="display:flex;align-items:flex-start;width:100%;">
+<div id="layout-row" style="display:flex;align-items:flex-start;width:100%;flex:1;">
 <div class="main" style="flex:1;min-width:0;max-width:calc(100% - 280px);padding:28px 32px;">
 
   <!-- 2: PATIENT -->
@@ -531,7 +531,7 @@ async function login(){
   document.getElementById('header-username').textContent=user;
   document.getElementById('avatar-initials').textContent=user.substring(0,2).toUpperCase();
   document.getElementById('auth-screen').style.display='none';
-  document.getElementById('clinical-area').style.display='block';
+  document.getElementById('clinical-area').style.display='flex';document.getElementById('clinical-area').style.flexDirection='column';
   unlockStep(2);showPanel(2);
 }
 
