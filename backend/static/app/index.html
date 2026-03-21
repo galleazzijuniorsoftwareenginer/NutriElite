@@ -676,15 +676,38 @@ function updateSelInfo(){
   if(m)document.getElementById('selected-option-info').textContent=m.name+' selecionado — '+m.macros.kcal+' kcal | '+m.macros.prot+'g prot | '+m.macros.carb+'g carb | '+m.macros.fat+'g gord';
 }
 
-function generateMenu(){
+async function generateMenu(){
   document.getElementById('menu-loading').classList.add('visible');
   document.getElementById('menu-not-generated').style.display='none';
-  setTimeout(()=>{
-    generatedMenus=[0,1,2].map(i=>buildMenu(i));
-    document.getElementById('menu-loading').classList.remove('visible');
-    document.getElementById('menu-result').style.display='block';
-    renderMenus();
-  },1800);
+  try {
+    const res = await fetch(API+'/plans/'+planId+'/menu/ai', {
+      headers: {'Authorization': 'Bearer '+token}
+    });
+    const data = await res.json();
+    generatedMenus = data.opciones.map((op, idx) => ({
+      name: op.nombre,
+      meals: op.refeicoes.map(r => ({
+        meal: r.refeicao,
+        items: r.itens.map(i => ({
+          food: i.alimento,
+          qty: i.quantidade_g + 'g',
+          kcal: i.kcal
+        }))
+      })),
+      macros: {
+        prot: op.macros.proteina_g,
+        carb: op.macros.carb_g,
+        fat: op.macros.gordura_g,
+        kcal: op.macros.kcal_total
+      }
+    }));
+  } catch(e) {
+    console.error('Erro IA:', e);
+    generatedMenus = [0,1,2].map(i=>buildMenu(i));
+  }
+  document.getElementById('menu-loading').classList.remove('visible');
+  document.getElementById('menu-result').style.display='block';
+  renderMenus();
 }
 
 function openSwap(menuIdx,foodName){
