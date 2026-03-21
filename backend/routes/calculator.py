@@ -154,3 +154,35 @@ def export_plan_pdf(
         media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename=plan_{plan_id}.pdf"}
     )
+
+# ---------- AI MENU GENERATION ----------
+@router.post("/plans/{plan_id}/menu/ai")
+def generate_ai_menu_endpoint(
+    plan_id: int,
+    db: Session = Depends(get_db),
+    token: dict = Depends(verify_token)
+):
+    from backend.services.smae_calculation_service import SMAECalculationService
+    from backend.services.ai_menu_service import generate_ai_menu
+
+    username = token["sub"]
+    db_user = db.query(User).filter(User.username == username).first()
+    plan = db.query(Plan).filter(
+        Plan.id == plan_id,
+        Plan.user_id == db_user.id
+    ).first()
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plano não encontrado")
+
+    audit = SMAECalculationService.calculate(plan_id, db)
+    plan_data = {
+        "goal": plan.goal,
+        "weight": plan.weight,
+        "get": plan.get
+    }
+
+    try:
+        menu = generate_ai_menu(plan_data, audit)
+        return menu
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao gerar menu: {str(e)}")
