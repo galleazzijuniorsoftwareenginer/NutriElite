@@ -2,7 +2,7 @@ import json
 import urllib.request
 import os
 
-GEMINI_MODEL = "gemini-1.5-flash"
+GEMINI_MODEL = "gemini-1.5-flash-latest"
 
 ALIMENTOS_MEXICANOS = {
     "Alimentos de origen animal": {
