@@ -681,6 +681,7 @@ async function generateMenu(){
   document.getElementById('menu-not-generated').style.display='none';
   try {
     const res = await fetch(API+'/plans/'+planId+'/menu/ai', {
+      method: 'POST',
       headers: {'Authorization': 'Bearer '+token}
     });
     const data = await res.json();
