@@ -156,6 +156,8 @@ def generate_plan_pdf(plan, portions, menu_data=None):
     # =========================
     # MENU GERADO POR IA
     # =========================
+    import sys
+    print("MENU_DATA RECEBIDO:", str(menu_data)[:500], file=sys.stderr)
     if menu_data and "meals" in menu_data:
         elements.append(Paragraph("Cardápio Alimentar", styles["Heading2"]))
         elements.append(Spacer(1, 0.1 * inch))
