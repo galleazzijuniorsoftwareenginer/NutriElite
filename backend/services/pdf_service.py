@@ -178,10 +178,12 @@ def generate_plan_pdf(plan, portions, menu_data=None):
             elements.append(Paragraph(f"<b>{meal['meal']}</b>", styles["Heading3"]))
             meal_data = [["Alimento", "Quantidade", "Kcal"]]
             for item in meal["items"]:
-                grams = FOOD_GRAMS.get(item["food"], 100)
+                qty = item.get("qty", "")
+                if not qty or qty == "undefinedg":
+                    qty = f"{item.get('quantidade_g', 100)}g"
                 meal_data.append([
                     item["food"],
-                    f"{grams}g",
+                    qty,
                     f"{item.get('kcal', '—')} kcal"
                 ])
             meal_table = Table(meal_data, colWidths=[220, 100, 130])
