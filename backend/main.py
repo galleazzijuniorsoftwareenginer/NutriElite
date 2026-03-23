@@ -10,7 +10,21 @@ from backend.scripts.seed_smae import seed, seed_default_user
 
 app = FastAPI()
 
-app.mount("/app", StaticFiles(directory="backend/static/app", html=True), name="app")
+from fastapi.staticfiles import StaticFiles
+from fastapi import Response
+from fastapi.responses import FileResponse
+import os
+
+@app.get("/app/{full_path:path}")
+async def serve_app(full_path: str):
+    file_path = f"backend/static/app/{full_path or 'index.html'}"
+    if not full_path or not os.path.exists(file_path):
+        file_path = "backend/static/app/index.html"
+    response = FileResponse(file_path)
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 Base.metadata.create_all(bind=engine)
 seed()
