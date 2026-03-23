@@ -111,5 +111,11 @@ Responde ÚNICAMENTE con JSON válido:
         result = json.loads(resp.read())
 
     text = result["content"][0]["text"]
-    text = text.replace("```json", "").replace("```", "").strip()
+    # Remove markdown code blocks
+    if "```json" in text:
+        text = text.split("```json")[1].split("```")[0].strip()
+    elif "```" in text:
+        text = text.split("```")[1].split("```")[0].strip()
+    else:
+        text = text.strip()
     return json.loads(text)
