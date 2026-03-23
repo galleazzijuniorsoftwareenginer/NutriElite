@@ -116,22 +116,22 @@
   .menu-option-body{padding:14px 16px;}
   .meal-block{margin-bottom:14px;}
   .meal-title{font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;}
+  .meal-item-wrap{position:relative;}
+  .meal-item-wrap:last-child .meal-row{border-bottom:none;}
   .meal-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;}
-  .meal-row:last-child{border-bottom:none;}
   .meal-food{color:var(--text);flex:1;}
   .meal-qty{color:var(--text-2);font-family:'DM Mono',monospace;font-size:11px;min-width:60px;text-align:right;margin-right:8px;}
-  .meal-swap-btn{font-size:11px;color:var(--accent-2);background:var(--accent-2-light);border:none;border-radius:6px;padding:3px 8px;cursor:pointer;font-family:'DM Sans',sans-serif;}
-  .meal-swap-btn:hover{opacity:.8;}
-  .swap-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:200;align-items:center;justify-content:center;}
-  .swap-modal.open{display:flex;}
-  .swap-box{background:var(--surface);border-radius:var(--radius-lg);padding:24px;width:400px;max-width:90vw;border:1px solid var(--border);}
-  .swap-title{font-size:14px;font-weight:600;margin-bottom:4px;}
-  .swap-sub{font-size:12px;color:var(--text-2);margin-bottom:16px;}
-  .swap-options{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
-  .swap-option{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;font-size:12px;transition:all .15s;}
-  .swap-option:hover,.swap-option.selected{border-color:var(--accent);background:var(--accent-light);}
-  .swap-option-name{font-weight:500;}
-  .swap-option-detail{color:var(--text-2);font-size:11px;}
+  .swap-arrows{display:flex;gap:2px;flex-shrink:0;}
+  .swap-arrow-btn{font-size:9px;color:var(--text-2);background:none;border:1px solid var(--border);border-radius:4px;width:18px;height:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;font-family:inherit;}
+  .swap-arrow-btn:hover{border-color:var(--accent-2);color:var(--accent-2);background:var(--accent-2-light);}
+  .swap-dropdown{display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-top:2px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.08);z-index:10;position:relative;}
+  .swap-dd-item{display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--border);transition:background .1s;}
+  .swap-dd-item:last-child{border-bottom:none;}
+  .swap-dd-item:hover{background:var(--accent-light);}
+  .swap-dd-food{flex:1;font-weight:500;color:var(--text);}
+  .swap-dd-detail{color:var(--text-2);font-size:11px;font-family:'DM Mono',monospace;}
+  .swap-dd-src{font-size:10px;color:var(--accent-2);background:var(--accent-2-light);border-radius:4px;padding:2px 6px;white-space:nowrap;}
+  .swap-dd-empty{padding:10px 12px;font-size:12px;color:var(--text-2);}
   .option-selector{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
   .opt-btn{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text-2);font-family:'DM Sans',sans-serif;transition:all .15s;}
   .opt-btn.active{background:var(--accent);color:white;border-color:var(--accent);}
@@ -455,23 +455,11 @@
 </div><!-- /flex-row -->
 </div><!-- /clinical-area -->
 
-<!-- SWAP MODAL -->
-<div class="swap-modal" id="swap-modal">
-  <div class="swap-box">
-    <div class="swap-title" id="swap-title">Trocar alimento</div>
-    <div class="swap-sub" id="swap-sub">Escolha um substituto com macros equivalentes</div>
-    <div class="swap-options" id="swap-options-list"></div>
-    <div style="display:flex;gap:8px;">
-      <button class="btn btn-primary" style="flex:1" onclick="confirmSwap()">Confirmar troca</button>
-      <button class="btn btn-secondary" onclick="closeSwap()">Cancelar</button>
-    </div>
-  </div>
-</div>
 
 <script>
 const API = window.location.origin;
 let token=null,planId=null,planData=null,currentStep=2,maxStep=2;
-let auditData=null,generatedMenus=[],selectedMenuOption=0,swapContext=null,selectedSwapIdx=null;
+let auditData=null,generatedMenus=[],selectedMenuOption=0;
 
 function switchTab(tab){
   document.getElementById('form-login').style.display=tab==='login'?'block':'none';
@@ -615,12 +603,6 @@ async function viewAudit(){
 }
 
 // AI MENU
-const SWAP_DB={
-  'Frango grelhado':[{name:'Atum em água',detail:'7g prot / 1g gord'},{name:'Clara de ovo',detail:'7g prot / 0g gord'},{name:'Tilápia assada',detail:'7g prot / 1g gord'}],
-  'Arroz branco':[{name:'Batata doce',detail:'15g carb / 0g gord'},{name:'Macarrão integral',detail:'15g carb / 0g gord'},{name:'Aveia',detail:'15g carb / 2g gord'}],
-  'Azeite':[{name:'Óleo de coco',detail:'5g gord / 0g prot'},{name:'Amendoim',detail:'5g gord / 3g prot'}],
-  'default':[{name:'Substituto equivalente A',detail:'Macros similares'},{name:'Substituto equivalente B',detail:'Macros similares'},{name:'Substituto equivalente C',detail:'Macros similares'}]
-};
 
 function buildMenu(idx){
   if(!auditData)return null;
@@ -657,7 +639,7 @@ function renderMenus(){
         <span style="color:var(--fat-color);font-weight:600">${menu.macros.fat}g gord</span>
         <span style="color:var(--text-2)">${menu.macros.kcal} kcal</span>
       </div>
-      ${menu.meals.map(mb=>`<div class="meal-block"><div class="meal-title">${mb.meal}</div>${mb.items.map(item=>`<div class="meal-row"><span class="meal-food" id="fn-${idx}-${btoa(item.food).replace(/=/g,'')}">${item.food}</span><span class="meal-qty">${item.qty}</span><span class="meal-qty">${item.kcal} kcal</span><button class="meal-swap-btn" onclick="openSwap(${idx},'${item.food}')">trocar</button></div>`).join('')}</div>`).join('')}
+      ${menu.meals.map((mb,mi)=>`<div class="meal-block"><div class="meal-title">${mb.meal}</div>${mb.items.map((item,ii)=>`<div class="meal-item-wrap"><div class="meal-row"><span class="meal-food" id="fn-${idx}-${mi}-${ii}">${item.food}</span><span class="meal-qty">${item.qty}</span><span class="meal-qty">${item.kcal} kcal</span><div class="swap-arrows"><button class="swap-arrow-btn" onclick="toggleSwapDropdown(event,${idx},${mi},${ii})">▲</button><button class="swap-arrow-btn" onclick="toggleSwapDropdown(event,${idx},${mi},${ii})">▼</button></div></div><div class="swap-dropdown" id="dd-${idx}-${mi}-${ii}"></div></div>`).join('')}</div>`).join('')}
     </div>`;
     wrap.appendChild(card);
   });
@@ -712,29 +694,43 @@ async function generateMenu(){
   renderMenus();
 }
 
-function openSwap(menuIdx,foodName){
-  swapContext={menuIdx,foodName};selectedSwapIdx=null;
-  document.getElementById('swap-title').textContent='Trocar: '+foodName;
-  document.getElementById('swap-sub').textContent='Escolha um substituto com macros equivalentes';
-  const alts=SWAP_DB[foodName]||SWAP_DB['default'];
-  document.getElementById('swap-options-list').innerHTML=alts.map((a,i)=>`<div class="swap-option" id="so-${i}" onclick="selSwap(${i})"><div><div class="swap-option-name">${a.name}</div><div class="swap-option-detail">${a.detail}</div></div></div>`).join('');
-  document.getElementById('swap-modal').classList.add('open');
+function closeAllDropdowns(){
+  document.querySelectorAll('.swap-dropdown').forEach(el=>{el.style.display='none';el.innerHTML='';});
 }
 
-function selSwap(idx){selectedSwapIdx=idx;document.querySelectorAll('.swap-option').forEach((el,i)=>el.classList.toggle('selected',i===idx));}
+function toggleSwapDropdown(e,menuIdx,mealIdx,itemIdx){
+  e.stopPropagation();
+  const ddId='dd-'+menuIdx+'-'+mealIdx+'-'+itemIdx;
+  const dd=document.getElementById(ddId);
+  const isOpen=dd.style.display==='block';
+  closeAllDropdowns();
+  if(isOpen)return;
+  const opts=[];
+  generatedMenus.forEach((menu,mIdx)=>{
+    if(mIdx===menuIdx)return;
+    const meal=menu.meals[mealIdx];
+    if(!meal)return;
+    const item=meal.items[itemIdx];
+    if(!item)return;
+    opts.push({mIdx,food:item.food,qty:item.qty,kcal:item.kcal});
+  });
+  dd.innerHTML=opts.length===0
+    ?'<div class="swap-dd-empty">Sem alternativas disponíveis</div>'
+    :opts.map(o=>`<div class="swap-dd-item" onclick="applySwap(event,${menuIdx},${mealIdx},${itemIdx},'${o.food.replace(/'/g,"\\'")}','${o.qty}',${o.kcal})"><span class="swap-dd-food">${o.food}</span><span class="swap-dd-detail">${o.qty} · ${o.kcal} kcal</span><span class="swap-dd-src">Opção ${o.mIdx+1}</span></div>`).join('');
+  dd.style.display='block';
+}
 
-function confirmSwap(){
-  if(selectedSwapIdx===null){alert('Selecione um substituto');return;}
-  const alts=SWAP_DB[swapContext.foodName]||SWAP_DB['default'];
-  const newFood=alts[selectedSwapIdx].name;
-  const key=btoa(swapContext.foodName).replace(/=/g,'');
-  const el=document.getElementById('fn-'+swapContext.menuIdx+'-'+key);
+function applySwap(e,menuIdx,mealIdx,itemIdx,newFood,newQty,newKcal){
+  e.stopPropagation();
+  const el=document.getElementById('fn-'+menuIdx+'-'+mealIdx+'-'+itemIdx);
   if(el){el.textContent=newFood;el.style.color='var(--accent-2)';el.style.fontWeight='500';}
-  generatedMenus[swapContext.menuIdx].meals.forEach(mb=>mb.items.forEach(item=>{if(item.food===swapContext.foodName)item.food=newFood;}));
-  updateSelInfo();closeSwap();
+  const item=generatedMenus[menuIdx]?.meals[mealIdx]?.items[itemIdx];
+  if(item){item.food=newFood;item.qty=newQty;item.kcal=newKcal;}
+  closeAllDropdowns();
+  updateSelInfo();
 }
 
-function closeSwap(){document.getElementById('swap-modal').classList.remove('open');swapContext=null;selectedSwapIdx=null;}
+document.addEventListener('click',closeAllDropdowns);
 
 function updatePDFSummary(){
   if(!planData)return;
