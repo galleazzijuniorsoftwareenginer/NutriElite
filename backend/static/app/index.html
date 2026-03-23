@@ -691,7 +691,7 @@ async function generateMenu(){
         meal: r.refeicao,
         items: r.itens.map(i => ({
           food: i.alimento,
-          qty: i.quantidade_g + 'g',
+          qty: (i.quantidade_g || '') + 'g',
           kcal: i.kcal
         }))
       })),
