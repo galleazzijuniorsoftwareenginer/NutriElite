@@ -685,21 +685,22 @@ async function generateMenu(){
       headers: {'Authorization': 'Bearer '+token}
     });
     const data = await res.json();
+    console.log('AI RESPONSE:', JSON.stringify(data).slice(0,500));
     generatedMenus = data.opciones.map((op, idx) => ({
       name: op.nombre,
-      meals: op.refeicoes.map(r => ({
+      meals: (op.refeicoes || []).map(r => ({
         meal: r.refeicao,
-        items: r.itens.map(i => ({
+        items: (r.itens || []).map(i => ({
           food: i.alimento,
           qty: i.quantidade_g ? i.quantidade_g + 'g' : (i.qty || '100g'),
           kcal: i.kcal
         }))
       })),
       macros: {
-        prot: op.macros.proteina_g,
-        carb: op.macros.carb_g,
-        fat: op.macros.gordura_g,
-        kcal: op.macros.kcal_total
+        prot: op.macros ? op.macros.proteina_g : 0,
+        carb: op.macros ? op.macros.carb_g : 0,
+        fat: op.macros ? op.macros.gordura_g : 0,
+        kcal: op.macros ? op.macros.kcal_total : 0
       }
     }));
   } catch(e) {

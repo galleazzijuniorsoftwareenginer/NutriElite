@@ -9,6 +9,9 @@ services:
     volumes:
       - .:/app
     restart: always
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/nutrielite
 
   db:
     image: postgres:15
