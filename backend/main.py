@@ -1,7 +1,5 @@
-cat > backend/main.py << 'EOF'
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
 from backend.routes.calculator import router as calculator_router
 from backend.routes.auth import router as auth_router
 from backend.routes.food import router as food_router
@@ -45,4 +43,3 @@ async def serve_app(full_path: str):
 @app.get("/")
 def root():
     return {"message": "NutriElite CLEAN RUNNING"}
-EOF
