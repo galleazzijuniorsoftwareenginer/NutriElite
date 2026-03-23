@@ -185,4 +185,6 @@ def generate_ai_menu_endpoint(
         menu = generate_ai_menu(plan_data, audit)
         return menu
     except Exception as e:
+        import traceback
+        print("ERRO MENU AI:", traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Erro ao gerar menu: {str(e)}")
