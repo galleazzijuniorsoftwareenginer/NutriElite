@@ -243,7 +243,7 @@
     <nav class="topbar-nav">
       <button class="topbar-btn active" id="nav-inicio" onclick="showSection('inicio')">Inicio</button>
       <button class="topbar-btn" id="nav-pacientes" onclick="showSection('pacientes')">Mis pacientes</button>
-      <button class="topbar-btn topbar-btn-new" id="nav-nuevo" onclick="showSection('nuevo')">+ Nuevo plan</button>
+      <button class="topbar-btn topbar-btn-new" id="nav-nuevo" onclick="showNewPlanModal()">+ Nuevo plan</button>
       <button class="topbar-btn" id="nav-historial" onclick="showSection('historial')">Historial</button>
       <button class="topbar-btn" id="nav-plantillas" onclick="showSection('plantillas')">Plantillas</button>
       <button class="topbar-btn" id="nav-perfil" onclick="showSection('perfil')">Perfil</button>
@@ -733,6 +733,80 @@ async function generatePlan(){
   document.getElementById('ins-imc-class').textContent=imcClass;
   document.getElementById('ins-imc-val').textContent='IMC: '+imc.toFixed(2);
   unlockStep(3);recalcDC();
+}
+
+// ===== MODAL NUEVO PLAN =====
+async function showNewPlanModal(){
+  // Carrega pacientes se ainda não carregados
+  if(!allPatients.length && token){
+    const res = await fetch(API+'/patients', {headers:{'Authorization':'Bearer '+token}});
+    allPatients = await res.json();
+  }
+  renderModalPatients(allPatients);
+  document.getElementById('modal-select-patient').style.display='flex';
+  document.getElementById('modal-patient-search').value='';
+}
+
+function renderModalPatients(list){
+  const wrap = document.getElementById('modal-patient-list');
+  if(!list.length){
+    wrap.innerHTML='<div style="padding:16px;text-align:center;font-size:12px;color:var(--text-3);">Sin pacientes. Crea uno nuevo.</div>';
+    return;
+  }
+  wrap.innerHTML = list.map(p=>`
+    <div onclick="selectPatientForPlan(${p.id},'${p.name.replace(/'/g,"\'")}','${(p.email||'').replace(/'/g,"\'")}','${(p.phone||'').replace(/'/g,"\'")}','${p.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}')"
+      style="padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);transition:background .1s;"
+      onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background=''">
+      <div style="width:32px;height:32px;border-radius:50%;background:var(--accent-light);color:var(--accent);font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${p.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}</div>
+      <div>
+        <div style="font-size:13px;font-weight:500;">${p.name}</div>
+        <div style="font-size:11px;color:var(--text-3);">${p.total_plans} plan(es) · ${p.email||''}</div>
+      </div>
+    </div>`).join('');
+}
+
+function filterModalPatients(){
+  const q = document.getElementById('modal-patient-search').value.toLowerCase();
+  renderModalPatients(allPatients.filter(p=>p.name.toLowerCase().includes(q)||(p.email||'').toLowerCase().includes(q)));
+}
+
+function selectPatientForPlan(id, name, email, phone){
+  currentPatientId = id;
+  closeSelectPatient();
+  showSection('nuevo');
+  setTimeout(()=>{
+    const nm = document.getElementById('name');
+    const em = document.getElementById('email');
+    const ph = document.getElementById('phone');
+    if(nm) nm.value = name;
+    if(em) em.value = email;
+    if(ph) ph.value = phone;
+  }, 150);
+}
+
+function startPlanWithoutPatient(){
+  currentPatientId = null;
+  closeSelectPatient();
+  showSection('nuevo');
+}
+
+function closeSelectPatient(){
+  document.getElementById('modal-select-patient').style.display='none';
+}
+
+async function quickAddAndStart(){
+  const name = prompt('Nombre del nuevo paciente:');
+  if(!name || !name.trim()) return;
+  const res = await fetch(API+'/patients', {
+    method:'POST',
+    headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+    body: JSON.stringify({name: name.trim(), email:'', phone:''})
+  });
+  if(res.ok){
+    const p = await res.json();
+    allPatients = [];
+    selectPatientForPlan(p.id, p.name, '', '');
+  }
 }
 
 // ===== PACIENTES =====
@@ -1407,5 +1481,28 @@ window.selectOpt=function(idx){
 
 showSidePanel(2);
 </script>
+<!-- MODAL_PLACEHOLDER -->
+<div id="modal-select-patient" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:300;align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border-radius:var(--radius-lg);padding:24px;width:440px;max-width:90vw;">
+    <div style="font-size:15px;font-weight:600;margin-bottom:6px;">Nuevo plan — ¿Para quién?</div>
+    <div style="font-size:12px;color:var(--text-2);margin-bottom:16px;">Selecciona un paciente existente o crea uno nuevo</div>
+    
+    <div style="position:relative;margin-bottom:12px;">
+      <input id="modal-patient-search" type="text" placeholder="Buscar paciente por nombre..." 
+        style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:'DM Sans',sans-serif;"
+        oninput="filterModalPatients()">
+    </div>
+    
+    <div id="modal-patient-list" style="max-height:220px;overflow-y:auto;margin-bottom:12px;border:1px solid var(--border);border-radius:var(--radius);"></div>
+    
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-secondary btn-full" onclick="closeSelectPatient()">Cancelar</button>
+      <button class="btn btn-secondary btn-full" onclick="startPlanWithoutPatient()">Sin paciente</button>
+      <button class="btn btn-primary btn-full" onclick="quickAddAndStart()">+ Nuevo paciente</button>
+    </div>
+  </div>
+</div>
+
+
 </body>
 </html>
