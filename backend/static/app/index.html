@@ -50,6 +50,8 @@
   .patient-name{font-size:13px;font-weight:600;color:var(--text);}
   .patient-meta{font-size:11px;color:var(--text-3);margin-top:2px;}
   .patient-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:var(--accent-light);color:var(--accent);}
+  .profile-menu-item{padding:7px 10px;font-size:12px;border-radius:6px;cursor:pointer;color:var(--text);transition:background .1s;}
+  .profile-menu-item:hover{background:var(--bg);}
   .coming-soon{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:12px;color:var(--text-3);}
   .coming-soon-icon{font-size:40px;}
   .coming-soon h2{font-size:16px;font-weight:600;color:var(--text-2);}
@@ -249,9 +251,25 @@
   </div>
   <div class="topbar-right">
     <button class="topbar-btn-pro" onclick="showSection('upgrade')">⭐ Pro</button>
-    <div class="avatar" id="avatar-initials">--</div>
-    <span id="header-username" style="font-size:12px;color:var(--text-2)">—</span>
-    <button class="btn btn-secondary" style="padding:4px 10px;font-size:11px" onclick="logout()">Salir</button>
+    <div style="position:relative;" id="profile-menu-wrap">
+      <button onclick="toggleProfileMenu()" style="display:flex;align-items:center;gap:8px;background:#2a2a27;border:none;border-radius:8px;padding:5px 10px;cursor:pointer;color:white;">
+        <div class="avatar" id="avatar-initials" style="width:26px;height:26px;font-size:11px;background:#1a6b4a;color:white;">--</div>
+        <span style="font-size:10px;color:#6b6860;">▼</span>
+      </button>
+      <span id="header-username" style="display:none;">—</span>
+      <div id="profile-dropdown" style="display:none;position:absolute;right:0;top:calc(100% + 6px);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);min-width:180px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:200;overflow:hidden;">
+        <div style="padding:12px 14px;border-bottom:1px solid var(--border);">
+          <div style="font-size:12px;font-weight:600;color:var(--text);" id="dropdown-username">—</div>
+          <div style="font-size:10px;color:var(--text-3);margin-top:2px;">Nutricionista</div>
+        </div>
+        <div style="padding:6px;">
+          <div class="profile-menu-item" onclick="closeProfileMenu();showSection('perfil')">👤 Mi perfil</div>
+          <div class="profile-menu-item" onclick="closeProfileMenu();showSection('upgrade')">⭐ Planes y upgrades</div>
+          <div style="height:1px;background:var(--border);margin:4px 0;"></div>
+          <div class="profile-menu-item" style="color:var(--danger);" onclick="logout()">🚪 Salir</div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -626,6 +644,19 @@ function switchTab(tab){
   document.getElementById('tab-register').classList.toggle('active',tab==='register');
 }
 
+function toggleProfileMenu(){
+  const d = document.getElementById('profile-dropdown');
+  d.style.display = d.style.display==='block' ? 'none' : 'block';
+}
+function closeProfileMenu(){
+  document.getElementById('profile-dropdown').style.display='none';
+}
+document.addEventListener('click', function(e){
+  if(!document.getElementById('profile-menu-wrap')?.contains(e.target)){
+    closeProfileMenu();
+  }
+});
+
 function logout(){
   token=null;planId=null;planData=null;currentStep=2;maxStep=2;auditData=null;generatedMenus=[];
   document.getElementById('clinical-area').style.display='none';
@@ -675,6 +706,7 @@ async function login(){
   const user=document.getElementById('login_user').value;
   document.getElementById('header-username').textContent=user;
   document.getElementById('avatar-initials').textContent=user.substring(0,2).toUpperCase();
+  const du=document.getElementById('dropdown-username'); if(du) du.textContent=user;
   document.getElementById('auth-screen').style.display='none';
   document.getElementById('clinical-area').style.display='block';
   unlockStep(2);showPanel(2);
