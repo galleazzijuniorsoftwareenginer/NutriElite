@@ -13,6 +13,25 @@ import os
 app = FastAPI()
 
 Base.metadata.create_all(bind=engine)
+
+# Migration automática
+from sqlalchemy import text
+with engine.connect() as conn:
+    conn.execute(text("""
+        CREATE TABLE IF NOT EXISTS patients (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR,
+            email VARCHAR,
+            phone VARCHAR,
+            user_id INTEGER REFERENCES users(id),
+            created_at TIMESTAMPTZ DEFAULT NOW()
+        )
+    """))
+    conn.execute(text("""
+        ALTER TABLE plans ADD COLUMN IF NOT EXISTS patient_id INTEGER REFERENCES patients(id)
+    """))
+    conn.commit()
+
 seed()
 seed_default_user()
 
