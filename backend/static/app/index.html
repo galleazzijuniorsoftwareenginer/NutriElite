@@ -277,6 +277,16 @@
         <div class="dc-total-item"><div class="dc-total-val" id="dc-peso">—</div><div class="dc-total-label">peso</div></div>
         <div class="dc-total-item"><div class="dc-total-val" id="dc-imc">—</div><div class="dc-total-label">IMC</div></div>
       </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;padding:12px 14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);">
+        <div style="font-size:12px;font-weight:500;color:var(--text-2);flex:1;">Ajuste calórico clínico <span style="color:var(--text-3);font-weight:400">(−500 a +500 kcal)</span></div>
+        <input type="number" id="kcal-adjustment" value="0" min="-500" max="500" step="50"
+          style="width:90px;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:'DM Sans',sans-serif;text-align:center;"
+          oninput="applyKcalAdjustment()">
+        <div style="font-size:12px;color:var(--text-3)">kcal</div>
+        <div style="font-size:12px;font-weight:600;" id="kcal-adjusted-display">—</div>
+      </div>
+      <div class="dc-total-bar" style="display:none">
+      </div>
       <div class="dc-macro-grid">
         <div class="dc-macro-card carb">
           <div class="dc-macro-label">Carboidratos</div>
@@ -546,7 +556,9 @@ async function generatePlan(){
 }
 
 function recalcDC(){
-  const get=planData?planData.GET:2000;
+  const base=planData?planData.GET:2000;
+  const adj=parseInt(document.getElementById('kcal-adjustment')?document.getElementById('kcal-adjustment').value:0)||0;
+  const get=base+Math.max(-500,Math.min(500,adj));
   const peso=planData?parseFloat(document.getElementById('weight').value):70;
   const carbPct=parseFloat(document.getElementById('pct-carb').value)||0;
   const protPct=parseFloat(document.getElementById('pct-prot').value)||0;
@@ -583,7 +595,17 @@ function recalcDC(){
 async function viewAudit(){
   if(!planId)return;
   document.getElementById('loading-audit').classList.add('visible');
-  const res=await fetch(API+'/plans/'+planId+'/audit',{headers:{'Authorization':'Bearer '+token}});
+  const base=planData?planData.GET:2000;
+  const adj=parseInt(document.getElementById('kcal-adjustment')?document.getElementById('kcal-adjustment').value:0)||0;
+  const get=base+Math.max(-500,Math.min(500,adj));
+  const carbPct=parseFloat(document.getElementById('pct-carb').value)||0;
+  const protPct=parseFloat(document.getElementById('pct-prot').value)||0;
+  const fatPct=parseFloat(document.getElementById('pct-fat').value)||0;
+  const gCarb=(get*carbPct/100)/4;
+  const gProt=(get*protPct/100)/4;
+  const gFat=(get*fatPct/100)/9;
+  const params=`?protein_g=${gProt.toFixed(1)}&carbs_g=${gCarb.toFixed(1)}&fats_g=${gFat.toFixed(1)}`;
+  const res=await fetch(API+'/plans/'+planId+'/audit'+params,{headers:{'Authorization':'Bearer '+token}});
   document.getElementById('loading-audit').classList.remove('visible');
   auditData=await res.json();
   const p=auditData.totals.protein_g,c=auditData.totals.carbs_g,f=auditData.totals.fats_g;

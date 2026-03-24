@@ -188,3 +188,38 @@ def generate_ai_menu_endpoint(
         import traceback
         print("ERRO MENU AI:", traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Erro ao gerar menu: {str(e)}")
+
+
+# ---------- AUDIT WITH CUSTOM MACROS ----------
+@router.get("/plans/{plan_id}/audit")
+def get_audit(
+    plan_id: int,
+    db: Session = Depends(get_db),
+    token: dict = Depends(verify_token),
+    protein_g: float = None,
+    carbs_g: float = None,
+    fats_g: float = None
+):
+    from backend.services.smae_calculation_service import SMAECalculationService
+    import copy
+
+    username = token["sub"]
+    db_user = db.query(User).filter(User.username == username).first()
+    plan = db.query(Plan).filter(
+        Plan.id == plan_id,
+        Plan.user_id == db_user.id
+    ).first()
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plano não encontrado")
+
+    if protein_g is not None and carbs_g is not None and fats_g is not None:
+        from backend.models import Plan as PlanModel
+        override = PlanModel()
+        override.__dict__.update({k: v for k, v in plan.__dict__.items() if not k.startswith('_')})
+        override.protein = protein_g
+        override.carbs = carbs_g
+        override.fats = fats_g
+        override.get = protein_g * 4 + carbs_g * 4 + fats_g * 9
+        return SMAECalculationService.calculate(plan_id, db, override_plan=override)
+
+    return SMAECalculationService.calculate(plan_id, db)
