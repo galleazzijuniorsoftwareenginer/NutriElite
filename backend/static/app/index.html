@@ -23,7 +23,31 @@
   .logo-dot{width:8px;height:8px;background:var(--accent);border-radius:50%;}
   .header-user{font-size:13px;color:var(--text-2);display:flex;align-items:center;gap:8px;}
   .avatar{width:28px;height:28px;background:var(--accent-light);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--accent);}
-  .stepbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;height:48px;display:flex;align-items:center;gap:0;position:sticky;top:56px;z-index:99;}
+  /* TOPBAR */
+  .topbar{background:#1a1916;padding:0 24px;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;gap:16px;}
+  .topbar-left{display:flex;align-items:center;gap:16px;flex:1;}
+  .topbar-right{display:flex;align-items:center;gap:8px;}
+  .topbar .logo{color:white;font-size:15px;}
+  .topbar .logo-dot{background:#1a6b4a;}
+  .topbar-nav{display:flex;align-items:center;gap:2px;}
+  .topbar-btn{background:transparent;border:none;color:#9e9b95;font-size:12px;font-weight:500;padding:6px 11px;border-radius:6px;cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif;white-space:nowrap;}
+  .topbar-btn:hover{background:#2a2a27;color:white;}
+  .topbar-btn.active{background:#2a2a27;color:white;}
+  .topbar-btn-new{background:#1a6b4a !important;color:white !important;font-weight:600;}
+  .topbar-btn-new:hover{background:#15573c !important;}
+  .topbar-btn-pro{background:linear-gradient(135deg,#92650a,#c9922a);border:none;color:white;font-size:11px;font-weight:600;padding:5px 12px;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+  .topbar-btn-pro:hover{opacity:.9;}
+  .topbar .avatar{background:#2a2a27;color:#9e9b95;}
+  .topbar #header-username{color:#9e9b95 !important;}
+  /* Seções */
+  .section-area{display:none;}
+  .section-area.active{display:block;}
+  /* Placeholder seções futuras */
+  .coming-soon{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:12px;color:var(--text-3);}
+  .coming-soon-icon{font-size:40px;}
+  .coming-soon h2{font-size:16px;font-weight:600;color:var(--text-2);}
+  .coming-soon p{font-size:13px;text-align:center;max-width:300px;line-height:1.6;}
+  .stepbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;height:48px;display:flex;align-items:center;gap:0;position:sticky;top:54px;z-index:99;}
   .stepbar-arrow{width:32px;height:32px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--text-2);transition:all .15s;flex-shrink:0;}
   .stepbar-arrow:hover:not(:disabled){background:var(--bg);color:var(--text);}
   .stepbar-arrow:disabled{opacity:.3;cursor:not-allowed;}
@@ -204,15 +228,28 @@
 
 <!-- ÁREA CLÍNICA -->
 <div id="clinical-area" style="display:none;">
-<div class="header">
-  <div class="logo"><div class="logo-dot"></div>NutriElite</div>
-  <div class="header-user">
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo"><div class="logo-dot"></div>NutriElite</div>
+    <nav class="topbar-nav">
+      <button class="topbar-btn active" id="nav-inicio" onclick="showSection('inicio')">Inicio</button>
+      <button class="topbar-btn" id="nav-pacientes" onclick="showSection('pacientes')">Mis pacientes</button>
+      <button class="topbar-btn topbar-btn-new" id="nav-nuevo" onclick="showSection('nuevo')">+ Nuevo plan</button>
+      <button class="topbar-btn" id="nav-historial" onclick="showSection('historial')">Historial</button>
+      <button class="topbar-btn" id="nav-plantillas" onclick="showSection('plantillas')">Plantillas</button>
+      <button class="topbar-btn" id="nav-perfil" onclick="showSection('perfil')">Perfil</button>
+    </nav>
+  </div>
+  <div class="topbar-right">
+    <button class="topbar-btn-pro" onclick="showSection('upgrade')">⭐ Pro</button>
     <div class="avatar" id="avatar-initials">--</div>
-    <span id="header-username">—</span>
-    <button class="btn btn-secondary" style="padding:4px 10px;font-size:11px;margin-left:8px" onclick="logout()">Sair</button>
+    <span id="header-username" style="font-size:12px;color:var(--text-2)">—</span>
+    <button class="btn btn-secondary" style="padding:4px 10px;font-size:11px" onclick="logout()">Salir</button>
   </div>
 </div>
-<div class="stepbar">
+
+<!-- Stepbar do wizard — só aparece na seção "nuevo" -->
+<div class="stepbar" id="wizard-stepbar" style="display:none">
   <button class="stepbar-arrow" id="btn-prev" onclick="navigateStep(-1)" disabled>&#8592;</button>
   <div class="stepbar-steps">
     <div class="stepbar-item active" data-step="2" onclick="goToStep(2)"><div class="stepbar-num">1</div><span>Paciente</span></div>
@@ -221,13 +258,13 @@
     <div class="stepbar-sep">›</div>
     <div class="stepbar-item locked" data-step="4" onclick="goToStep(4)"><div class="stepbar-num">3</div><span>Auditoría</span></div>
     <div class="stepbar-sep">›</div>
-    <div class="stepbar-item locked" data-step="5" onclick="goToStep(5)"><div class="stepbar-num">4</div><span>Menu IA</span></div>
+    <div class="stepbar-item locked" data-step="5" onclick="goToStep(5)"><div class="stepbar-num">4</div><span>Menú IA</span></div>
     <div class="stepbar-sep">›</div>
     <div class="stepbar-item locked" data-step="6" onclick="goToStep(6)"><div class="stepbar-num">5</div><span>PDF</span></div>
   </div>
   <button class="stepbar-arrow" id="btn-next" onclick="navigateStep(1)" disabled>&#8594;</button>
 </div>
-<div id="layout-row" style="display:flex;align-items:flex-start;width:100%;">
+<div id="section-nuevo" class="section-area active"><div id="layout-row" style="display:flex;align-items:flex-start;width:100%;">
 <div class="main" style="flex:1;min-width:0;max-width:calc(100vw - 320px);padding:28px 32px;">
 
   <!-- 2: PATIENT -->
@@ -463,6 +500,62 @@
 </div>
 
 </div><!-- /flex-row -->
+</div><!-- /section-nuevo -->
+
+<!-- SECTION: INICIO -->
+<div id="section-inicio" class="section-area">
+  <div class="coming-soon">
+    <div class="coming-soon-icon">🏠</div>
+    <h2>Inicio</h2>
+    <p>Dashboard con resumen del día, pacientes recientes y accesos rápidos. Disponible en Sprint 4.</p>
+  </div>
+</div>
+
+<!-- SECTION: PACIENTES -->
+<div id="section-pacientes" class="section-area">
+  <div class="coming-soon">
+    <div class="coming-soon-icon">👥</div>
+    <h2>Mis pacientes</h2>
+    <p>Lista de pacientes con búsqueda, historial de planes y próximas citas. Disponible en Sprint 4.</p>
+  </div>
+</div>
+
+<!-- SECTION: HISTORIAL -->
+<div id="section-historial" class="section-area">
+  <div class="coming-soon">
+    <div class="coming-soon-icon">📋</div>
+    <h2>Historial de planes</h2>
+    <p>Todos los planes generados, ordenados por fecha. Reutiliza sin rehacer. Disponible en Sprint 4.</p>
+  </div>
+</div>
+
+<!-- SECTION: PLANTILLAS -->
+<div id="section-plantillas" class="section-area">
+  <div class="coming-soon">
+    <div class="coming-soon-icon">📌</div>
+    <h2>Plantillas</h2>
+    <p>Guarda planes como plantillas y reutilízalos para pacientes con perfil similar. Disponible en Sprint 4.</p>
+  </div>
+</div>
+
+<!-- SECTION: PERFIL -->
+<div id="section-perfil" class="section-area">
+  <div class="coming-soon">
+    <div class="coming-soon-icon">👤</div>
+    <h2>Perfil</h2>
+    <p>Datos del nutricionista, cédula profesional y logo para el PDF clínico. Disponible en Sprint 3.</p>
+  </div>
+</div>
+
+<!-- SECTION: UPGRADE -->
+<div id="section-upgrade" class="section-area">
+  <div class="coming-soon">
+    <div class="coming-soon-icon">⭐</div>
+    <h2>Planes NutriElite</h2>
+    <p>Free · Pro · Clínica — desbloquea planes ilimitados, branding en PDF y múltiples nutricionistas. Disponible en Sprint 4.</p>
+  </div>
+</div>
+
 </div><!-- /clinical-area -->
 
 
@@ -553,6 +646,28 @@ async function generatePlan(){
   document.getElementById('ins-imc-class').textContent=imcClass;
   document.getElementById('ins-imc-val').textContent='IMC: '+imc.toFixed(2);
   unlockStep(3);recalcDC();
+}
+
+function showSection(name){
+  document.querySelectorAll('.section-area').forEach(el=>el.classList.remove('active'));
+  const sec=document.getElementById('section-'+name);
+  if(sec)sec.classList.add('active');
+  const sb=document.getElementById('wizard-stepbar');
+  if(sb)sb.style.display=name==='nuevo'?'flex':'none';
+  document.querySelectorAll('.topbar-btn').forEach(b=>b.classList.remove('active'));
+  const btn=document.getElementById('nav-'+name);
+  if(btn)btn.classList.add('active');
+}
+
+function applyKcalAdjustment(){
+  const adj=parseInt(document.getElementById('kcal-adjustment').value)||0;
+  const clamped=Math.max(-500,Math.min(500,adj));
+  document.getElementById('kcal-adjustment').value=clamped;
+  const base=planData?planData.GET:2000;
+  const adjusted=base+clamped;
+  document.getElementById('kcal-adjusted-display').textContent=adjusted.toFixed(0)+' kcal GET ajustado';
+  document.getElementById('kcal-adjusted-display').style.color=clamped<0?'var(--danger)':clamped>0?'var(--accent)':'var(--text-2)';
+  recalcDC();
 }
 
 function recalcDC(){
