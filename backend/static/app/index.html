@@ -219,7 +219,7 @@
     <div class="stepbar-sep">›</div>
     <div class="stepbar-item locked" data-step="3" onclick="goToStep(3)"><div class="stepbar-num">2</div><span>Dietocálculo</span></div>
     <div class="stepbar-sep">›</div>
-    <div class="stepbar-item locked" data-step="4" onclick="goToStep(4)"><div class="stepbar-num">3</div><span>Auditoria</span></div>
+    <div class="stepbar-item locked" data-step="4" onclick="goToStep(4)"><div class="stepbar-num">3</div><span>Auditoría</span></div>
     <div class="stepbar-sep">›</div>
     <div class="stepbar-item locked" data-step="5" onclick="goToStep(5)"><div class="stepbar-num">4</div><span>Menu IA</span></div>
     <div class="stepbar-sep">›</div>
@@ -235,32 +235,32 @@
     <div class="card">
       <div class="card-title">Dados do paciente</div>
       <div class="form-grid" style="margin-bottom:12px">
-        <div class="field"><label>Nome completo</label><input id="name" placeholder="Juan Pérez"></div>
+        <div class="field"><label>Nombre completo</label><input id="name" placeholder="Juan Pérez"></div>
         <div class="field"><label>Email</label><input id="email" placeholder="juan@email.com"></div>
         <div class="field"><label>Telefone</label><input id="phone" placeholder="+52 664 ..."></div>
         <div class="field"><label>Peso (kg)</label><input id="weight" type="number" placeholder="75"></div>
         <div class="field"><label>Altura (cm)</label><input id="height" type="number" placeholder="175"></div>
-        <div class="field"><label>Idade</label><input id="age" type="number" placeholder="28"></div>
+        <div class="field"><label>Edad</label><input id="age" type="number" placeholder="28"></div>
       </div>
       <div class="form-grid-3" style="margin-bottom:16px">
-        <div class="field"><label>Gênero</label><select id="gender"><option value="male">Masculino</option><option value="female">Feminino</option></select></div>
-        <div class="field"><label>Atividade</label><select id="activity"><option value="1.2">Sedentário</option><option value="1.375">Leve</option><option value="1.55">Moderado</option><option value="1.725">Ativo</option><option value="1.9">Muito ativo</option><option value="3.0">Atleta</option></select></div>
-        <div class="field"><label>Objetivo</label><select id="goal"><option value="cut">Cutting</option><option value="maintenance">Manutenção</option><option value="bulk">Bulk</option></select></div>
+        <div class="field"><label>Género</label><select id="gender"><option value="male">Masculino</option><option value="female">Femenino</option></select></div>
+        <div class="field"><label>Actividad</label><select id="activity"><option value="1.2">Sedentario</option><option value="1.375">Ligero</option><option value="1.55">Moderado</option><option value="1.725">Activo</option><option value="1.9">Muy activo</option><option value="3.0">Atleta</option></select></div>
+        <div class="field"><label>Objetivo</label><select id="goal"><option value="cut">Cutting</option><option value="maintenance">Mantenimiento</option><option value="bulk">Bulk</option></select></div>
       </div>
       <div class="form-grid" style="margin-bottom:16px">
         <div class="field"><label>Fórmula</label><select id="formula"><option value="mifflin">Mifflin-St Jeor</option><option value="harris">Harris-Benedict</option></select></div>
       </div>
       <div class="loading-inline" id="loading-plan"><div class="spinner"></div> Calculando...</div>
-      <button class="btn btn-primary btn-full" onclick="generatePlan()">Calcular plano metabólico</button>
+      <button class="btn btn-primary btn-full" onclick="generatePlan()">Calcular plan metabólico</button>
       <div class="plan-result" id="plan-result">
-        <div class="plan-result-title">Plano gerado com sucesso!</div>
+        <div class="plan-result-title">¡Plan generado con éxito!</div>
         <div class="plan-metrics">
           <div class="plan-metric"><div class="plan-metric-val" id="res-tmb">—</div><div class="plan-metric-label">TMB (kcal)</div></div>
           <div class="plan-metric"><div class="plan-metric-val" id="res-get">—</div><div class="plan-metric-label">GET (kcal)</div></div>
           <div class="plan-metric"><div class="plan-metric-val" id="res-id">—</div><div class="plan-metric-label">Plan ID</div></div>
         </div>
         <div style="margin-top:12px;text-align:right;">
-          <button class="btn btn-primary" style="padding:8px 16px;font-size:12px" onclick="showPanel(3)">Avançar para Dietocálculo →</button>
+          <button class="btn btn-primary" style="padding:8px 16px;font-size:12px" onclick="showPanel(3)">Avanzar a Dietocálculo →</button>
         </div>
       </div>
     </div>
@@ -270,10 +270,10 @@
   <div class="step-panel" id="panel-3">
     <div class="card">
       <div class="card-title">Dietocálculo <span class="badge">ajuste clínico</span></div>
-      <p style="font-size:12px;color:var(--text-2);margin-bottom:16px;">Ajuste a distribuição de macronutrientes. Valores atualizam em tempo real.</p>
+      <p style="font-size:12px;color:var(--text-2);margin-bottom:16px;">Ajusta la distribución de macronutrientes. Valores se actualizan en tiempo real.</p>
       <div class="dc-total-bar">
-        <div class="dc-total-item"><div class="dc-total-val" id="dc-kcal">—</div><div class="dc-total-label">kcal totais</div></div>
-        <div class="dc-total-item"><div class="dc-total-val" id="dc-pct-sum" style="color:var(--warn)">0%</div><div class="dc-total-label">soma %</div></div>
+        <div class="dc-total-item"><div class="dc-total-val" id="dc-kcal">—</div><div class="dc-total-label">kcal totales</div></div>
+        <div class="dc-total-item"><div class="dc-total-val" id="dc-pct-sum" style="color:var(--warn)">0%</div><div class="dc-total-label">suma %</div></div>
         <div class="dc-total-item"><div class="dc-total-val" id="dc-peso">—</div><div class="dc-total-label">peso</div></div>
         <div class="dc-total-item"><div class="dc-total-val" id="dc-imc">—</div><div class="dc-total-label">IMC</div></div>
       </div>
@@ -289,7 +289,7 @@
       </div>
       <div class="dc-macro-grid">
         <div class="dc-macro-card carb">
-          <div class="dc-macro-label">Carboidratos</div>
+          <div class="dc-macro-label">Carbohidratos</div>
           <div class="dc-pct-input-row"><input class="dc-pct-input" id="pct-carb" type="number" value="50" min="0" max="100" oninput="recalcDC()"><span class="dc-pct-sym">%</span></div>
           <div class="dc-grams" id="dc-g-carb">— g</div>
           <div class="dc-sub" id="dc-gkg-carb">— g/kg</div>
@@ -305,7 +305,7 @@
           <div class="dc-bar-track"><div class="dc-bar-fill prot" id="bar-prot" style="width:30%"></div></div>
         </div>
         <div class="dc-macro-card fat">
-          <div class="dc-macro-label">Gorduras</div>
+          <div class="dc-macro-label">Grasas</div>
           <div class="dc-pct-input-row"><input class="dc-pct-input" id="pct-fat" type="number" value="20" min="0" max="100" oninput="recalcDC()"><span class="dc-pct-sym">%</span></div>
           <div class="dc-grams" id="dc-g-fat">— g</div>
           <div class="dc-sub" id="dc-gkg-fat">— g/kg</div>
@@ -316,15 +316,15 @@
       <div class="dc-alert" id="dc-alert"></div>
       <div class="section-title">Indicadores clínicos</div>
       <div class="insights-grid">
-        <div class="insight-card"><div class="insight-label">Déficit / Superávit calórico</div><div class="insight-val" id="ins-deficit">—</div><div class="insight-sub">em relação ao GET</div></div>
+        <div class="insight-card"><div class="insight-label">Déficit / Superávit calórico</div><div class="insight-val" id="ins-deficit">—</div><div class="insight-sub">en relación al GET</div></div>
         <div class="insight-card"><div class="insight-label">Proteína por kg</div><div class="insight-val" id="ins-prot-kg">—</div><div class="insight-sub">recomendado: 1.6–2.2 g/kg</div></div>
-        <div class="insight-card"><div class="insight-label">Relação prot/carb</div><div class="insight-val" id="ins-ratio">—</div><div class="insight-sub">cutting: acima de 0.4</div></div>
+        <div class="insight-card"><div class="insight-label">Relação prot/carb</div><div class="insight-val" id="ins-ratio">—</div><div class="insight-sub">cutting: arriba de 0.4</div></div>
         <div class="insight-card"><div class="insight-label">IMC</div><div class="insight-val" id="ins-imc-class">—</div><div class="insight-sub" id="ins-imc-val">—</div></div>
       </div>
-      <div class="loading-inline" id="loading-audit"><div class="spinner"></div> Gerando auditoria...</div>
+      <div class="loading-inline" id="loading-audit"><div class="spinner"></div> Generando auditoría...</div>
       <div style="display:flex;gap:10px;margin-top:4px;">
         <button class="btn btn-secondary" style="padding:10px 16px;font-size:12px" onclick="showPanel(2)">← Paciente</button>
-        <button class="btn btn-primary btn-full" id="btn-audit" onclick="viewAudit()" disabled>Gerar auditoria SMAE com esses %</button>
+        <button class="btn btn-primary btn-full" id="btn-audit" onclick="viewAudit()" disabled>Generar auditoría SMAE con estos %</button>
       </div>
     </div>
   </div>
@@ -332,13 +332,13 @@
   <!-- 4: AUDIT -->
   <div class="step-panel" id="panel-4">
     <div class="card">
-      <div class="card-title">Auditoria nutricional</div>
+      <div class="card-title">Auditoría nutricional</div>
       <div class="macro-summary" id="macro-summary"></div>
-      <div class="section-title">Distribuição SMAE</div>
+      <div class="section-title">Distribución SMAE</div>
       <div id="smae-table-wrap"></div>
       <div style="display:flex;justify-content:space-between;margin-top:16px;">
         <button class="btn btn-secondary" style="padding:8px 16px;font-size:12px" onclick="showPanel(3)">← Dietocálculo</button>
-        <button class="btn btn-primary" style="padding:8px 16px;font-size:12px" onclick="showPanel(5)">Ir para Menu IA →</button>
+        <button class="btn btn-primary" style="padding:8px 16px;font-size:12px" onclick="showPanel(5)">Ir a Menú IA →</button>
       </div>
     </div>
   </div>
@@ -346,20 +346,20 @@
   <!-- 5: AI MENU -->
   <div class="step-panel" id="panel-5">
     <div class="card">
-      <div class="card-title">Menu gerado por IA <span class="badge badge-blue">inteligência artificial</span></div>
-      <p style="font-size:12px;color:var(--text-2);margin-bottom:16px;">Cardápio semanal 7 dias baseado nos macros do paciente. Selecione o dia e troque alimentos se necessário.</p>
-      <div class="menu-loading" id="menu-loading"><div class="spinner"></div> Gerando opções com IA...</div>
+      <div class="card-title">Menú generado por IA <span class="badge badge-blue">inteligencia artificial</span></div>
+      <p style="font-size:12px;color:var(--text-2);margin-bottom:16px;">Plan semanal 7 días basado en los macros del paciente. Selecciona el día y cambia alimentos si es necesario.</p>
+      <div class="menu-loading" id="menu-loading"><div class="spinner"></div> Generando opciones con IA...</div>
       <div id="menu-not-generated">
-        <button class="btn btn-ai btn-full" onclick="generateMenu()">Gerar menu com IA</button>
+        <button class="btn btn-ai btn-full" onclick="generateMenu()">Generar menú con IA</button>
       </div>
       <div id="menu-result" style="display:none">
-        <div class="section-title">Selecione o dia</div>
+        <div class="section-title">Selecciona el día</div>
         <div class="option-selector" id="option-selector"></div>
         <div class="menu-options" id="menu-options-wrap"></div>
-        <div style="background:var(--accent-light);border:1px solid #b7deca;border-radius:var(--radius);padding:10px 14px;font-size:12px;color:var(--accent);margin-bottom:12px;" id="selected-option-info">Nenhuma opção selecionada.</div>
+        <div style="background:var(--accent-light);border:1px solid #b7deca;border-radius:var(--radius);padding:10px 14px;font-size:12px;color:var(--accent);margin-bottom:12px;" id="selected-option-info">Ninguna opción seleccionada.</div>
         <div style="display:flex;justify-content:space-between;margin-top:4px;">
-          <button class="btn btn-secondary" style="padding:8px 16px;font-size:12px" onclick="showPanel(4)">← Auditoria</button>
-          <button class="btn btn-primary" style="padding:8px 16px;font-size:12px" onclick="showPanel(6)">Ir para PDF →</button>
+          <button class="btn btn-secondary" style="padding:8px 16px;font-size:12px" onclick="showPanel(4)">← Auditoría</button>
+          <button class="btn btn-primary" style="padding:8px 16px;font-size:12px" onclick="showPanel(6)">Ir a PDF →</button>
         </div>
       </div>
     </div>
@@ -369,14 +369,14 @@
   <div class="step-panel" id="panel-6">
     <div class="card">
       <div class="card-title">Exportar PDF clínico</div>
-      <p style="font-size:12px;color:var(--text-2);margin-bottom:20px;">O PDF incluirá dados do paciente, auditoria nutricional, distribuição SMAE e o cardápio selecionado.</p>
+      <p style="font-size:12px;color:var(--text-2);margin-bottom:20px;">El PDF incluirá datos del paciente, auditoría nutricional, distribución SMAE y el plan semanal seleccionado.</p>
       <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:20px;">
-        <div class="section-title">Resumo</div>
+        <div class="section-title">Resumen</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;" id="pdf-summary"></div>
       </div>
-      <div class="loading-inline" id="loading-pdf"><div class="spinner"></div> Gerando PDF...</div>
+      <div class="loading-inline" id="loading-pdf"><div class="spinner"></div> Generando PDF...</div>
       <div style="display:flex;gap:10px;">
-        <button class="btn btn-secondary" style="padding:10px 16px;font-size:12px" onclick="showPanel(5)">← Menu IA</button>
+        <button class="btn btn-secondary" style="padding:10px 16px;font-size:12px" onclick="showPanel(5)">← Menú IA</button>
         <button class="btn btn-primary btn-full" onclick="downloadPDF()">Exportar PDF clínico completo</button>
       </div>
     </div>
@@ -387,7 +387,7 @@
 <!-- SIDE PANEL -->
 <div class="side-panel" id="side-panel">
   <div id="side-content-1" class="side-content">
-    <div class="side-title">Avaliação do paciente</div>
+    <div class="side-title">Evaluación del paciente</div>
     <div class="side-card">
       <div class="imc-display">
         <div class="imc-value" id="side-imc-val">—</div>
@@ -398,27 +398,27 @@
         <div class="imc-marker" id="imc-marker" style="margin-left:0%"></div>
       </div>
       <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-3);margin-top:4px;">
-        <span>Baixo</span><span>Normal</span><span>Sobrepeso</span><span>Obesidade</span>
+        <span>Bajo</span><span>Normal</span><span>Sobrepeso</span><span>Obesidad</span>
       </div>
     </div>
     <div class="side-card">
       <div class="side-title">Referências clínicas</div>
       <div class="side-metric"><span>Peso ideal (IMC 22)</span><span class="side-metric-val" id="ref-peso-ideal">—</span></div>
-      <div class="side-metric"><span>Peso mín. saudável</span><span class="side-metric-val" id="ref-peso-min">—</span></div>
-      <div class="side-metric"><span>Peso máx. saudável</span><span class="side-metric-val" id="ref-peso-max">—</span></div>
+      <div class="side-metric"><span>Peso mín. saludable</span><span class="side-metric-val" id="ref-peso-min">—</span></div>
+      <div class="side-metric"><span>Peso máx. saludable</span><span class="side-metric-val" id="ref-peso-max">—</span></div>
     </div>
   </div>
 
   <div id="side-content-2" class="side-content" style="display:none">
-    <div class="side-title">Distribuição de macros</div>
+    <div class="side-title">Distribución de macros</div>
     <div class="side-card">
       <div class="chart-wrap"><canvas id="macro-pie-chart"></canvas></div>
     </div>
     <div class="side-card">
-      <div class="side-title">Referência OMS</div>
-      <div class="side-metric"><span>Carboidratos</span><span class="side-metric-val" style="color:var(--carb-color)">45–65%</span></div>
+      <div class="side-title">Referencia OMS</div>
+      <div class="side-metric"><span>Carbohidratos</span><span class="side-metric-val" style="color:var(--carb-color)">45–65%</span></div>
       <div class="side-metric"><span>Proteína</span><span class="side-metric-val" style="color:var(--prot-color)">10–35%</span></div>
-      <div class="side-metric"><span>Gorduras</span><span class="side-metric-val" style="color:var(--fat-color)">20–35%</span></div>
+      <div class="side-metric"><span>Grasas</span><span class="side-metric-val" style="color:var(--fat-color)">20–35%</span></div>
     </div>
   </div>
 
@@ -428,26 +428,26 @@
       <div class="radar-wrap"><canvas id="radar-chart"></canvas></div>
     </div>
     <div class="side-card">
-      <div class="side-title">Fechamento energético</div>
-      <div class="side-metric"><span>GET planejado</span><span class="side-metric-val" id="side-get">—</span></div>
+      <div class="side-title">Cierre energético</div>
+      <div class="side-metric"><span>GET planificado</span><span class="side-metric-val" id="side-get">—</span></div>
       <div class="side-metric"><span>Total SMAE</span><span class="side-metric-val" id="side-smae-total">—</span></div>
-      <div class="side-metric"><span>Diferença</span><span class="side-metric-val" id="side-diff">—</span></div>
+      <div class="side-metric"><span>Diferencia</span><span class="side-metric-val" id="side-diff">—</span></div>
     </div>
   </div>
 
   <div id="side-content-4" class="side-content" style="display:none">
-    <div class="side-title">Distribuição calórica</div>
+    <div class="side-title">Distribución calórica</div>
     <div class="side-card">
       <div class="meal-timeline" id="meal-timeline"></div>
     </div>
     <div class="side-card">
-      <div class="side-title">Menu selecionado</div>
+      <div class="side-title">Menú seleccionado</div>
       <div style="font-size:12px;color:var(--text-2)" id="side-menu-name">Nenhum selecionado</div>
     </div>
   </div>
 
   <div id="side-content-5" class="side-content" style="display:none">
-    <div class="side-title">Resumo do plano</div>
+    <div class="side-title">Resumen do plano</div>
     <div class="side-card">
       <div class="side-metric"><span>Paciente</span><span class="side-metric-val" id="side-patient-name">—</span></div>
       <div class="side-metric"><span>TMB</span><span class="side-metric-val" id="side-tmb">—</span></div>
@@ -456,7 +456,7 @@
       <div class="side-metric"><span>Objetivo</span><span class="side-metric-val" id="side-goal">—</span></div>
     </div>
     <div class="side-card" style="background:var(--accent-light);border-color:#b7deca;">
-      <div style="font-size:11px;color:var(--accent);font-weight:500;">Plano pronto para exportar</div>
+      <div style="font-size:11px;color:var(--accent);font-weight:500;">Plan listo para exportar</div>
       <div style="font-size:11px;color:var(--accent);margin-top:4px;" id="side-menu-selected">—</div>
     </div>
   </div>
@@ -588,8 +588,8 @@ function recalcDC(){
   pkel.style.color=protKg>=1.6&&protKg<=2.4?'var(--accent)':'var(--warn)';
   document.getElementById('ins-ratio').textContent=gCarb>0?(gProt/gCarb).toFixed(2):'—';
   const alert=document.getElementById('dc-alert'),btn=document.getElementById('btn-audit'),rounded=Math.round(total);
-  if(rounded===100){alert.className='dc-alert ok';alert.textContent='Distribuição correta — soma 100%. Pronto para gerar auditoria.';document.getElementById('dc-pct-sum').style.color='var(--accent)';btn.disabled=false;}
-  else{alert.className='dc-alert warn';const diff=100-rounded;alert.textContent=diff>0?'Faltam '+diff+'% para fechar 100%.':'Excesso de '+Math.abs(diff)+'% — reduza algum macro.';document.getElementById('dc-pct-sum').style.color='var(--warn)';btn.disabled=true;}
+  if(rounded===100){alert.className='dc-alert ok';alert.textContent='Distribución correcta — suma 100%. Listo para generar auditoría.';document.getElementById('dc-pct-sum').style.color='var(--accent)';btn.disabled=false;}
+  else{alert.className='dc-alert warn';const diff=100-rounded;alert.textContent=diff>0?'Faltan '+diff+'% para cerrar 100%.':'Exceso de '+Math.abs(diff)+'% — reduce algún macro.';document.getElementById('dc-pct-sum').style.color='var(--warn)';btn.disabled=true;}
 }
 
 async function viewAudit(){
@@ -614,13 +614,13 @@ async function viewAudit(){
   const cPct=totalKcal>0?(c*4/totalKcal*100).toFixed(1):'0';
   const fPct=totalKcal>0?(f*9/totalKcal*100).toFixed(1):'0';
   document.getElementById('macro-summary').innerHTML=`
-    <div class="macro-pill carb"><div class="macro-pill-val">${c.toFixed(1)}g</div><div class="macro-pill-label">Carboidratos (${cPct}%)</div></div>
+    <div class="macro-pill carb"><div class="macro-pill-val">${c.toFixed(1)}g</div><div class="macro-pill-label">Carbohidratos (${cPct}%)</div></div>
     <div class="macro-pill prot"><div class="macro-pill-val">${p.toFixed(1)}g</div><div class="macro-pill-label">Proteína (${pPct}%)</div></div>
-    <div class="macro-pill fat"><div class="macro-pill-val">${f.toFixed(1)}g</div><div class="macro-pill-label">Gorduras (${fPct}%)</div></div>
-    <div class="macro-pill"><div class="macro-pill-val">${totalKcal.toFixed(0)}</div><div class="macro-pill-label">kcal totais</div></div>`;
+    <div class="macro-pill fat"><div class="macro-pill-val">${f.toFixed(1)}g</div><div class="macro-pill-label">Grasas (${fPct}%)</div></div>
+    <div class="macro-pill"><div class="macro-pill-val">${totalKcal.toFixed(0)}</div><div class="macro-pill-label">kcal totales</div></div>`;
   let rows=auditData.smae_table.map(row=>`<tr><td><span class="group-tag">${row.group}</span></td><td>${row.subgroup||'—'}</td><td>${row.portions}</td><td>${row.kcal}</td><td>${row.protein}</td><td>${row.fats}</td><td>${row.carbs}</td></tr>`).join('');
   rows+=`<tr class="total-row"><td colspan="3">TOTAL</td><td>${auditData.totals.kcal_from_table}</td><td>${p.toFixed(1)}</td><td>${f.toFixed(1)}</td><td>${c.toFixed(1)}</td></tr>`;
-  document.getElementById('smae-table-wrap').innerHTML=`<table><thead><tr><th>Grupo</th><th>Subgrupo</th><th>Porções</th><th>Kcal</th><th>Prot (g)</th><th>Gord (g)</th><th>Carb (g)</th></tr></thead><tbody>${rows}</tbody></table>`;
+  document.getElementById('smae-table-wrap').innerHTML=`<table><thead><tr><th>Grupo</th><th>Subgrupo</th><th>Porciones</th><th>Kcal</th><th>Prot (g)</th><th>Grasa (g)</th><th>Carb (g)</th></tr></thead><tbody>${rows}</tbody></table>`;
   unlockStep(4);unlockStep(5);unlockStep(6);showPanel(4);
 }
 
@@ -847,7 +847,7 @@ function updateSideMacroPie(carbPct,protPct,fatPct){
   pieChart=new Chart(ctx,{
     type:'doughnut',
     data:{
-      labels:['Carboidratos','Proteína','Gorduras'],
+      labels:['Carbohidratos','Proteína','Grasas'],
       datasets:[{
         data:[carbPct,protPct,fatPct],
         backgroundColor:['#2563a8','#1a6b4a','#b45309'],
@@ -895,7 +895,7 @@ function updateSideRadar(auditData, planGet){
   radarChart=new Chart(ctx,{
     type:'radar',
     data:{
-      labels:['Proteína','Carboidratos','Gorduras','Energia','Balanço','Grupos SMAE'],
+      labels:['Proteína','Carbohidratos','Grasas','Energía','Balance','Grupos SMAE'],
       datasets:[{
         label:'Plano atual',
         data:[protScore,carbScore,fatScore,kcalScore,Math.max(balanceScore,0),smaeScore],
