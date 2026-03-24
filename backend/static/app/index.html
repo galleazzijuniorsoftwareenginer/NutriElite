@@ -375,6 +375,7 @@
         </div>
       </div>
       <div class="dc-alert" id="dc-alert"></div>
+      <div id="clinical-alerts" style="margin-bottom:12px;display:flex;flex-direction:column;gap:6px;"></div>
       <div class="section-title">Indicadores clínicos</div>
       <div class="insights-grid">
         <div class="insight-card"><div class="insight-label">Déficit / Superávit calórico</div><div class="insight-val" id="ins-deficit">—</div><div class="insight-sub">en relación al GET</div></div>
@@ -1318,6 +1319,64 @@ function recalcDC(){
   const alert=document.getElementById('dc-alert'),btn=document.getElementById('btn-audit'),rounded=Math.round(total);
   if(rounded===100){alert.className='dc-alert ok';alert.textContent='Distribución correcta — suma 100%. Listo para generar auditoría.';document.getElementById('dc-pct-sum').style.color='var(--accent)';btn.disabled=false;}
   else{alert.className='dc-alert warn';const diff=100-rounded;alert.textContent=diff>0?'Faltan '+diff+'% para cerrar 100%.':'Exceso de '+Math.abs(diff)+'% — reduce algún macro.';document.getElementById('dc-pct-sum').style.color='var(--warn)';btn.disabled=true;}
+
+  // Alertas clínicos
+  checkClinicalAlerts(get, gProt, gCarb, gFat, peso, carbPct, protPct, fatPct);
+}
+
+function checkClinicalAlerts(get, gProt, gCarb, gFat, peso, carbPct, protPct, fatPct){
+  const wrap = document.getElementById('clinical-alerts');
+  if(!wrap) return;
+  const alerts = [];
+  const tmb = planData ? planData.TMB : 0;
+  const goal = document.getElementById('goal')?.value || 'maintenance';
+
+  // 1. GET abaixo do TMB
+  if(tmb > 0 && get < tmb){
+    alerts.push({type:'danger', msg:`⚠️ GET (${get.toFixed(0)} kcal) está abajo del TMB (${tmb.toFixed(0)} kcal) — riesgo metabólico`});
+  }
+
+  // 2. Déficit muito agressivo
+  const deficit = (planData?.GET||get) - get;
+  if(deficit > 700){
+    alerts.push({type:'warn', msg:`⚠️ Déficit de ${deficit.toFixed(0)} kcal es muy agresivo — máximo seguro recomendado: 500 kcal`});
+  }
+
+  // 3. Proteína por kg
+  const protKg = gProt / peso;
+  if(protKg > 2.5){
+    alerts.push({type:'warn', msg:`⚠️ Proteína muy alta: ${protKg.toFixed(1)}g/kg — puede sobrecargar los riñones (máx. recomendado: 2.2g/kg)`});
+  }
+  if(protKg < 1.2 && goal !== 'maintenance'){
+    alerts.push({type:'warn', msg:`⚠️ Proteína baja: ${protKg.toFixed(1)}g/kg — puede causar pérdida muscular (mín. recomendado: 1.6g/kg)`});
+  }
+
+  // 4. Carboidratos abaixo do mínimo OMS
+  if(carbPct < 45){
+    alerts.push({type:'warn', msg:`⚠️ Carbohidratos (${carbPct}%) por debajo del mínimo OMS (45%) — puede causar fatiga y déficit de fibra`});
+  }
+
+  // 5. Gorduras abaixo do mínimo
+  if(fatPct < 20){
+    alerts.push({type:'warn', msg:`⚠️ Grasas (${fatPct}%) por debajo del mínimo OMS (20%) — puede afectar absorción de vitaminas A, D, E, K`});
+  }
+
+  // 6. Superávit muito alto para cutting
+  if(goal === 'cut' && deficit < -100){
+    alerts.push({type:'warn', msg:`⚠️ Plan en superávit calórico para objetivo de pérdida de peso`});
+  }
+
+  // Renderiza
+  if(!alerts.length){
+    wrap.innerHTML = '<div style="background:var(--accent-light);color:var(--accent);padding:8px 12px;border-radius:var(--radius);font-size:12px;font-weight:500;">✅ Distribución dentro de los parámetros clínicos recomendados</div>';
+    return;
+  }
+  wrap.innerHTML = alerts.map(a => `
+    <div style="padding:8px 12px;border-radius:var(--radius);font-size:12px;font-weight:500;
+      background:${a.type==='danger'?'var(--danger-light)':'var(--warn-light)'};
+      color:${a.type==='danger'?'var(--danger)':'var(--warn)'};">
+      ${a.msg}
+    </div>`).join('');
 }
 
 async function viewAudit(){
