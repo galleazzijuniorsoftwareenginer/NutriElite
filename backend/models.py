@@ -11,6 +11,17 @@ class User(Base):
     password = Column(String)
 
 
+
+class Patient(Base):
+    __tablename__ = "patients"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, index=True)
+    email = Column(String)
+    phone = Column(String)
+    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
 class Plan(Base):
     __tablename__ = "plans"
 
@@ -35,6 +46,7 @@ class Plan(Base):
     carbs = Column(Float)
     fats = Column(Float)
 
+    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=True)
     user_id = Column(Integer, ForeignKey("users.id"))
 
     created_at = Column(

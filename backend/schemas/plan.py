@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Literal
+from typing import Literal, Optional
 
 
 class PlanRequest(BaseModel):
@@ -14,3 +14,4 @@ class PlanRequest(BaseModel):
     activity_level: float
     goal: str
     formula: Literal["mifflin", "harris", "schofield"]
+    patient_id: Optional[int] = None

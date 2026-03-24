@@ -223,3 +223,36 @@ def get_audit(
         return SMAECalculationService.calculate(plan_id, db, override_plan=override)
 
     return SMAECalculationService.calculate(plan_id, db)
+
+# ---------- GET PLAN BY ID ----------
+@router.get("/plans/{plan_id}")
+def get_plan(
+    plan_id: int,
+    db: Session = Depends(get_db),
+    token: dict = Depends(verify_token)
+):
+    username = token["sub"]
+    db_user = db.query(User).filter(User.username == username).first()
+    plan = db.query(Plan).filter(
+        Plan.id == plan_id,
+        Plan.user_id == db_user.id
+    ).first()
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plano não encontrado")
+    return {
+        "plan_id": plan.id,
+        "TMB": round(plan.tmb, 2),
+        "GET": round(plan.get, 2),
+        "Protein_g": round(plan.protein, 2),
+        "Carbs_g": round(plan.carbs, 2),
+        "Fats_g": round(plan.fats, 2),
+        "patient_name": plan.patient_name,
+        "patient_email": plan.patient_email,
+        "patient_phone": plan.patient_phone,
+        "weight": plan.weight,
+        "height": plan.height,
+        "age": plan.age,
+        "gender": plan.gender,
+        "activity_level": plan.activity_level,
+        "goal": plan.goal,
+    }

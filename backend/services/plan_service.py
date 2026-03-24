@@ -38,7 +38,8 @@ def create_plan(data, db, user_id):
         protein=protein,
         carbs=carbs,
         fats=fats,
-        user_id=user_id
+        user_id=user_id,
+        patient_id=data.patient_id if hasattr(data, "patient_id") else None
     )
 
     db.add(new_plan)

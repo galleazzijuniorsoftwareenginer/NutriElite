@@ -43,6 +43,13 @@
   .section-area{display:none;}
   .section-area.active{display:block;}
   /* Placeholder seções futuras */
+  .patient-row{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:16px;transition:box-shadow .15s;}
+  .patient-row:hover{box-shadow:0 2px 8px rgba(0,0,0,.06);}
+  .patient-avatar{width:36px;height:36px;border-radius:50%;background:var(--accent-light);color:var(--accent);font-weight:600;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .patient-info{flex:1;}
+  .patient-name{font-size:13px;font-weight:600;color:var(--text);}
+  .patient-meta{font-size:11px;color:var(--text-3);margin-top:2px;}
+  .patient-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:var(--accent-light);color:var(--accent);}
   .coming-soon{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:12px;color:var(--text-3);}
   .coming-soon-icon{font-size:40px;}
   .coming-soon h2{font-size:16px;font-weight:600;color:var(--text-2);}
@@ -513,10 +520,58 @@
 
 <!-- SECTION: PACIENTES -->
 <div id="section-pacientes" class="section-area">
-  <div class="coming-soon">
-    <div class="coming-soon-icon">👥</div>
-    <h2>Mis pacientes</h2>
-    <p>Lista de pacientes con búsqueda, historial de planes y próximas citas. Disponible en Sprint 4.</p>
+  <div class="main" style="padding:28px 32px;max-width:900px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="font-size:18px;font-weight:600;">Mis pacientes</div>
+        <span id="patients-counter" style="font-size:11px;color:var(--text-3);background:var(--bg);border:1px solid var(--border);padding:2px 8px;border-radius:20px;"></span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <select id="patients-sort" onchange="sortPatients()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);font-family:'DM Sans',sans-serif;">
+          <option value="recent">Más recientes</option>
+          <option value="name">Nombre A-Z</option>
+          <option value="plans">Más planes</option>
+        </select>
+        <button class="btn btn-primary" onclick="showAddPatient()">+ Agregar paciente</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:16px;">
+      <input id="patient-search" type="text" placeholder="Buscar por nombre o correo..." 
+        style="flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:'DM Sans',sans-serif;"
+        oninput="filterPatients()">
+    </div>
+    <div id="patients-loading" style="display:none;color:var(--text-3);font-size:13px;padding:20px 0;">Cargando pacientes...</div>
+    <div id="patients-empty" style="display:none;text-align:center;padding:40px;color:var(--text-3);">
+      <div style="font-size:32px;margin-bottom:8px;">👥</div>
+      <div style="font-size:14px;font-weight:500;margin-bottom:4px;">Sin pacientes aún</div>
+      <div style="font-size:12px;">Agrega tu primer paciente para comenzar</div>
+    </div>
+    <div id="patients-list"></div>
+
+    <!-- Modal agregar paciente -->
+    <div id="modal-add-patient" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:none;align-items:center;justify-content:center;">
+      <div style="background:var(--surface);border-radius:var(--radius-lg);padding:24px;width:400px;max-width:90vw;">
+        <div style="font-size:15px;font-weight:600;margin-bottom:16px;">Nuevo paciente</div>
+        <div class="field" style="margin-bottom:12px;"><label>Nombre completo *</label><input id="new-patient-name" type="text" placeholder="Nombre del paciente"></div>
+        <div class="field" style="margin-bottom:12px;"><label>Correo electrónico</label><input id="new-patient-email" type="email" placeholder="correo@ejemplo.com"></div>
+        <div class="field" style="margin-bottom:20px;"><label>Teléfono</label><input id="new-patient-phone" type="text" placeholder="55 1234 5678"></div>
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-secondary btn-full" onclick="closeAddPatient()">Cancelar</button>
+          <button class="btn btn-primary btn-full" onclick="savePatient()">Guardar paciente</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal historial -->
+    <div id="modal-patient-plans" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center;">
+      <div style="background:var(--surface);border-radius:var(--radius-lg);padding:24px;width:560px;max-width:90vw;max-height:80vh;overflow-y:auto;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <div style="font-size:15px;font-weight:600;" id="modal-patient-name">Historial</div>
+          <button onclick="closePatientPlans()" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--text-3);">✕</button>
+        </div>
+        <div id="modal-plans-list"></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -562,7 +617,7 @@
 <script>
 const API = window.location.origin;
 let token=null,planId=null,planData=null,currentStep=2,maxStep=2;
-let auditData=null,generatedMenus=[],selectedMenuOption=0,weeklyMenu=null;
+let auditData=null,generatedMenus=[],selectedMenuOption=0,weeklyMenu=null,currentPatientId=null;
 
 function switchTab(tab){
   document.getElementById('form-login').style.display=tab==='login'?'block':'none';
@@ -630,7 +685,7 @@ async function generatePlan(){
   const h=parseFloat(document.getElementById('height').value);
   if(!w||!h){alert('Informe peso e altura');return;}
   document.getElementById('loading-plan').classList.add('visible');
-  const res=await fetch(API+'/plan',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({patient_name:document.getElementById('name').value,patient_email:document.getElementById('email').value,patient_phone:document.getElementById('phone').value,weight:w,height:h,age:parseInt(document.getElementById('age').value),gender:document.getElementById('gender').value,activity_level:parseFloat(document.getElementById('activity').value),goal:document.getElementById('goal').value,formula:document.getElementById('formula').value})});
+  const res=await fetch(API+'/plan',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({patient_name:document.getElementById('name').value,patient_email:document.getElementById('email').value,patient_phone:document.getElementById('phone').value,patient_id:currentPatientId,weight:w,height:h,age:parseInt(document.getElementById('age').value),gender:document.getElementById('gender').value,activity_level:parseFloat(document.getElementById('activity').value),goal:document.getElementById('goal').value,formula:document.getElementById('formula').value})});
   document.getElementById('loading-plan').classList.remove('visible');
   const data=await res.json();
   planId=data.plan_id;planData=data;
@@ -648,10 +703,206 @@ async function generatePlan(){
   unlockStep(3);recalcDC();
 }
 
+// ===== PACIENTES =====
+let allPatients = [];
+
+async function loadPatients(){
+  document.getElementById('patients-loading').style.display='block';
+  document.getElementById('patients-list').innerHTML='';
+  try {
+    const res = await fetch(API+'/patients', {headers:{'Authorization':'Bearer '+token}});
+    allPatients = await res.json();
+    renderPatients(allPatients);
+  } catch(e) { console.error('Erro pacientes:', e); }
+  document.getElementById('patients-loading').style.display='none';
+}
+
+function renderPatients(list){
+  const wrap = document.getElementById('patients-list');
+  const empty = document.getElementById('patients-empty');
+  const counter = document.getElementById('patients-counter');
+  if(counter) counter.textContent = list.length + ' paciente(s)';
+  if(!list.length){ empty.style.display='block'; wrap.innerHTML=''; return; }
+  empty.style.display='none';
+  const goalLabel = {cut:'Perdida de peso', bulk:'Ganancia muscular', maintenance:'Mantenimiento'};
+  wrap.innerHTML = list.map(p => {
+    const lastDate = p.last_plan ? p.last_plan.slice(0,10) : 'Sin planes';
+    const initials = p.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+    return `
+    <div class="patient-row" style="flex-wrap:wrap;gap:10px;">
+      <div class="patient-avatar">${initials}</div>
+      <div class="patient-info" style="flex:1;min-width:180px;">
+        <div class="patient-name">${p.name}</div>
+        <div class="patient-meta" style="font-size:11px;color:var(--text-3);">${p.email||''} ${p.phone?'· '+p.phone:''}</div>
+        <div style="font-size:10px;color:var(--text-3);margin-top:2px;">${p.total_plans} plan(es) · Último: ${lastDate}</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="btn btn-secondary" style="font-size:11px;padding:5px 10px;" onclick="viewPatientPlans(${p.id},decodeURIComponent('${encodeURIComponent(p.name)}'))">Planes</button>
+        <button class="btn btn-primary" style="font-size:11px;padding:5px 10px;" onclick="newPlanForPatient(${p.id},decodeURIComponent('${encodeURIComponent(p.name)}'),decodeURIComponent('${encodeURIComponent(p.email||'')}'),decodeURIComponent('${encodeURIComponent(p.phone||'')}'))">+ Plan</button>
+        <button class="btn btn-secondary" style="font-size:11px;padding:5px 10px;" onclick="editPatient(${p.id},decodeURIComponent('${encodeURIComponent(p.name)}'),decodeURIComponent('${encodeURIComponent(p.email||'')}'),decodeURIComponent('${encodeURIComponent(p.phone||'')}'))">Editar</button>
+        <button style="background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;font-size:11px;padding:5px 10px;cursor:pointer;color:#b91c1c;font-family:inherit;" onclick="deletePatient(${p.id},decodeURIComponent('${encodeURIComponent(p.name)}'))">Eliminar</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterPatients(){
+  const q = document.getElementById('patient-search').value.toLowerCase();
+  const filtered = allPatients.filter(p => p.name.toLowerCase().includes(q) || (p.email||'').toLowerCase().includes(q));
+  sortAndRender(filtered);
+}
+
+function sortPatients(){
+  sortAndRender(allPatients);
+}
+
+function sortAndRender(list){
+  const sort = document.getElementById('patients-sort')?.value || 'recent';
+  const sorted = [...list];
+  if(sort==='name') sorted.sort((a,b)=>a.name.localeCompare(b.name));
+  else if(sort==='plans') sorted.sort((a,b)=>b.total_plans-a.total_plans);
+  else sorted.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+  renderPatients(sorted);
+}
+
+function showAddPatient(){
+  document.getElementById('modal-add-patient').style.display='flex';
+}
+
+// closeAddPatient movida abaixo
+
+async function savePatient(){
+  const name = document.getElementById('new-patient-name').value.trim();
+  if(!name){ alert('El nombre es obligatorio'); return; }
+  const body = {
+    name,
+    email: document.getElementById('new-patient-email').value,
+    phone: document.getElementById('new-patient-phone').value
+  };
+  const url = editingPatientId ? API+'/patients/'+editingPatientId : API+'/patients';
+  const method = editingPatientId ? 'PUT' : 'POST';
+  const res = await fetch(url, {
+    method,
+    headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+    body: JSON.stringify(body)
+  });
+  if(res.ok){ closeAddPatient(); loadPatients(); }
+  else { alert('Error al guardar paciente'); }
+}
+
+async function viewPatientPlans(id, name){
+  document.getElementById('modal-patient-name').textContent = name;
+  document.getElementById('modal-plans-list').innerHTML = '<div style="color:var(--text-3);font-size:13px;">Cargando...</div>';
+  document.getElementById('modal-patient-plans').style.display='flex';
+  const res = await fetch(API+'/patients/'+id+'/plans', {headers:{'Authorization':'Bearer '+token}});
+  const data = await res.json();
+  const goalLabel = {cut:'Pérdida de peso', bulk:'Ganancia muscular', maintenance:'Mantenimiento'};
+  if(!data.plans.length){
+    document.getElementById('modal-plans-list').innerHTML='<div style="color:var(--text-3);font-size:13px;text-align:center;padding:20px;">Sin planes aún</div>';
+    return;
+  }
+  document.getElementById('modal-plans-list').innerHTML = data.plans.map(p=>`
+    <div style="border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:600;">${goalLabel[p.goal]||p.goal}</div>
+          <div style="font-size:11px;color:var(--text-3);margin-top:2px;">${p.weight}kg · TMB ${Math.round(p.tmb)} kcal · GET ${Math.round(p.get)} kcal</div>
+          <div style="font-size:10px;color:var(--text-3);margin-top:2px;">${p.created_at.slice(0,10)}</div>
+        </div>
+        <button class="btn btn-primary" style="font-size:11px;padding:5px 12px;flex-shrink:0;" onclick="openPlan(${p.id})">Abrir plan</button>
+      </div>
+    </div>`).join('');
+}
+
+function closePatientPlans(){
+  document.getElementById('modal-patient-plans').style.display='none';
+}
+
+async function openPlan(id){
+  closePatientPlans();
+  const res = await fetch(API+'/plans/'+id, {headers:{'Authorization':'Bearer '+token}});
+  const data = await res.json();
+  // Popula os campos do wizard
+  planId = data.plan_id;
+  planData = data;
+  document.getElementById('name').value = data.patient_name || '';
+  document.getElementById('email').value = data.patient_email || '';
+  document.getElementById('phone').value = data.patient_phone || '';
+  document.getElementById('weight').value = data.weight || '';
+  document.getElementById('height').value = data.height || '';
+  document.getElementById('age').value = data.age || '';
+  document.getElementById('gender').value = data.gender || 'male';
+  document.getElementById('activity').value = data.activity_level || '1.55';
+  document.getElementById('goal').value = data.goal || 'maintenance';
+  // Atualiza resultados
+  document.getElementById('res-tmb').textContent = data.TMB ? data.TMB.toFixed(0) : '—';
+  document.getElementById('res-get').textContent = data.GET ? data.GET.toFixed(0) : '—';
+  document.getElementById('res-id').textContent = '#'+planId;
+  document.getElementById('dc-kcal').textContent = data.GET ? data.GET.toFixed(0) : '—';
+  unlockStep(3); unlockStep(4); unlockStep(5); unlockStep(6);
+  showSection('nuevo');
+  showPanel(4);
+}
+
+function togglePatientMenu(e, id){
+  e.stopPropagation();
+  closePatientMenus();
+  const m = document.getElementById('pmenu-'+id);
+  if(m) m.style.display = m.style.display==='block' ? 'none' : 'block';
+}
+function closePatientMenus(){
+  document.querySelectorAll('[id^="pmenu-"]').forEach(m=>m.style.display='none');
+}
+document.addEventListener('click', closePatientMenus);
+
+async function deletePatient(id, name){
+  if(!confirm('¿Eliminar a '+name+'? Esta acción no se puede deshacer.')) return;
+  const res = await fetch(API+'/patients/'+id, {
+    method:'DELETE',
+    headers:{'Authorization':'Bearer '+token}
+  });
+  if(res.ok){ loadPatients(); }
+  else { alert('Error al eliminar paciente'); }
+}
+
+let editingPatientId = null;
+function editPatient(id, name, email, phone){
+  editingPatientId = id;
+  document.getElementById('new-patient-name').value = name;
+  document.getElementById('new-patient-email').value = email;
+  document.getElementById('new-patient-phone').value = phone;
+  document.querySelector('#modal-add-patient div div:first-child').textContent = 'Editar paciente';
+  document.getElementById('modal-add-patient').style.display='flex';
+}
+
+function closeAddPatient(){
+  document.getElementById('modal-add-patient').style.display='none';
+  document.getElementById('new-patient-name').value='';
+  document.getElementById('new-patient-email').value='';
+  document.getElementById('new-patient-phone').value='';
+  editingPatientId = null;
+  const title = document.querySelector('#modal-add-patient div div:first-child');
+  if(title) title.textContent = 'Nuevo paciente';
+}
+
+function newPlanForPatient(id, name, email, phone){
+  currentPatientId = id;
+  showSection('nuevo');
+  setTimeout(()=>{
+    const nm = document.getElementById('name') || document.getElementById('patient-name');
+    const em = document.getElementById('email') || document.getElementById('patient-email');
+    const ph = document.getElementById('phone') || document.getElementById('patient-phone');
+    if(nm) nm.value = name;
+    if(em) em.value = email;
+    if(ph) ph.value = phone;
+  }, 150);
+}
+
 function showSection(name){
   document.querySelectorAll('.section-area').forEach(el=>el.classList.remove('active'));
   const sec=document.getElementById('section-'+name);
   if(sec)sec.classList.add('active');
+  if(name==='pacientes' && token) loadPatients();
   const sb=document.getElementById('wizard-stepbar');
   if(sb)sb.style.display=name==='nuevo'?'flex':'none';
   document.querySelectorAll('.topbar-btn').forEach(b=>b.classList.remove('active'));
