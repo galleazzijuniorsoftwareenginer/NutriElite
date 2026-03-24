@@ -151,7 +151,8 @@ def export_plan_pdf(
     plan_id: int,
     db: Session = Depends(get_db),
     token: dict = Depends(verify_token),
-    menu: str = None
+    menu: str = None,
+    perfil: str = None
 ):
 
     username = token["sub"]
@@ -174,7 +175,13 @@ def export_plan_pdf(
             menu_data = json.loads(menu)
         except Exception:
             menu_data = None
-    pdf_buffer = generate_plan_pdf(plan, portions, menu_data)
+    perfil_data = None
+    if perfil:
+        try:
+            perfil_data = json.loads(perfil)
+        except Exception:
+            perfil_data = None
+    pdf_buffer = generate_plan_pdf(plan, portions, menu_data, perfil_data)
 
     return StreamingResponse(
         pdf_buffer,

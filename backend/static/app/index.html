@@ -646,10 +646,61 @@
 
 <!-- SECTION: PERFIL -->
 <div id="section-perfil" class="section-area">
-  <div class="coming-soon">
-    <div class="coming-soon-icon">👤</div>
-    <h2>Perfil</h2>
-    <p>Datos del nutricionista, cédula profesional y logo para el PDF clínico. Disponible en Sprint 3.</p>
+  <div class="main" style="padding:28px 32px;max-width:600px;">
+    <div style="font-size:18px;font-weight:600;margin-bottom:6px;">Mi perfil</div>
+    <div style="font-size:12px;color:var(--text-2);margin-bottom:24px;">Estos datos aparecerán en el encabezado de todos los PDFs clínicos generados.</div>
+
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title">Logo de la clínica</div>
+      <div style="display:flex;align-items:center;gap:16px;">
+        <div id="logo-preview-wrap" style="width:80px;height:80px;border:1px dashed var(--border);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;background:var(--bg);overflow:hidden;flex-shrink:0;">
+          <img id="logo-preview-img" src="" style="display:none;width:100%;height:100%;object-fit:contain;">
+          <span id="logo-preview-empty" style="font-size:24px;">🏥</span>
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:12px;font-weight:500;margin-bottom:6px;">Subir logo (PNG o JPEG, máx. 1MB)</div>
+          <input type="file" id="logo-upload" accept="image/png,image/jpeg" onchange="handleLogoUpload(event)"
+            style="font-size:12px;font-family:'DM Sans',sans-serif;">
+          <div style="font-size:11px;color:var(--text-3);margin-top:4px;">Recomendado: fondo blanco, formato cuadrado</div>
+          <button id="logo-remove-btn" onclick="removeLogo()" style="display:none;background:none;border:none;color:var(--danger);font-size:11px;cursor:pointer;margin-top:4px;font-family:'DM Sans',sans-serif;">✕ Quitar logo</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title">Datos profesionales</div>
+      <div class="form-grid" style="margin-bottom:12px;">
+        <div class="field"><label>Nombre completo</label><input id="perfil-nombre" type="text" placeholder="Lic. María García López"></div>
+        <div class="field"><label>Cédula profesional</label><input id="perfil-cedula" type="text" placeholder="12345678"></div>
+      </div>
+      <div class="form-grid" style="margin-bottom:12px;">
+        <div class="field"><label>Especialidad</label><input id="perfil-especialidad" type="text" placeholder="Nutrición Clínica"></div>
+        <div class="field"><label>Teléfono de contacto</label><input id="perfil-telefono" type="text" placeholder="+52 664 123 4567"></div>
+      </div>
+      <div class="field" style="margin-bottom:12px;"><label>Clínica / Consultorio</label><input id="perfil-clinica" type="text" placeholder="Clínica NutriSalud Tijuana"></div>
+      <div class="field"><label>Correo profesional</label><input id="perfil-email" type="email" placeholder="nutricionista@clinica.com"></div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title">Vista previa del encabezado PDF</div>
+      <div id="perfil-preview" style="border:1px solid var(--border);border-radius:var(--radius);padding:16px;background:var(--bg);font-size:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+          <img id="preview-logo" src="" style="display:none;width:60px;height:60px;object-fit:contain;border-radius:4px;flex-shrink:0;">
+          <div style="flex:1;">
+            <div style="font-weight:700;font-size:14px;" id="preview-nombre">Nombre del nutricionista</div>
+            <div style="color:var(--text-2);" id="preview-especialidad">Especialidad</div>
+            <div style="color:var(--text-3);font-size:11px;" id="preview-cedula">Cédula: —</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-weight:600;" id="preview-clinica">Clínica / Consultorio</div>
+            <div style="color:var(--text-3);font-size:11px;" id="preview-contacto">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-full" onclick="savePerfil()">Guardar perfil</button>
+    <div id="perfil-saved" style="display:none;text-align:center;font-size:12px;color:var(--accent);margin-top:8px;">✓ Perfil guardado correctamente</div>
   </div>
 </div>
 
@@ -766,6 +817,99 @@ async function generatePlan(){
   document.getElementById('ins-imc-class').textContent=imcClass;
   document.getElementById('ins-imc-val').textContent='IMC: '+imc.toFixed(2);
   unlockStep(3);recalcDC();
+}
+
+// ===== PERFIL =====
+function handleLogoUpload(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  if(file.size > 1024*1024){ alert('La imagen debe ser menor a 1MB'); return; }
+  if(!['image/png','image/jpeg'].includes(file.type)){ alert('Solo se permiten PNG o JPEG'); return; }
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const base64 = e.target.result;
+    localStorage.setItem('nutrielite_logo', base64);
+    showLogoPreview(base64);
+  };
+  reader.readAsDataURL(file);
+}
+
+function showLogoPreview(base64){
+  const img = document.getElementById('logo-preview-img');
+  const empty = document.getElementById('logo-preview-empty');
+  const removeBtn = document.getElementById('logo-remove-btn');
+  if(base64){
+    img.src = base64;
+    img.style.display = 'block';
+    empty.style.display = 'none';
+    removeBtn.style.display = 'inline-block';
+  } else {
+    img.style.display = 'none';
+    empty.style.display = 'block';
+    removeBtn.style.display = 'none';
+  }
+}
+
+function removeLogo(){
+  localStorage.removeItem('nutrielite_logo');
+  document.getElementById('logo-upload').value = '';
+  showLogoPreview(null);
+}
+
+function loadPerfil(){
+  const p = JSON.parse(localStorage.getItem('nutrielite_perfil')||'{}');
+  const logo = localStorage.getItem('nutrielite_logo');
+  if(logo) showLogoPreview(logo);
+  document.getElementById('perfil-nombre').value = p.nombre||'';
+  document.getElementById('perfil-cedula').value = p.cedula||'';
+  document.getElementById('perfil-especialidad').value = p.especialidad||'';
+  document.getElementById('perfil-telefono').value = p.telefono||'';
+  document.getElementById('perfil-clinica').value = p.clinica||'';
+  document.getElementById('perfil-email').value = p.email||'';
+  updatePerfilPreview();
+  // Atualiza inputs para preview em tempo real
+  ['perfil-nombre','perfil-cedula','perfil-especialidad','perfil-telefono','perfil-clinica','perfil-email'].forEach(id=>{
+    document.getElementById(id).oninput = updatePerfilPreview;
+  });
+}
+
+function updatePerfilPreview(){
+  const n = document.getElementById('perfil-nombre').value||'Nombre del nutricionista';
+  const e = document.getElementById('perfil-especialidad').value||'Especialidad';
+  const c = document.getElementById('perfil-cedula').value;
+  const cl = document.getElementById('perfil-clinica').value||'Clínica / Consultorio';
+  const t = document.getElementById('perfil-telefono').value;
+  const em = document.getElementById('perfil-email').value;
+  document.getElementById('preview-nombre').textContent = n;
+  document.getElementById('preview-especialidad').textContent = e;
+  document.getElementById('preview-cedula').textContent = c ? 'Cédula: '+c : 'Cédula: —';
+  document.getElementById('preview-clinica').textContent = cl;
+  document.getElementById('preview-contacto').textContent = [t,em].filter(Boolean).join(' · ')||'—';
+  const logo = localStorage.getItem('nutrielite_logo');
+  const previewLogo = document.getElementById('preview-logo');
+  if(logo && previewLogo){ previewLogo.src=logo; previewLogo.style.display='block'; }
+  else if(previewLogo){ previewLogo.style.display='none'; }
+}
+
+function savePerfil(){
+  const p = {
+    nombre: document.getElementById('perfil-nombre').value,
+    cedula: document.getElementById('perfil-cedula').value,
+    especialidad: document.getElementById('perfil-especialidad').value,
+    telefono: document.getElementById('perfil-telefono').value,
+    clinica: document.getElementById('perfil-clinica').value,
+    email: document.getElementById('perfil-email').value,
+  };
+  localStorage.setItem('nutrielite_perfil', JSON.stringify(p));
+  document.getElementById('perfil-saved').style.display='block';
+  setTimeout(()=>document.getElementById('perfil-saved').style.display='none', 3000);
+}
+
+function getPerfilData(){
+  const p = JSON.parse(localStorage.getItem('nutrielite_perfil')||'{}');
+  const logo = localStorage.getItem('nutrielite_logo');
+  if(logo) p.logo = logo;
+  return p;
 }
 
 // ===== HISTORIAL =====
@@ -1120,6 +1264,7 @@ function showSection(name){
   if(sec)sec.classList.add('active');
   if(name==='pacientes' && token) loadPatients();
   if(name==='historial' && token) loadHistorial();
+  if(name==='perfil') loadPerfil();
   const sb=document.getElementById('wizard-stepbar');
   if(sb)sb.style.display=name==='nuevo'?'flex':'none';
   document.querySelectorAll('.topbar-btn').forEach(b=>b.classList.remove('active'));
@@ -1373,7 +1518,13 @@ async function downloadPDF(){
   if(!planId)return;
   document.getElementById('loading-pdf').classList.add('visible');
   const pdfPayload = weeklyMenu ? weeklyMenu : generatedMenus[selectedMenuOption];
-  const menuParam=pdfPayload?'?menu='+encodeURIComponent(JSON.stringify(pdfPayload)):'';
+  const perfilRaw = getPerfilData();
+  const perfilSemLogo = {...perfilRaw};
+  delete perfilSemLogo.logo;
+  const perfilStr = Object.keys(perfilSemLogo).some(k=>perfilSemLogo[k]) ? encodeURIComponent(JSON.stringify(perfilSemLogo)) : '';
+  const menuParam = pdfPayload
+    ? '?menu='+encodeURIComponent(JSON.stringify(pdfPayload))+(perfilStr?'&perfil='+perfilStr:'')
+    : (perfilStr?'?perfil='+perfilStr:'');
   const res=await fetch(API+'/plans/'+planId+'/pdf'+menuParam,{headers:{'Authorization':'Bearer '+token}});
   document.getElementById('loading-pdf').classList.remove('visible');
   const blob=await res.blob();

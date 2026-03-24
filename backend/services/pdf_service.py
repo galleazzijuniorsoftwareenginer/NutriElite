@@ -7,7 +7,7 @@ from reportlab.lib.units import inch
 from io import BytesIO
 from backend.services.smae_calculation_service import SMAECalculationService
 
-def generate_plan_pdf(plan, portions, menu_data=None):
+def generate_plan_pdf(plan, portions, menu_data=None, perfil_data=None):
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer)
@@ -31,6 +31,62 @@ def generate_plan_pdf(plan, portions, menu_data=None):
         bmi_class = "Sobrepeso"
     else:
         bmi_class = "Obesidad"
+
+    # Cabeçalho com branding do nutricionista
+    if perfil_data and perfil_data.get("nombre"):
+        from reportlab.platypus import HRFlowable
+        from reportlab.platypus import Image as RLImage
+        import base64
+        import io
+
+        # Logo
+        logo_cell = ""
+        if perfil_data.get("logo"):
+            try:
+                logo_b64 = perfil_data["logo"].split(",")[1] if "," in perfil_data["logo"] else perfil_data["logo"]
+                logo_bytes = base64.b64decode(logo_b64)
+                logo_buf = io.BytesIO(logo_bytes)
+                logo_img = RLImage(logo_buf, width=60, height=60)
+                logo_img.hAlign = "LEFT"
+                logo_cell = logo_img
+            except Exception:
+                logo_cell = ""
+
+        text_cell = Paragraph(
+            f"<b>{perfil_data.get('nombre','')}</b><br/>"
+            f"{perfil_data.get('especialidad','')}<br/>"
+            f"<font size='9'>Cédula: {perfil_data.get('cedula','—')}</font>",
+            styles["Normal"]
+        )
+        contact_cell = Paragraph(
+            f"<b>{perfil_data.get('clinica','')}</b><br/>"
+            f"<font size='9'>{perfil_data.get('telefono','')} {perfil_data.get('email','')}</font>",
+            styles["Normal"]
+        )
+
+        # Layout centralizado
+        contacto = " · ".join(filter(None, [perfil_data.get('telefono',''), perfil_data.get('email','')]))
+        center_style = styles["Normal"].clone("cs")
+        center_style.alignment = 1  # CENTER
+
+        if logo_cell:
+            logo_cell.hAlign = "CENTER"
+            elements.append(logo_cell)
+            elements.append(Spacer(1, 0.08 * inch))
+
+        elements.append(Paragraph(f"<b><font size='13'>{perfil_data.get('nombre','')}</font></b>", center_style))
+        if perfil_data.get('especialidad'):
+            elements.append(Paragraph(perfil_data.get('especialidad',''), center_style))
+        if perfil_data.get('cedula'):
+            elements.append(Paragraph(f"<font size='9'>Cédula: {perfil_data.get('cedula','')}</font>", center_style))
+        if perfil_data.get('clinica'):
+            elements.append(Paragraph(f"<font size='9'>{perfil_data.get('clinica','')}</font>", center_style))
+        if contacto:
+            elements.append(Paragraph(f"<font size='9'>{contacto}</font>", center_style))
+
+        elements.append(Spacer(1, 0.15 * inch))
+        elements.append(HRFlowable(width="100%", thickness=1, color=colors.lightgrey))
+        elements.append(Spacer(1, 0.2 * inch))
 
     elements.append(Paragraph("INFORME NUTRICIONAL CLÍNICO", styles["Title"]))
     elements.append(Spacer(1, 0.3 * inch))
@@ -101,9 +157,6 @@ def generate_plan_pdf(plan, portions, menu_data=None):
     elements.append(macro_table)
     elements.append(Spacer(1, 0.3 * inch))
 
-    elements.append(Paragraph("Distribución SMAE", styles["Heading2"]))
-    elements.append(Spacer(1, 0.2 * inch))
-
     table_data = [
         ["Grupo", "Subgrupo", "Porciones", "Kcal", "Prot (g)", "Grasa (g)", "Carb (g)"]
     ]
@@ -126,14 +179,19 @@ def generate_plan_pdf(plan, portions, menu_data=None):
         round(audit["totals"]["carbs_g"], 1),
     ])
 
+    from reportlab.platypus import KeepTogether
     table = Table(table_data, repeatRows=1)
     table.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
         ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
         ("ALIGN", (2, 1), (-1, -1), "CENTER"),
     ]))
-    elements.append(table)
-    elements.append(Spacer(1, 0.3 * inch))
+    elements.append(KeepTogether([
+        Paragraph("Distribución SMAE", styles["Heading2"]),
+        Spacer(1, 0.2 * inch),
+        table,
+        Spacer(1, 0.3 * inch)
+    ]))
 
     # =========================
     # CARDÁPIO SEMANAL 7 DIAS
@@ -151,7 +209,7 @@ def generate_plan_pdf(plan, portions, menu_data=None):
 
             for comida in dia["comidas"]:
                 elements.append(Paragraph(
-                    f"<i>{comida['tiempo']}</i> — {comida['kcal']} kcal",
+                    f"<i>{comida.get('tiempo', comida.get('tempo',''))}</i> — {comida.get('kcal','')} kcal",
                     styles["Normal"]
                 ))
                 meal_data = [["Alimento", "Cantidad (g)", "Kcal"]]
