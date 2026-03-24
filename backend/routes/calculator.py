@@ -283,3 +283,24 @@ def get_plan(
         "activity_level": plan.activity_level,
         "goal": plan.goal,
     }
+
+# ---------- DELETE PLAN ----------
+@router.delete("/plans/{plan_id}")
+def delete_plan(
+    plan_id: int,
+    db: Session = Depends(get_db),
+    token: dict = Depends(verify_token)
+):
+    username = token["sub"]
+    db_user = db.query(User).filter(User.username == username).first()
+    plan = db.query(Plan).filter(
+        Plan.id == plan_id,
+        Plan.user_id == db_user.id
+    ).first()
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plano não encontrado")
+    from backend.models import PlanFoodGroup
+    db.query(PlanFoodGroup).filter(PlanFoodGroup.plan_id == plan_id).delete()
+    db.delete(plan)
+    db.commit()
+    return {"ok": True}

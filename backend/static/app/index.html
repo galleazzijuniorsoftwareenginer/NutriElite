@@ -601,6 +601,12 @@
         <span id="historial-counter" style="font-size:11px;color:var(--text-3);background:var(--bg);border:1px solid var(--border);padding:2px 8px;border-radius:20px;"></span>
       </div>
       <div style="display:flex;gap:8px;">
+        <select id="historial-filter-date" onchange="renderHistorial(allPlans)" style="font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);font-family:'DM Sans',sans-serif;">
+          <option value="">Todo el tiempo</option>
+          <option value="30">Últimos 30 días</option>
+          <option value="90">Últimos 3 meses</option>
+          <option value="180">Últimos 6 meses</option>
+        </select>
         <select id="historial-filter-goal" onchange="loadHistorial()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);font-family:'DM Sans',sans-serif;">
           <option value="">Todos los objetivos</option>
           <option value="cut">Pérdida de peso</option>
@@ -791,8 +797,18 @@ function renderHistorial(list){
   const sorted = [...list];
   if(sort==='oldest') sorted.sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
   else if(sort==='name') sorted.sort((a,b)=>(a.patient_name||'').localeCompare(b.patient_name||''));
-  wrap.innerHTML = sorted.map(p => {
+  // Filtro por data
+  const days = parseInt(document.getElementById('historial-filter-date')?.value||'0');
+  const cutoff = days ? new Date(Date.now() - days*24*60*60*1000) : null;
+  const filtered = cutoff ? sorted.filter(p=>new Date(p.created_at)>=cutoff) : sorted;
+
+  if(counter) counter.textContent = filtered.length + ' plan(es)';
+  if(!filtered.length){ empty.style.display='block'; wrap.innerHTML=''; return; }
+  empty.style.display='none';
+
+  wrap.innerHTML = filtered.map(p => {
     const initials = (p.patient_name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+    const nm = (p.patient_name||'Sin nombre').replace(/'/g,"\'");
     return `
     <div class="patient-row" style="margin-bottom:8px;">
       <div class="patient-avatar" style="background:var(--bg);border:1px solid var(--border);color:var(--text-2);">${initials}</div>
@@ -808,6 +824,7 @@ function renderHistorial(list){
       </div>
       <div style="display:flex;gap:6px;flex-shrink:0;">
         <button class="btn btn-primary" style="font-size:11px;padding:5px 12px;" onclick="openPlan(${p.id})">Abrir</button>
+        <button style="background:#fef2f2;border:1px solid #fca5a5;border-radius:var(--radius);font-size:11px;padding:5px 10px;cursor:pointer;color:#b91c1c;font-family:inherit;" onclick="deletePlan(${p.id},'${nm}')">Eliminar</button>
       </div>
     </div>`;
   }).join('');
@@ -816,6 +833,16 @@ function renderHistorial(list){
 function filterHistorial(){
   const q = document.getElementById('historial-search').value.toLowerCase();
   renderHistorial(allPlans.filter(p=>(p.patient_name||'').toLowerCase().includes(q)));
+}
+
+async function deletePlan(id, name){
+  if(!confirm('¿Eliminar el plan de '+name+'? Esta acción no se puede deshacer.')) return;
+  const res = await fetch(API+'/plans/'+id, {
+    method:'DELETE',
+    headers:{'Authorization':'Bearer '+token}
+  });
+  if(res.ok){ loadHistorial(); }
+  else { alert('Error al eliminar plan'); }
 }
 
 // ===== MODAL NUEVO PLAN =====
