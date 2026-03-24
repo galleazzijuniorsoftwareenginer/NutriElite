@@ -246,7 +246,6 @@
       <button class="topbar-btn topbar-btn-new" id="nav-nuevo" onclick="showNewPlanModal()">+ Nuevo plan</button>
       <button class="topbar-btn" id="nav-historial" onclick="showSection('historial')">Historial</button>
       <button class="topbar-btn" id="nav-plantillas" onclick="showSection('plantillas')">Plantillas</button>
-      <button class="topbar-btn" id="nav-perfil" onclick="showSection('perfil')">Perfil</button>
     </nav>
   </div>
   <div class="topbar-right">
@@ -595,10 +594,38 @@
 
 <!-- SECTION: HISTORIAL -->
 <div id="section-historial" class="section-area">
-  <div class="coming-soon">
-    <div class="coming-soon-icon">📋</div>
-    <h2>Historial de planes</h2>
-    <p>Todos los planes generados, ordenados por fecha. Reutiliza sin rehacer. Disponible en Sprint 4.</p>
+  <div class="main" style="padding:28px 32px;max-width:900px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="font-size:18px;font-weight:600;">Historial de planes</div>
+        <span id="historial-counter" style="font-size:11px;color:var(--text-3);background:var(--bg);border:1px solid var(--border);padding:2px 8px;border-radius:20px;"></span>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <select id="historial-filter-goal" onchange="loadHistorial()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);font-family:'DM Sans',sans-serif;">
+          <option value="">Todos los objetivos</option>
+          <option value="cut">Pérdida de peso</option>
+          <option value="bulk">Ganancia muscular</option>
+          <option value="maintenance">Mantenimiento</option>
+        </select>
+        <select id="historial-sort" onchange="renderHistorial(allPlans)" style="font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);font-family:'DM Sans',sans-serif;">
+          <option value="recent">Más recientes</option>
+          <option value="oldest">Más antiguos</option>
+          <option value="name">Nombre A-Z</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-bottom:16px;">
+      <input id="historial-search" type="text" placeholder="Buscar por nombre de paciente..."
+        style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:'DM Sans',sans-serif;"
+        oninput="filterHistorial()">
+    </div>
+    <div id="historial-loading" style="display:none;color:var(--text-3);font-size:13px;padding:20px 0;">Cargando historial...</div>
+    <div id="historial-empty" style="display:none;text-align:center;padding:40px;color:var(--text-3);">
+      <div style="font-size:32px;margin-bottom:8px;">📋</div>
+      <div style="font-size:14px;font-weight:500;margin-bottom:4px;">Sin planes aún</div>
+      <div style="font-size:12px;">Genera tu primer plan para comenzar</div>
+    </div>
+    <div id="historial-list"></div>
   </div>
 </div>
 
@@ -733,6 +760,62 @@ async function generatePlan(){
   document.getElementById('ins-imc-class').textContent=imcClass;
   document.getElementById('ins-imc-val').textContent='IMC: '+imc.toFixed(2);
   unlockStep(3);recalcDC();
+}
+
+// ===== HISTORIAL =====
+let allPlans = [];
+
+async function loadHistorial(){
+  document.getElementById('historial-loading').style.display='block';
+  document.getElementById('historial-list').innerHTML='';
+  const goal = document.getElementById('historial-filter-goal')?.value || '';
+  const url = API+'/plans'+(goal?'?goal='+goal:'');
+  try {
+    const res = await fetch(url, {headers:{'Authorization':'Bearer '+token}});
+    allPlans = await res.json();
+    renderHistorial(allPlans);
+  } catch(e) { console.error('Erro historial:', e); }
+  document.getElementById('historial-loading').style.display='none';
+}
+
+function renderHistorial(list){
+  const wrap = document.getElementById('historial-list');
+  const empty = document.getElementById('historial-empty');
+  const counter = document.getElementById('historial-counter');
+  if(counter) counter.textContent = list.length + ' plan(es)';
+  if(!list.length){ empty.style.display='block'; wrap.innerHTML=''; return; }
+  empty.style.display='none';
+  const goalLabel = {cut:'Pérdida de peso', bulk:'Ganancia muscular', maintenance:'Mantenimiento'};
+  const goalColor = {cut:'var(--danger)', bulk:'var(--accent)', maintenance:'var(--blue)'};
+  const sort = document.getElementById('historial-sort')?.value || 'recent';
+  const sorted = [...list];
+  if(sort==='oldest') sorted.sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+  else if(sort==='name') sorted.sort((a,b)=>(a.patient_name||'').localeCompare(b.patient_name||''));
+  wrap.innerHTML = sorted.map(p => {
+    const initials = (p.patient_name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+    return `
+    <div class="patient-row" style="margin-bottom:8px;">
+      <div class="patient-avatar" style="background:var(--bg);border:1px solid var(--border);color:var(--text-2);">${initials}</div>
+      <div style="flex:1;">
+        <div style="font-size:13px;font-weight:600;">${p.patient_name||'Sin nombre'}</div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:2px;">
+          ${p.weight}kg · TMB ${p.tmb} kcal · GET ${p.get} kcal
+        </div>
+      </div>
+      <div style="text-align:right;font-size:11px;">
+        <div style="font-weight:600;color:${goalColor[p.goal]||'var(--text-2)'};">${goalLabel[p.goal]||p.goal}</div>
+        <div style="color:var(--text-3);margin-top:2px;">${p.created_at}</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        <button class="btn btn-primary" style="font-size:11px;padding:5px 12px;" onclick="openPlan(${p.id})">Abrir</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterHistorial(){
+  const q = document.getElementById('historial-search').value.toLowerCase();
+  renderHistorial(allPlans.filter(p=>(p.patient_name||'').toLowerCase().includes(q)));
 }
 
 // ===== MODAL NUEVO PLAN =====
@@ -1009,6 +1092,7 @@ function showSection(name){
   const sec=document.getElementById('section-'+name);
   if(sec)sec.classList.add('active');
   if(name==='pacientes' && token) loadPatients();
+  if(name==='historial' && token) loadHistorial();
   const sb=document.getElementById('wizard-stepbar');
   if(sb)sb.style.display=name==='nuevo'?'flex':'none';
   document.querySelectorAll('.topbar-btn').forEach(b=>b.classList.remove('active'));

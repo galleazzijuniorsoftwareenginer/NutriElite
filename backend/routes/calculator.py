@@ -118,6 +118,33 @@ def generate_plan(
     }
 
 
+
+# ---------- GET ALL PLANS ----------
+@router.get("/plans")
+def get_all_plans(
+    db: Session = Depends(get_db),
+    token: dict = Depends(verify_token),
+    goal: str = None
+):
+    username = token["sub"]
+    db_user = db.query(User).filter(User.username == username).first()
+    query = db.query(Plan).filter(Plan.user_id == db_user.id)
+    if goal:
+        query = query.filter(Plan.goal == goal)
+    plans = query.order_by(Plan.created_at.desc()).all()
+    return [{
+        "id": p.id,
+        "patient_name": p.patient_name,
+        "patient_id": p.patient_id,
+        "goal": p.goal,
+        "weight": p.weight,
+        "height": p.height,
+        "age": p.age,
+        "tmb": round(p.tmb, 0),
+        "get": round(p.get, 0),
+        "created_at": str(p.created_at)[:10]
+    } for p in plans]
+
 # ---------- GET USER PLAN HISTORY ----------
 @router.get("/plans/{plan_id}/pdf")
 def export_plan_pdf(
