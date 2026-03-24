@@ -16,7 +16,6 @@ def generate_plan_pdf(plan, portions, menu_data=None):
     styles = getSampleStyleSheet()
 
     from backend.database import SessionLocal
-
     db = SessionLocal()
     audit = SMAECalculationService.calculate(plan.id, db)
     db.close()
@@ -33,11 +32,6 @@ def generate_plan_pdf(plan, portions, menu_data=None):
     else:
         bmi_class = "Obesidad"
 
-    closure_percent = round(
-        (audit["energy_validation"]["kcal_from_macros"] / plan.get) * 100,
-        1
-    )
-
     elements.append(Paragraph("INFORME NUTRICIONAL CLÍNICO", styles["Title"]))
     elements.append(Spacer(1, 0.3 * inch))
 
@@ -45,36 +39,33 @@ def generate_plan_pdf(plan, portions, menu_data=None):
     elements.append(Spacer(1, 0.2 * inch))
 
     patient_data = [
-    ["Paciente:", f"{plan.patient_name}"],
-    ["Email:", f"{plan.patient_email}"],
-    ["Teléfono:", f"{plan.patient_phone}"],
-    ["Edad:", f"{plan.age} años"],
-    ["Género:", f"{plan.gender}"],
-    ["Peso:", f"{plan.weight} kg"],
-    ["Altura:", f"{plan.height} cm"],
-    ["Nivel de actividad:", f"{plan.activity_level}"],
-    ["Objetivo:", f"{plan.goal}"],
-    ["Fecha:", f"{plan.created_at}"],
+        ["Paciente:", f"{plan.patient_name}"],
+        ["Email:", f"{plan.patient_email}"],
+        ["Teléfono:", f"{plan.patient_phone}"],
+        ["Edad:", f"{plan.age} años"],
+        ["Género:", f"{plan.gender}"],
+        ["Peso:", f"{plan.weight} kg"],
+        ["Altura:", f"{plan.height} cm"],
+        ["Nivel de actividad:", f"{plan.activity_level}"],
+        ["Objetivo:", f"{plan.goal}"],
+        ["Fecha:", f"{plan.created_at}"],
     ]
 
     patient_table = Table(patient_data, colWidths=[150, 300])
-
     patient_table.setStyle(TableStyle([
-    ("GRID", (0, 0), (-1, -1), 0.5, colors.lightgrey),
-    ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
-    ("ALIGN", (0, 0), (-1, -1), "LEFT"),
-    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.lightgrey),
+        ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
+        ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
     ]))
-
     elements.append(patient_table)
     elements.append(Spacer(1, 0.4 * inch))
+
     elements.append(Paragraph("Evaluación Antropométrica", styles["Heading2"]))
     elements.append(Spacer(1, 0.2 * inch))
     elements.append(Paragraph(f"IMC: {bmi}", styles["Normal"]))
     elements.append(Paragraph(f"Clasificación: {bmi_class}", styles["Normal"]))
     elements.append(Spacer(1, 0.3 * inch))
-
-    
 
     elements.append(Paragraph("Auditoría Nutricional", styles["Heading2"]))
     elements.append(Spacer(1, 0.2 * inch))
@@ -86,7 +77,6 @@ def generate_plan_pdf(plan, portions, menu_data=None):
     protein_kcal = protein_g * 4
     fats_kcal = fats_g * 9
     carbs_kcal = carbs_g * 4
-
     total_kcal = protein_kcal + fats_kcal + carbs_kcal
 
     protein_pct = round((protein_kcal / total_kcal) * 100, 1) if total_kcal else 0
@@ -102,24 +92,21 @@ def generate_plan_pdf(plan, portions, menu_data=None):
     ]
 
     macro_table = Table(macro_table_data, repeatRows=1)
-
     macro_table.setStyle(TableStyle([
         ("BACKGROUND", (0,0), (-1,0), colors.lightgrey),
         ("GRID", (0,0), (-1,-1), 0.5, colors.grey),
         ("ALIGN", (1,1), (-1,-1), "CENTER"),
         ("FONTNAME", (0,0), (-1,0), "Helvetica-Bold"),
     ]))
-
     elements.append(macro_table)
     elements.append(Spacer(1, 0.3 * inch))
+
     elements.append(Paragraph("Distribución SMAE", styles["Heading2"]))
     elements.append(Spacer(1, 0.2 * inch))
 
-    # Cabeçalho da tabela
     table_data = [
         ["Grupo", "Subgrupo", "Porciones", "Kcal", "Prot (g)", "Grasa (g)", "Carb (g)"]
     ]
-
     for row in audit["smae_table"]:
         table_data.append([
             row["group"],
@@ -130,11 +117,8 @@ def generate_plan_pdf(plan, portions, menu_data=None):
             round(row["fats"], 1),
             round(row["carbs"], 1),
         ])
-
-    # Linha de totais
     table_data.append([
-        "TOTAL",
-        "",
+        "TOTAL", "",
         "",
         round(audit["totals"]["kcal_from_table"], 1),
         round(audit["totals"]["protein_g"], 1),
@@ -143,38 +127,67 @@ def generate_plan_pdf(plan, portions, menu_data=None):
     ])
 
     table = Table(table_data, repeatRows=1)
-
     table.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
         ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
         ("ALIGN", (2, 1), (-1, -1), "CENTER"),
     ]))
-
     elements.append(table)
     elements.append(Spacer(1, 0.3 * inch))
 
     # =========================
-    # MENU GERADO POR IA
+    # CARDÁPIO SEMANAL 7 DIAS
     # =========================
     import sys
-    print("MENU_DATA RECEBIDO:", str(menu_data)[:500], file=sys.stderr)
-    if menu_data and "meals" in menu_data:
+    print("MENU_DATA RECEBIDO:", str(menu_data)[:200], file=sys.stderr)
+
+    if menu_data and "semana" in menu_data:
+        elements.append(Paragraph("Plan Alimenticio Semanal", styles["Heading2"]))
+        elements.append(Spacer(1, 0.2 * inch))
+
+        for dia in menu_data["semana"]:
+            elements.append(Paragraph(f"<b>{dia['dia']}</b>", styles["Heading3"]))
+            elements.append(Spacer(1, 0.1 * inch))
+
+            for comida in dia["comidas"]:
+                elements.append(Paragraph(
+                    f"<i>{comida['tiempo']}</i> — {comida['kcal']} kcal",
+                    styles["Normal"]
+                ))
+                meal_data = [["Alimento", "Cantidad (g)", "Kcal"]]
+                for item in comida["itens"]:
+                    meal_data.append([
+                        item["alimento"],
+                        f"{item.get('quantidade_g') or item.get('qty', '—')}g",
+                        f"{item.get('kcal', '—')} kcal"
+                    ])
+                meal_table = Table(meal_data, colWidths=[220, 100, 130])
+                meal_table.setStyle(TableStyle([
+                    ("BACKGROUND", (0,0), (-1,0), colors.lightgrey),
+                    ("GRID", (0,0), (-1,-1), 0.5, colors.grey),
+                    ("FONTNAME", (0,0), (-1,0), "Helvetica-Bold"),
+                    ("ALIGN", (1,1), (-1,-1), "CENTER"),
+                ]))
+                elements.append(meal_table)
+                elements.append(Spacer(1, 0.1 * inch))
+
+            # Totais do dia
+            macros = dia.get("macros", {})
+            elements.append(Paragraph(
+                f"<b>Total del día:</b> {macros.get('kcal_total', '—')} kcal | "
+                f"Prot: {macros.get('proteina_g', '—')}g | "
+                f"Carb: {macros.get('carb_g', '—')}g | "
+                f"Grasa: {macros.get('gordura_g', '—')}g",
+                styles["Normal"]
+            ))
+            elements.append(Spacer(1, 0.3 * inch))
+
+    # fallback: formato antigo (3 opciones)
+    elif menu_data and "meals" in menu_data:
         elements.append(Paragraph("Cardápio Alimentar", styles["Heading2"]))
         elements.append(Spacer(1, 0.1 * inch))
         elements.append(Paragraph(f"<b>{menu_data.get('name', 'Menu selecionado')}</b>", styles["Normal"]))
         elements.append(Spacer(1, 0.15 * inch))
-
-        FOOD_GRAMS = {
-            "Frango grelhado": 130, "Atum em água": 100, "Ovo cozido": 120,
-            "Carne magra": 130, "Tilápia assada": 130, "Clara de ovo": 240,
-            "Feijão carioca": 80, "Lentilha": 80, "Grão-de-bico": 80,
-            "Arroz branco": 75, "Batata doce": 100, "Aveia": 60,
-            "Macarrão integral": 80, "Banana": 120, "Maçã": 150,
-            "Mamão": 120, "Brócolis": 100, "Espinafre": 80,
-            "Cenoura": 80, "Azeite": 10, "Castanha": 20,
-            "Iogurte grego": 170, "Leite desnatado": 200,
-            "Mel": 15, "Açúcar mascavo": 10,
-        }
 
         for meal in menu_data["meals"]:
             elements.append(Paragraph(f"<b>{meal['meal']}</b>", styles["Heading3"]))

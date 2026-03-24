@@ -337,13 +337,13 @@
   <div class="step-panel" id="panel-5">
     <div class="card">
       <div class="card-title">Menu gerado por IA <span class="badge badge-blue">inteligência artificial</span></div>
-      <p style="font-size:12px;color:var(--text-2);margin-bottom:16px;">3 opções de cardápio baseadas nos macros do paciente. Selecione e troque alimentos se necessário.</p>
+      <p style="font-size:12px;color:var(--text-2);margin-bottom:16px;">Cardápio semanal 7 dias baseado nos macros do paciente. Selecione o dia e troque alimentos se necessário.</p>
       <div class="menu-loading" id="menu-loading"><div class="spinner"></div> Gerando opções com IA...</div>
       <div id="menu-not-generated">
         <button class="btn btn-ai btn-full" onclick="generateMenu()">Gerar menu com IA</button>
       </div>
       <div id="menu-result" style="display:none">
-        <div class="section-title">Escolha uma opção</div>
+        <div class="section-title">Selecione o dia</div>
         <div class="option-selector" id="option-selector"></div>
         <div class="menu-options" id="menu-options-wrap"></div>
         <div style="background:var(--accent-light);border:1px solid #b7deca;border-radius:var(--radius);padding:10px 14px;font-size:12px;color:var(--accent);margin-bottom:12px;" id="selected-option-info">Nenhuma opção selecionada.</div>
@@ -459,7 +459,7 @@
 <script>
 const API = window.location.origin;
 let token=null,planId=null,planData=null,currentStep=2,maxStep=2;
-let auditData=null,generatedMenus=[],selectedMenuOption=0;
+let auditData=null,generatedMenus=[],selectedMenuOption=0,weeklyMenu=null;
 
 function switchTab(tab){
   document.getElementById('form-login').style.display=tab==='login'?'block':'none';
@@ -626,7 +626,7 @@ function renderMenus(){
   generatedMenus.forEach((menu,idx)=>{
     const btn=document.createElement('button');
     btn.className='opt-btn'+(idx===selectedMenuOption?' active':'');
-    btn.textContent='Opção '+(idx+1);
+    const dias=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];btn.textContent=dias[idx]||('Opção '+(idx+1));
     btn.onclick=()=>selectOpt(idx);
     sel.appendChild(btn);
     const card=document.createElement('div');
@@ -655,7 +655,7 @@ function selectOpt(idx){
 
 function updateSelInfo(){
   const m=generatedMenus[selectedMenuOption];
-  if(m)document.getElementById('selected-option-info').textContent=m.name+' selecionado — '+m.macros.kcal+' kcal | '+m.macros.prot+'g prot | '+m.macros.carb+'g carb | '+m.macros.fat+'g gord';
+  if(m)document.getElementById('selected-option-info').textContent=(weeklyMenu?m.name:m.name+' selecionado')+' — '+m.macros.kcal+' kcal | '+m.macros.prot+'g prot | '+m.macros.carb+'g carb | '+m.macros.fat+'g gord';
 }
 
 async function generateMenu(){
@@ -668,23 +668,45 @@ async function generateMenu(){
     });
     const data = await res.json();
     console.log('AI RESPONSE:', JSON.stringify(data).slice(0,500));
-    generatedMenus = data.opciones.map((op, idx) => ({
-      name: op.nombre,
-      meals: (op.refeicoes || []).map(r => ({
-        meal: r.refeicao,
-        items: (r.itens || []).map(i => ({
-          food: i.alimento,
-          qty: i.quantidade_g ? i.quantidade_g + 'g' : (i.qty || '100g'),
-          kcal: i.kcal
-        }))
-      })),
-      macros: {
-        prot: op.macros ? op.macros.proteina_g : 0,
-        carb: op.macros ? op.macros.carb_g : 0,
-        fat: op.macros ? op.macros.gordura_g : 0,
-        kcal: op.macros ? op.macros.kcal_total : 0
-      }
-    }));
+    if (data.semana) {
+      generatedMenus = data.semana.map((dia) => ({
+        name: dia.dia,
+        meals: (dia.comidas || []).map(r => ({
+          meal: r.tiempo,
+          items: (r.itens || []).map(i => ({
+            food: i.alimento,
+            qty: i.quantidade_g ? i.quantidade_g + 'g' : '100g',
+            kcal: i.kcal
+          }))
+        })),
+        macros: {
+          prot: dia.macros ? dia.macros.proteina_g : 0,
+          carb: dia.macros ? dia.macros.carb_g : 0,
+          fat: dia.macros ? dia.macros.gordura_g : 0,
+          kcal: dia.macros ? dia.macros.kcal_total : 0
+        }
+      }));
+      weeklyMenu = data;
+    } else {
+      generatedMenus = data.opciones ? data.opciones.map((op, idx) => ({
+        name: op.nombre,
+        meals: (op.refeicoes || []).map(r => ({
+          meal: r.refeicao,
+          items: (r.itens || []).map(i => ({
+            food: i.alimento,
+            qty: i.quantidade_g ? i.quantidade_g + 'g' : (i.qty || '100g'),
+            kcal: i.kcal
+          }))
+        })),
+        macros: {
+          prot: op.macros ? op.macros.proteina_g : 0,
+          carb: op.macros ? op.macros.carb_g : 0,
+          fat: op.macros ? op.macros.gordura_g : 0,
+          kcal: op.macros ? op.macros.kcal_total : 0
+        }
+      })) : [];
+      weeklyMenu = null;
+    }
   } catch(e) {
     console.error('Erro IA:', e);
     generatedMenus = [0,1,2].map(i=>buildMenu(i));
@@ -745,8 +767,8 @@ function updatePDFSummary(){
 async function downloadPDF(){
   if(!planId)return;
   document.getElementById('loading-pdf').classList.add('visible');
-  const m=generatedMenus[selectedMenuOption];
-  const menuParam=m?'?menu='+encodeURIComponent(JSON.stringify(m)):'';
+  const pdfPayload = weeklyMenu ? weeklyMenu : generatedMenus[selectedMenuOption];
+  const menuParam=pdfPayload?'?menu='+encodeURIComponent(JSON.stringify(pdfPayload)):'';
   const res=await fetch(API+'/plans/'+planId+'/pdf'+menuParam,{headers:{'Authorization':'Bearer '+token}});
   document.getElementById('loading-pdf').classList.remove('visible');
   const blob=await res.blob();
