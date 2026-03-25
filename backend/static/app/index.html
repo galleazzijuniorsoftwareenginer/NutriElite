@@ -252,6 +252,11 @@
     </nav>
   </div>
   <div class="topbar-right">
+    <div style="display:flex;gap:2px;background:#2a2a27;border-radius:6px;padding:2px;">
+      <button onclick="setLang('es')" id="lang-es" style="background:#1a6b4a;border:none;color:white;font-size:10px;font-weight:600;padding:4px 8px;border-radius:4px;cursor:pointer;font-family:'DM Sans',sans-serif;">ES</button>
+      <button onclick="setLang('pt')" id="lang-pt" style="background:transparent;border:none;color:#9e9b95;font-size:10px;font-weight:600;padding:4px 8px;border-radius:4px;cursor:pointer;font-family:'DM Sans',sans-serif;">PT</button>
+      <button onclick="setLang('en')" id="lang-en" style="background:transparent;border:none;color:#9e9b95;font-size:10px;font-weight:600;padding:4px 8px;border-radius:4px;cursor:pointer;font-family:'DM Sans',sans-serif;">EN</button>
+    </div>
     <button class="topbar-btn-pro" onclick="showSection('upgrade')">⭐ Pro</button>
     <div style="position:relative;" id="profile-menu-wrap">
       <button onclick="toggleProfileMenu()" style="display:flex;align-items:center;gap:8px;background:#2a2a27;border:none;border-radius:8px;padding:5px 10px;cursor:pointer;color:white;">
@@ -978,7 +983,7 @@ async function login(){
   const du=document.getElementById('dropdown-username'); if(du) du.textContent=user;
   document.getElementById('auth-screen').style.display='none';
   document.getElementById('clinical-area').style.display='block';
-  setTimeout(()=>{ if(token) loadDashboard(); }, 100);
+  setTimeout(()=>{ if(token) loadDashboard(); initLang(); }, 100);
   unlockStep(2);showPanel(2);
 }
 
@@ -1443,6 +1448,197 @@ function newPlanForPatient(id, name, email, phone){
     if(em) em.value = email;
     if(ph) ph.value = phone;
   }, 150);
+}
+
+// ===== i18n =====
+const i18n = {
+  es: {
+    // Topbar
+    'nav-inicio': 'Inicio',
+    'nav-pacientes': 'Mis pacientes',
+    'nav-nuevo': '+ Nuevo plan',
+    'nav-historial': 'Historial',
+    'nav-plantillas': 'Plantillas',
+    // Dashboard
+    'dashboard-new-plan': '+ Nuevo plan',
+    'metric-label-pacientes': 'Pacientes',
+    'metric-label-mes': 'Planes este mes',
+    'metric-label-total': 'Total planes',
+    'metric-label-objetivo': 'Objetivo + común',
+    'metric-sub-pacientes': 'total registrados',
+    'metric-sub-mes': 'generados',
+    'metric-sub-total': 'histórico',
+    'metric-sub-objetivo': 'entre tus pacientes',
+    // Wizard
+    'wizard-title-patient': 'Datos del paciente',
+    'tab-personal-label': '👤 Datos personales',
+    'tab-antro-label': '📏 Antropometría',
+    'tab-clinico-label': '🏥 Historial clínico',
+    'btn-calcular': 'Calcular plan metabólico',
+    'btn-audit': 'Generar auditoría SMAE con estos %',
+    'btn-generate-menu': 'Generar menú con IA',
+    'btn-export-pdf': 'Exportar PDF clínico completo',
+    // Secciones
+    'section-title-pacientes': 'Mis pacientes',
+    'section-title-historial': 'Historial de planes',
+    'section-title-plantillas': 'Plantillas',
+    'section-title-perfil': 'Mi perfil',
+    // Perfil
+    'perfil-title-logo': 'Logo de la clínica',
+    'perfil-title-datos': 'Datos profesionales',
+    'perfil-title-preview': 'Vista previa del encabezado PDF',
+    'btn-save-perfil': 'Guardar perfil',
+    // Audit
+    'audit-title': 'Auditoría nutricional',
+    'audit-smae': 'Distribución SMAE',
+    // Menu
+    'menu-select-day': 'Selecciona el día',
+    'menu-loading': 'Generando menú con IA...',
+    // PDF
+    'pdf-title': 'Exportar PDF clínico',
+    'pdf-summary': 'Resumen',
+    // Botões gerais
+    'btn-agregar-paciente': '+ Agregar paciente',
+    'btn-cancelar': 'Cancelar',
+    'btn-guardar': 'Guardar paciente',
+    'dropdown-perfil': 'Mi perfil',
+    'dropdown-upgrade': 'Planes y upgrades',
+    'dropdown-salir': 'Salir',
+  },
+  pt: {
+    'nav-inicio': 'Início',
+    'nav-pacientes': 'Meus pacientes',
+    'nav-nuevo': '+ Novo plano',
+    'nav-historial': 'Histórico',
+    'nav-plantillas': 'Modelos',
+    'dashboard-new-plan': '+ Novo plano',
+    'metric-label-pacientes': 'Pacientes',
+    'metric-label-mes': 'Planos este mês',
+    'metric-label-total': 'Total planos',
+    'metric-label-objetivo': 'Objetivo + comum',
+    'metric-sub-pacientes': 'total registrados',
+    'metric-sub-mes': 'gerados',
+    'metric-sub-total': 'histórico',
+    'metric-sub-objetivo': 'entre seus pacientes',
+    'wizard-title-patient': 'Dados do paciente',
+    'tab-personal-label': '👤 Dados pessoais',
+    'tab-antro-label': '📏 Antropometria',
+    'tab-clinico-label': '🏥 Histórico clínico',
+    'btn-calcular': 'Calcular plano metabólico',
+    'btn-audit': 'Gerar auditoria SMAE com esses %',
+    'btn-generate-menu': 'Gerar menu com IA',
+    'btn-export-pdf': 'Exportar PDF clínico completo',
+    'section-title-pacientes': 'Meus pacientes',
+    'section-title-historial': 'Histórico de planos',
+    'section-title-plantillas': 'Modelos',
+    'section-title-perfil': 'Meu perfil',
+    'perfil-title-logo': 'Logo da clínica',
+    'perfil-title-dados': 'Dados profissionais',
+    'perfil-title-preview': 'Pré-visualização do cabeçalho PDF',
+    'btn-save-perfil': 'Salvar perfil',
+    'audit-title': 'Auditoria nutricional',
+    'audit-smae': 'Distribuição SMAE',
+    'menu-select-day': 'Selecione o dia',
+    'menu-loading': 'Gerando menu com IA...',
+    'pdf-title': 'Exportar PDF clínico',
+    'pdf-summary': 'Resumo',
+    'btn-agregar-paciente': '+ Adicionar paciente',
+    'btn-cancelar': 'Cancelar',
+    'btn-guardar': 'Salvar paciente',
+    'dropdown-perfil': 'Meu perfil',
+    'dropdown-upgrade': 'Planos e upgrades',
+    'dropdown-salir': 'Sair',
+  },
+  en: {
+    'nav-inicio': 'Home',
+    'nav-pacientes': 'My patients',
+    'nav-nuevo': '+ New plan',
+    'nav-historial': 'History',
+    'nav-plantillas': 'Templates',
+    'dashboard-new-plan': '+ New plan',
+    'metric-label-pacientes': 'Patients',
+    'metric-label-mes': 'Plans this month',
+    'metric-label-total': 'Total plans',
+    'metric-label-objetivo': 'Most common goal',
+    'metric-sub-pacientes': 'total registered',
+    'metric-sub-mes': 'generated',
+    'metric-sub-total': 'all time',
+    'metric-sub-objetivo': 'among your patients',
+    'wizard-title-patient': 'Patient data',
+    'tab-personal-label': '👤 Personal data',
+    'tab-antro-label': '📏 Anthropometry',
+    'tab-clinico-label': '🏥 Clinical history',
+    'btn-calcular': 'Calculate metabolic plan',
+    'btn-audit': 'Generate SMAE audit with these %',
+    'btn-generate-menu': 'Generate AI menu',
+    'btn-export-pdf': 'Export full clinical PDF',
+    'section-title-pacientes': 'My patients',
+    'section-title-historial': 'Plan history',
+    'section-title-plantillas': 'Templates',
+    'section-title-perfil': 'My profile',
+    'perfil-title-logo': 'Clinic logo',
+    'perfil-title-dados': 'Professional data',
+    'perfil-title-preview': 'PDF header preview',
+    'btn-save-perfil': 'Save profile',
+    'audit-title': 'Nutritional audit',
+    'audit-smae': 'SMAE distribution',
+    'menu-select-day': 'Select day',
+    'menu-loading': 'Generating AI menu...',
+    'pdf-title': 'Export clinical PDF',
+    'pdf-summary': 'Summary',
+    'btn-agregar-paciente': '+ Add patient',
+    'btn-cancelar': 'Cancel',
+    'btn-guardar': 'Save patient',
+    'dropdown-perfil': 'My profile',
+    'dropdown-upgrade': 'Plans & upgrades',
+    'dropdown-salir': 'Sign out',
+  }
+};
+
+let currentLang = 'es';
+
+function setLang(lang){
+  currentLang = lang;
+  localStorage.setItem('nutrielite_lang', lang);
+  const t = i18n[lang];
+
+  // Atualiza botões de idioma
+  ['es','pt','en'].forEach(l => {
+    const btn = document.getElementById('lang-'+l);
+    if(btn){
+      btn.style.background = l===lang ? '#1a6b4a' : 'transparent';
+      btn.style.color = l===lang ? 'white' : '#9e9b95';
+    }
+  });
+
+  // Atualiza elementos por ID
+  const updates = {
+    'nav-inicio': 'textContent',
+    'nav-pacientes': 'textContent',
+    'nav-nuevo': 'textContent',
+    'nav-historial': 'textContent',
+    'nav-plantillas': 'textContent',
+    'btn-audit': 'textContent',
+  };
+
+  Object.entries(updates).forEach(([id, prop]) => {
+    const el = document.getElementById(id);
+    if(el && t[id]) el[prop] = t[id];
+  });
+
+  // Botões por texto
+  document.querySelectorAll('button').forEach(btn => {
+    const key = Object.keys(t).find(k => {
+      const esVal = i18n.es[k];
+      return esVal && btn.textContent.trim() === esVal;
+    });
+    if(key && t[key]) btn.textContent = t[key];
+  });
+}
+
+function initLang(){
+  const saved = localStorage.getItem('nutrielite_lang') || 'es';
+  if(saved !== 'es') setLang(saved);
 }
 
 // ===== PLANTILLAS =====
