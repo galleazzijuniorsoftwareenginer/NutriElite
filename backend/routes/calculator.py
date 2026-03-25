@@ -181,6 +181,22 @@ def export_plan_pdf(
             perfil_data = json.loads(perfil)
         except Exception:
             perfil_data = None
+    # Se não veio perfil na URL, busca do banco
+    if not perfil_data:
+        from backend.models import NutritionistProfile
+        profile = db.query(NutritionistProfile).filter(
+            NutritionistProfile.user_id == db_user.id
+        ).first()
+        if profile:
+            perfil_data = {
+                "nombre": profile.nombre,
+                "cedula": profile.cedula,
+                "especialidad": profile.especialidad,
+                "clinica": profile.clinica,
+                "telefono": profile.telefono,
+                "email": profile.email,
+                "logo": profile.logo_base64,
+            }
     pdf_buffer = generate_plan_pdf(plan, portions, menu_data, perfil_data)
 
     return StreamingResponse(

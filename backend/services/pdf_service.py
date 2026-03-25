@@ -41,9 +41,10 @@ def generate_plan_pdf(plan, portions, menu_data=None, perfil_data=None):
 
         # Logo
         logo_cell = ""
-        if perfil_data.get("logo"):
+        if perfil_data.get("logo") or perfil_data.get("logo_base64"):
             try:
-                logo_b64 = perfil_data["logo"].split(",")[1] if "," in perfil_data["logo"] else perfil_data["logo"]
+                logo_raw = perfil_data.get("logo") or perfil_data.get("logo_base64","")
+                logo_b64 = logo_raw.split(",")[1] if "," in logo_raw else logo_raw
                 logo_bytes = base64.b64decode(logo_b64)
                 logo_buf = io.BytesIO(logo_bytes)
                 logo_img = RLImage(logo_buf, width=60, height=60)

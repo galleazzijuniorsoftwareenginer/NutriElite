@@ -1042,20 +1042,32 @@ function removeLogo(){
   showLogoPreview(null);
 }
 
-function loadPerfil(){
-  const p = JSON.parse(localStorage.getItem('nutrielite_perfil')||'{}');
-  const logo = localStorage.getItem('nutrielite_logo');
-  if(logo) showLogoPreview(logo);
-  document.getElementById('perfil-nombre').value = p.nombre||'';
-  document.getElementById('perfil-cedula').value = p.cedula||'';
-  document.getElementById('perfil-especialidad').value = p.especialidad||'';
-  document.getElementById('perfil-telefono').value = p.telefono||'';
-  document.getElementById('perfil-clinica').value = p.clinica||'';
-  document.getElementById('perfil-email').value = p.email||'';
+async function loadPerfil(){
+  try {
+    const res = await fetch(API+'/profile', {headers:{'Authorization':'Bearer '+token}});
+    const p = await res.json();
+    document.getElementById('perfil-nombre').value = p.nombre||'';
+    document.getElementById('perfil-cedula').value = p.cedula||'';
+    document.getElementById('perfil-especialidad').value = p.especialidad||'';
+    document.getElementById('perfil-telefono').value = p.telefono||'';
+    document.getElementById('perfil-clinica').value = p.clinica||'';
+    document.getElementById('perfil-email').value = p.email||'';
+    if(p.logo_base64) showLogoPreview(p.logo_base64);
+  } catch(e) {
+    const p = JSON.parse(localStorage.getItem('nutrielite_perfil')||'{}');
+    document.getElementById('perfil-nombre').value = p.nombre||'';
+    document.getElementById('perfil-cedula').value = p.cedula||'';
+    document.getElementById('perfil-especialidad').value = p.especialidad||'';
+    document.getElementById('perfil-telefono').value = p.telefono||'';
+    document.getElementById('perfil-clinica').value = p.clinica||'';
+    document.getElementById('perfil-email').value = p.email||'';
+    const logo = localStorage.getItem('nutrielite_logo');
+    if(logo) showLogoPreview(logo);
+  }
   updatePerfilPreview();
-  // Atualiza inputs para preview em tempo real
   ['perfil-nombre','perfil-cedula','perfil-especialidad','perfil-telefono','perfil-clinica','perfil-email'].forEach(id=>{
-    document.getElementById(id).oninput = updatePerfilPreview;
+    const el = document.getElementById(id);
+    if(el) el.oninput = updatePerfilPreview;
   });
 }
 
@@ -1077,7 +1089,8 @@ function updatePerfilPreview(){
   else if(previewLogo){ previewLogo.style.display='none'; }
 }
 
-function savePerfil(){
+async function savePerfil(){
+  const logo = localStorage.getItem('nutrielite_logo') || '';
   const p = {
     nombre: document.getElementById('perfil-nombre').value,
     cedula: document.getElementById('perfil-cedula').value,
@@ -1085,15 +1098,23 @@ function savePerfil(){
     telefono: document.getElementById('perfil-telefono').value,
     clinica: document.getElementById('perfil-clinica').value,
     email: document.getElementById('perfil-email').value,
+    logo_base64: logo,
   };
-  localStorage.setItem('nutrielite_perfil', JSON.stringify(p));
-  document.getElementById('perfil-saved').style.display='block';
-  setTimeout(()=>document.getElementById('perfil-saved').style.display='none', 3000);
+  const res = await fetch(API+'/profile', {
+    method: 'POST',
+    headers: {'Authorization':'Bearer '+token, 'Content-Type':'application/json'},
+    body: JSON.stringify(p)
+  });
+  if(res.ok){
+    localStorage.setItem('nutrielite_perfil', JSON.stringify(p));
+    document.getElementById('perfil-saved').style.display='block';
+    setTimeout(()=>document.getElementById('perfil-saved').style.display='none', 3000);
+  }
 }
 
 function getPerfilData(){
   const p = JSON.parse(localStorage.getItem('nutrielite_perfil')||'{}');
-  const logo = localStorage.getItem('nutrielite_logo');
+  const logo = localStorage.getItem('nutrielite_logo') || p.logo_base64 || '';
   if(logo) p.logo = logo;
   return p;
 }

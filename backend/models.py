@@ -108,3 +108,17 @@ class PlanFoodGroup(Base):
 
     plan = relationship("Plan", backref="plan_food_groups")
     food_group = relationship("FoodGroup")
+
+
+class NutritionistProfile(Base):
+    __tablename__ = "nutritionist_profiles"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True)
+    nombre = Column(String, nullable=True)
+    cedula = Column(String, nullable=True)
+    especialidad = Column(String, nullable=True)
+    clinica = Column(String, nullable=True)
+    telefono = Column(String, nullable=True)
+    email = Column(String, nullable=True)
+    logo_base64 = Column(String, nullable=True)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
