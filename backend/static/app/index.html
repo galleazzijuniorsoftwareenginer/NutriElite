@@ -619,10 +619,90 @@
 
 <!-- SECTION: INICIO -->
 <div id="section-inicio" class="section-area">
-  <div class="coming-soon">
-    <div class="coming-soon-icon">🏠</div>
-    <h2>Inicio</h2>
-    <p>Dashboard con resumen del día, pacientes recientes y accesos rápidos. Disponible en Sprint 4.</p>
+  <div class="main" style="padding:28px 32px;max-width:960px;">
+
+    <!-- Header bienvenida -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+      <div>
+        <div style="font-size:20px;font-weight:600;" id="dashboard-greeting">Buenos días 👋</div>
+        <div style="font-size:13px;color:var(--text-2);margin-top:2px;" id="dashboard-date">—</div>
+      </div>
+      <button class="btn btn-primary" onclick="showNewPlanModal()" style="padding:10px 20px;">+ Nuevo plan</button>
+    </div>
+
+    <!-- Métricas -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;" id="dashboard-metrics">
+      <div class="card" style="padding:16px;margin-bottom:0;">
+        <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Pacientes</div>
+        <div style="font-size:28px;font-weight:600;font-family:'DM Mono',monospace;" id="metric-pacientes">—</div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:2px;">total registrados</div>
+      </div>
+      <div class="card" style="padding:16px;margin-bottom:0;">
+        <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Planes este mes</div>
+        <div style="font-size:28px;font-weight:600;font-family:'DM Mono',monospace;color:var(--accent);" id="metric-planes-mes">—</div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:2px;">generados</div>
+      </div>
+      <div class="card" style="padding:16px;margin-bottom:0;">
+        <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Total planes</div>
+        <div style="font-size:28px;font-weight:600;font-family:'DM Mono',monospace;" id="metric-planes-total">—</div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:2px;">histórico</div>
+      </div>
+      <div class="card" style="padding:16px;margin-bottom:0;">
+        <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Objetivo + común</div>
+        <div style="font-size:18px;font-weight:600;color:var(--blue);" id="metric-objetivo">—</div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:2px;">entre tus pacientes</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+      <!-- Pacientes recentes -->
+      <div class="card" style="margin-bottom:0;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <div class="card-title" style="margin-bottom:0;">Pacientes recientes</div>
+          <button onclick="showSection('pacientes')" style="background:none;border:none;font-size:12px;color:var(--accent);cursor:pointer;font-family:'DM Sans',sans-serif;">Ver todos →</button>
+        </div>
+        <div id="dashboard-pacientes-list">
+          <div style="color:var(--text-3);font-size:12px;text-align:center;padding:20px;">Cargando...</div>
+        </div>
+      </div>
+
+      <!-- Últimos planes -->
+      <div class="card" style="margin-bottom:0;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <div class="card-title" style="margin-bottom:0;">Últimos planes</div>
+          <button onclick="showSection('historial')" style="background:none;border:none;font-size:12px;color:var(--accent);cursor:pointer;font-family:'DM Sans',sans-serif;">Ver historial →</button>
+        </div>
+        <div id="dashboard-planes-list">
+          <div style="color:var(--text-3);font-size:12px;text-align:center;padding:20px;">Cargando...</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Accesos rápidos -->
+    <div class="card" style="margin-top:16px;margin-bottom:0;">
+      <div class="card-title">Accesos rápidos</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
+        <button onclick="showNewPlanModal()" style="background:var(--accent-light);border:1px solid #b7deca;border-radius:var(--radius);padding:14px;cursor:pointer;text-align:center;font-family:'DM Sans',sans-serif;">
+          <div style="font-size:20px;margin-bottom:4px;">📋</div>
+          <div style="font-size:12px;font-weight:600;color:var(--accent);">Nuevo plan</div>
+        </button>
+        <button onclick="showSection('pacientes')" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:14px;cursor:pointer;text-align:center;font-family:'DM Sans',sans-serif;">
+          <div style="font-size:20px;margin-bottom:4px;">👥</div>
+          <div style="font-size:12px;font-weight:600;color:var(--text-2);">Mis pacientes</div>
+        </button>
+        <button onclick="showSection('historial')" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:14px;cursor:pointer;text-align:center;font-family:'DM Sans',sans-serif;">
+          <div style="font-size:20px;margin-bottom:4px;">📊</div>
+          <div style="font-size:12px;font-weight:600;color:var(--text-2);">Historial</div>
+        </button>
+        <button onclick="closeProfileMenu();showSection('perfil')" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:14px;cursor:pointer;text-align:center;font-family:'DM Sans',sans-serif;">
+          <div style="font-size:20px;margin-bottom:4px;">👤</div>
+          <div style="font-size:12px;font-weight:600;color:var(--text-2);">Mi perfil</div>
+        </button>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -884,6 +964,7 @@ async function login(){
   const du=document.getElementById('dropdown-username'); if(du) du.textContent=user;
   document.getElementById('auth-screen').style.display='none';
   document.getElementById('clinical-area').style.display='block';
+  setTimeout(()=>{ if(token) loadDashboard(); }, 100);
   unlockStep(2);showPanel(2);
 }
 
@@ -1349,6 +1430,85 @@ function newPlanForPatient(id, name, email, phone){
   }, 150);
 }
 
+// ===== DASHBOARD =====
+async function loadDashboard(){
+  // Saudação
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Buenos días' : hour < 18 ? 'Buenas tardes' : 'Buenas noches';
+  const user = document.getElementById('header-username')?.textContent || '';
+  document.getElementById('dashboard-greeting').textContent = greeting + (user && user !== '—' ? ', ' + user : '') + ' 👋';
+  
+  // Data
+  const now = new Date();
+  document.getElementById('dashboard-date').textContent = now.toLocaleDateString('es-MX', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+
+  try {
+    // Busca pacientes e planos em paralelo
+    const [pRes, plRes] = await Promise.all([
+      fetch(API+'/patients', {headers:{'Authorization':'Bearer '+token}}),
+      fetch(API+'/plans', {headers:{'Authorization':'Bearer '+token}})
+    ]);
+    const patients = await pRes.json();
+    const plans = await plRes.json();
+
+    // Métricas
+    document.getElementById('metric-pacientes').textContent = patients.length;
+    document.getElementById('metric-planes-total').textContent = plans.length;
+
+    // Planos este mês
+    const thisMonth = new Date().toISOString().slice(0,7);
+    const planesMes = plans.filter(p => p.created_at.startsWith(thisMonth)).length;
+    document.getElementById('metric-planes-mes').textContent = planesMes;
+
+    // Objetivo mais comum
+    const goalCount = {};
+    plans.forEach(p => { goalCount[p.goal] = (goalCount[p.goal]||0) + 1; });
+    const topGoal = Object.entries(goalCount).sort((a,b)=>b[1]-a[1])[0];
+    const goalLabel = {cut:'Pérdida de peso', bulk:'Ganancia muscular', maintenance:'Mantenimiento'};
+    document.getElementById('metric-objetivo').textContent = topGoal ? goalLabel[topGoal[0]] : '—';
+
+    // Pacientes recentes (últimos 5)
+    const recentPatients = [...patients].slice(0, 5);
+    const pWrap = document.getElementById('dashboard-pacientes-list');
+    if(!recentPatients.length){
+      pWrap.innerHTML = '<div style="color:var(--text-3);font-size:12px;text-align:center;padding:20px;">Sin pacientes aún</div>';
+    } else {
+      pWrap.innerHTML = recentPatients.map(p => {
+        const initials = p.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+        return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
+          <div style="width:30px;height:30px;border-radius:50%;background:var(--accent-light);color:var(--accent);font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${initials}</div>
+          <div style="flex:1;">
+            <div style="font-size:12px;font-weight:600;">${p.name}</div>
+            <div style="font-size:10px;color:var(--text-3);">${p.total_plans} plan(es)</div>
+          </div>
+          <button onclick="newPlanForPatient(${p.id},decodeURIComponent('${encodeURIComponent(p.name)}'),decodeURIComponent('${encodeURIComponent(p.email||'')}'),decodeURIComponent('${encodeURIComponent(p.phone||'')}'))" 
+            style="background:var(--accent);border:none;border-radius:6px;color:white;font-size:10px;padding:4px 8px;cursor:pointer;font-family:'DM Sans',sans-serif;">+ Plan</button>
+        </div>`;
+      }).join('');
+    }
+
+    // Últimos planos (5)
+    const recentPlans = plans.slice(0, 5);
+    const plWrap = document.getElementById('dashboard-planes-list');
+    if(!recentPlans.length){
+      plWrap.innerHTML = '<div style="color:var(--text-3);font-size:12px;text-align:center;padding:20px;">Sin planes aún</div>';
+    } else {
+      const goalColor = {cut:'var(--danger)', bulk:'var(--accent)', maintenance:'var(--blue)'};
+      plWrap.innerHTML = recentPlans.map(p => `
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
+          <div style="flex:1;">
+            <div style="font-size:12px;font-weight:600;">${p.patient_name||'Sin nombre'}</div>
+            <div style="font-size:10px;color:${goalColor[p.goal]||'var(--text-3)'};">${goalLabel[p.goal]||p.goal} · ${p.weight}kg</div>
+          </div>
+          <div style="font-size:10px;color:var(--text-3);">${p.created_at}</div>
+          <button onclick="openPlan(${p.id})"
+            style="background:var(--bg);border:1px solid var(--border);border-radius:6px;font-size:10px;padding:4px 8px;cursor:pointer;font-family:'DM Sans',sans-serif;">Abrir</button>
+        </div>`).join('');
+    }
+
+  } catch(e) { console.error('Dashboard error:', e); }
+}
+
 // ===== TABS PACIENTE =====
 function switchPatientTab(tab){
   ['personal','antro','clinico'].forEach(t=>{
@@ -1399,6 +1559,7 @@ function showSection(name){
   document.querySelectorAll('.section-area').forEach(el=>el.classList.remove('active'));
   const sec=document.getElementById('section-'+name);
   if(sec)sec.classList.add('active');
+  if(name==='inicio' && token) loadDashboard();
   if(name==='pacientes' && token) loadPatients();
   if(name==='historial' && token) loadHistorial();
   if(name==='perfil') loadPerfil();
