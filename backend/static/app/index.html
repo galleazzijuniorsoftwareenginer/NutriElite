@@ -488,6 +488,83 @@
       <div class="macro-summary" id="macro-summary"></div>
       <div class="section-title">Distribución SMAE</div>
       <div id="smae-table-wrap"></div>
+
+      <!-- Painéis abaixo da tabela SMAE -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:16px;" id="audit-bottom-panels">
+
+        <!-- Dietocálculo Meta -->
+        <div style="border:1px solid var(--border);border-radius:var(--radius);padding:12px;">
+          <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Dietocálculo (Meta)</div>
+          <table style="width:100%;font-size:11px;border-collapse:collapse;">
+            <thead><tr style="color:var(--text-3);">
+              <td></td><td style="text-align:center;padding:2px">Carb</td><td style="text-align:center;padding:2px">Prot</td><td style="text-align:center;padding:2px">Grasa</td>
+            </tr></thead>
+            <tbody>
+              <tr><td style="color:var(--text-2);padding:2px 0">%</td>
+                <td style="text-align:center;font-weight:600;color:var(--carb-color)" id="dc-pct-carb-side">—</td>
+                <td style="text-align:center;font-weight:600;color:var(--prot-color)" id="dc-pct-prot-side">—</td>
+                <td style="text-align:center;font-weight:600;color:var(--fat-color)" id="dc-pct-fat-side">—</td>
+              </tr>
+              <tr><td style="color:var(--text-2);padding:2px 0">gr.</td>
+                <td style="text-align:center" id="dc-gr-carb-side">—</td>
+                <td style="text-align:center" id="dc-gr-prot-side">—</td>
+                <td style="text-align:center" id="dc-gr-fat-side">—</td>
+              </tr>
+              <tr><td style="color:var(--text-2);padding:2px 0">g/kg</td>
+                <td style="text-align:center" id="dc-gkg-carb-side">—</td>
+                <td style="text-align:center" id="dc-gkg-prot-side">—</td>
+                <td style="text-align:center" id="dc-gkg-fat-side">—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Distribución real -->
+        <div style="border:1px solid var(--border);border-radius:var(--radius);padding:12px;">
+          <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Distribución real (SMAE)</div>
+          <table style="width:100%;font-size:11px;border-collapse:collapse;">
+            <thead><tr style="color:var(--text-3);">
+              <td></td><td style="text-align:center;padding:2px">Carb</td><td style="text-align:center;padding:2px">Prot</td><td style="text-align:center;padding:2px">Grasa</td>
+            </tr></thead>
+            <tbody>
+              <tr><td style="color:var(--text-2);padding:2px 0">%</td>
+                <td style="text-align:center;font-weight:600" id="real-pct-carb">—</td>
+                <td style="text-align:center;font-weight:600" id="real-pct-prot">—</td>
+                <td style="text-align:center;font-weight:600" id="real-pct-fat">—</td>
+              </tr>
+              <tr><td style="color:var(--text-2);padding:2px 0">gr.</td>
+                <td style="text-align:center" id="real-gr-carb">—</td>
+                <td style="text-align:center" id="real-gr-prot">—</td>
+                <td style="text-align:center" id="real-gr-fat">—</td>
+              </tr>
+              <tr><td style="color:var(--text-2);padding:2px 0">Rango</td>
+                <td style="text-align:center"><span id="rango-carb" style="font-size:10px;padding:2px 5px;border-radius:10px;">—</span></td>
+                <td style="text-align:center"><span id="rango-prot" style="font-size:10px;padding:2px 5px;border-radius:10px;">—</span></td>
+                <td style="text-align:center"><span id="rango-fat" style="font-size:10px;padding:2px 5px;border-radius:10px;">—</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Cierre energético + Ajustar -->
+        <div style="border:1px solid var(--border);border-radius:var(--radius);padding:12px;display:flex;flex-direction:column;justify-content:space-between;">
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Cierre energético</div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid var(--border);">
+              <span>GET planificado</span><span id="side-get" style="font-weight:600;font-family:monospace">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid var(--border);">
+              <span>Total SMAE</span><span id="side-smae-total" style="font-weight:600;font-family:monospace">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;">
+              <span>Diferencia</span><span id="side-diff" style="font-weight:600;font-family:monospace">—</span>
+            </div>
+          </div>
+          <button id="btn-ajustar-dc" onclick="ajustarDietocalculo()" style="width:100%;margin-top:10px;padding:8px;background:var(--accent);color:white;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">↺ Ajustar Dietocálculo</button>
+        </div>
+
+      </div>
+
       <div style="display:flex;justify-content:space-between;margin-top:16px;">
         <button class="btn btn-secondary" style="padding:8px 16px;font-size:12px" onclick="showPanel(3)">← Dietocálculo</button>
         <button class="btn btn-primary" style="padding:8px 16px;font-size:12px" onclick="showPanel(5)">Ir a Menú IA →</button>
@@ -578,82 +655,6 @@
     <div class="side-title">Radar nutricional</div>
     <div class="side-card">
       <div class="radar-wrap"><canvas id="radar-chart"></canvas></div>
-    </div>
-
-    <!-- Dietocálculo Meta -->
-    <div class="side-card">
-      <div class="side-title">Dietocálculo (Meta)</div>
-      <table style="width:100%;font-size:11px;border-collapse:collapse;">
-        <thead><tr style="color:var(--text-3);font-weight:600;">
-          <td></td><td style="text-align:center">Carb</td><td style="text-align:center">Prot</td><td style="text-align:center">Grasa</td><td style="text-align:center">Kcal</td>
-        </tr></thead>
-        <tbody>
-          <tr><td style="color:var(--text-2);padding:3px 0">%</td>
-            <td style="text-align:center;font-weight:600;color:var(--carb-color)" id="dc-pct-carb-side">—</td>
-            <td style="text-align:center;font-weight:600;color:var(--prot-color)" id="dc-pct-prot-side">—</td>
-            <td style="text-align:center;font-weight:600;color:var(--fat-color)" id="dc-pct-fat-side">—</td>
-            <td style="text-align:center;font-weight:600" id="dc-kcal-side">—</td>
-          </tr>
-          <tr><td style="color:var(--text-2);padding:3px 0">gr.</td>
-            <td style="text-align:center" id="dc-gr-carb-side">—</td>
-            <td style="text-align:center" id="dc-gr-prot-side">—</td>
-            <td style="text-align:center" id="dc-gr-fat-side">—</td>
-            <td></td>
-          </tr>
-          <tr><td style="color:var(--text-2);padding:3px 0">g/kg</td>
-            <td style="text-align:center" id="dc-gkg-carb-side">—</td>
-            <td style="text-align:center" id="dc-gkg-prot-side">—</td>
-            <td style="text-align:center" id="dc-gkg-fat-side">—</td>
-            <td></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Distribución real -->
-    <div class="side-card">
-      <div class="side-title">Distribución real (SMAE)</div>
-      <table style="width:100%;font-size:11px;border-collapse:collapse;">
-        <thead><tr style="color:var(--text-3);font-weight:600;">
-          <td></td><td style="text-align:center">Carb</td><td style="text-align:center">Prot</td><td style="text-align:center">Grasa</td><td style="text-align:center">Kcal</td>
-        </tr></thead>
-        <tbody>
-          <tr><td style="color:var(--text-2);padding:3px 0">%</td>
-            <td style="text-align:center;font-weight:600" id="real-pct-carb">—</td>
-            <td style="text-align:center;font-weight:600" id="real-pct-prot">—</td>
-            <td style="text-align:center;font-weight:600" id="real-pct-fat">—</td>
-            <td style="text-align:center" id="real-kcal">—</td>
-          </tr>
-          <tr><td style="color:var(--text-2);padding:3px 0">gr.</td>
-            <td style="text-align:center" id="real-gr-carb">—</td>
-            <td style="text-align:center" id="real-gr-prot">—</td>
-            <td style="text-align:center" id="real-gr-fat">—</td>
-            <td></td>
-          </tr>
-          <tr><td style="color:var(--text-2);padding:3px 0">Rango</td>
-            <td style="text-align:center"><span id="rango-carb" style="font-size:10px;padding:2px 5px;border-radius:10px;">—</span></td>
-            <td style="text-align:center"><span id="rango-prot" style="font-size:10px;padding:2px 5px;border-radius:10px;">—</span></td>
-            <td style="text-align:center"><span id="rango-fat" style="font-size:10px;padding:2px 5px;border-radius:10px;">—</span></td>
-            <td></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Cierre energético -->
-    <div class="side-card">
-      <div class="side-title">Cierre energético</div>
-      <div class="side-metric"><span>GET planificado</span><span class="side-metric-val" id="side-get">—</span></div>
-      <div class="side-metric"><span>Total SMAE</span><span class="side-metric-val" id="side-smae-total">—</span></div>
-      <div class="side-metric"><span>Diferencia</span><span class="side-metric-val" id="side-diff">—</span></div>
-    </div>
-
-    <!-- Botão Ajustar -->
-    <button id="btn-ajustar-dc" onclick="ajustarDietocalculo()" style="width:100%;margin-top:8px;padding:10px;background:var(--accent);color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">
-      ↺ Ajustar Dietocálculo
-    </button>
-    <div style="font-size:10px;color:var(--text-3);margin-top:6px;line-height:1.4;">
-      Ajusta o dietocálculo aos valores reais da distribuição SMAE selecionada.
     </div>
   </div>
 
