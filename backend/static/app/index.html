@@ -2018,9 +2018,52 @@ async function viewAudit(){
     <div class="macro-pill prot"><div class="macro-pill-val">${p.toFixed(1)}g</div><div class="macro-pill-label">Proteína (${pPct}%)</div></div>
     <div class="macro-pill fat"><div class="macro-pill-val">${f.toFixed(1)}g</div><div class="macro-pill-label">Grasas (${fPct}%)</div></div>
     <div class="macro-pill"><div class="macro-pill-val">${totalKcal.toFixed(0)}</div><div class="macro-pill-label">kcal totales</div></div>`;
-  let rows=auditData.smae_table.map(row=>`<tr><td><span class="group-tag">${row.group}</span></td><td>${row.subgroup||'—'}</td><td>${row.portions}</td><td>${row.kcal}</td><td>${row.protein}</td><td>${row.fats}</td><td>${row.carbs}</td></tr>`).join('');
-  rows+=`<tr class="total-row"><td colspan="3">TOTAL</td><td>${auditData.totals.kcal_from_table}</td><td>${p.toFixed(1)}</td><td>${f.toFixed(1)}</td><td>${c.toFixed(1)}</td></tr>`;
-  document.getElementById('smae-table-wrap').innerHTML=`<table><thead><tr><th>Grupo</th><th>Subgrupo</th><th>Porciones</th><th>Kcal</th><th>Prot (g)</th><th>Grasa (g)</th><th>Carb (g)</th></tr></thead><tbody>${rows}</tbody></table>`;
+  // Tabela SMAE editável
+  window._smaeRows = auditData.smae_table.map(r => ({...r}));
+
+  function recalcSmaeRow(idx) {
+    const inp = document.getElementById('smae-por-'+idx);
+    if (!inp) return;
+    const portions = Math.min(parseInt(inp.value)||0, idx===1?8:999);
+    inp.value = portions;
+    const orig = auditData.smae_table[idx];
+    const factor = orig.portions > 0 ? portions / orig.portions : 0;
+    window._smaeRows[idx] = {
+      ...orig,
+      portions,
+      kcal: Math.round(orig.kcal * factor),
+      protein: Math.round(orig.protein * factor),
+      fats: Math.round(orig.fats * factor),
+      carbs: Math.round(orig.carbs * factor),
+    };
+    renderSmaeTable();
+  }
+
+  function renderSmaeTable() {
+    const rows = window._smaeRows;
+    let tkcal=0,tprot=0,tfats=0,tcarbs=0;
+    rows.forEach(r=>{tkcal+=r.kcal;tprot+=r.protein;tfats+=r.fats;tcarbs+=r.carbs;});
+    const tbody = rows.map((row,i)=>`<tr>
+      <td><span class="group-tag">${row.group}</span></td>
+      <td>${row.subgroup||'—'}</td>
+      <td><input id="smae-por-${i}" type="number" min="0" max="${row.group==='Alimentos de origen animal'?8:99}" value="${row.portions}"
+        style="width:52px;border:1px solid var(--border);border-radius:6px;padding:3px 6px;font-size:13px;font-family:inherit;text-align:center;"
+        oninput="recalcSmaeRow(${i})"></td>
+      <td id="smae-kcal-${i}">${row.kcal}</td>
+      <td id="smae-prot-${i}">${row.protein}</td>
+      <td id="smae-fats-${i}">${row.fats}</td>
+      <td id="smae-carbs-${i}">${row.carbs}</td>
+    </tr>`).join('');
+    const foot=`<tr class="total-row"><td colspan="3">TOTAL</td><td>${tkcal}</td><td>${tprot}</td><td>${tfats}</td><td>${tcarbs}</td></tr>`;
+    document.getElementById('smae-table-wrap').innerHTML=`<table><thead><tr><th>Grupo</th><th>Subgrupo</th><th>Porciones</th><th>Kcal</th><th>Prot (g)</th><th>Grasa (g)</th><th>Carb (g)</th></tr></thead><tbody>${tbody}${foot}</tbody></table>`;
+    // re-bind após re-render
+    rows.forEach((_,i)=>{
+      const inp=document.getElementById('smae-por-'+i);
+      if(inp) inp.oninput=()=>recalcSmaeRow(i);
+    });
+  }
+
+  renderSmaeTable();
   unlockStep(4);unlockStep(5);unlockStep(6);showPanel(4);
 }
 
