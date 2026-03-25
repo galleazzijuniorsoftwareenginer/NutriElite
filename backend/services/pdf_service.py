@@ -33,6 +33,8 @@ def generate_plan_pdf(plan, portions, menu_data=None, perfil_data=None):
         bmi_class = "Obesidad"
 
     # Cabeçalho com branding do nutricionista
+    import sys
+    print("DEBUG perfil_data:", perfil_data, file=sys.stderr)
     if perfil_data and perfil_data.get("nombre"):
         from reportlab.platypus import HRFlowable
         from reportlab.platypus import Image as RLImage
@@ -47,6 +49,7 @@ def generate_plan_pdf(plan, portions, menu_data=None, perfil_data=None):
                 logo_b64 = logo_raw.split(",")[1] if "," in logo_raw else logo_raw
                 logo_bytes = base64.b64decode(logo_b64)
                 logo_buf = io.BytesIO(logo_bytes)
+                logo_buf.seek(0)
                 logo_img = RLImage(logo_buf, width=60, height=60)
                 logo_img.hAlign = "LEFT"
                 logo_cell = logo_img
@@ -120,6 +123,9 @@ def generate_plan_pdf(plan, portions, menu_data=None, perfil_data=None):
 
     elements.append(Paragraph("Evaluación Antropométrica", styles["Heading2"]))
     elements.append(Spacer(1, 0.2 * inch))
+
+    goal_label = getattr(plan, 'goal', '') or ''
+    activity_label = getattr(plan, 'activity_level', '') or ''
 
     antro_data = [
         ["IMC:", f"{bmi}"],
@@ -227,7 +233,7 @@ def generate_plan_pdf(plan, portions, menu_data=None, perfil_data=None):
                     styles["Normal"]
                 ))
                 meal_data = [["Alimento", "Cantidad (g)", "Kcal"]]
-                for item in comida["itens"]:
+                for item in comida.get("itens", comida.get("items", [])):
                     meal_data.append([
                         item["alimento"],
                         f"{item.get('quantidade_g') or item.get('qty', '—')}g",
