@@ -119,8 +119,21 @@ def generate_plan_pdf(plan, portions, menu_data=None, perfil_data=None):
 
     elements.append(Paragraph("Evaluación Antropométrica", styles["Heading2"]))
     elements.append(Spacer(1, 0.2 * inch))
-    elements.append(Paragraph(f"IMC: {bmi}", styles["Normal"]))
-    elements.append(Paragraph(f"Clasificación: {bmi_class}", styles["Normal"]))
+
+    antro_data = [
+        ["IMC:", f"{bmi}"],
+        ["Clasificación:", bmi_class],
+        ["Objetivo:", goal_label],
+        ["Nivel de actividad:", activity_label],
+    ]
+    antro_table = Table(antro_data, colWidths=[150, 300])
+    antro_table.setStyle(TableStyle([
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.lightgrey),
+        ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
+        ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+    ]))
+    elements.append(antro_table)
     elements.append(Spacer(1, 0.3 * inch))
 
     elements.append(Paragraph("Auditoría Nutricional", styles["Heading2"]))

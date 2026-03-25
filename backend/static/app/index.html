@@ -52,6 +52,9 @@
   .patient-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:var(--accent-light);color:var(--accent);}
   .profile-menu-item{padding:7px 10px;font-size:12px;border-radius:6px;cursor:pointer;color:var(--text);transition:background .1s;}
   .profile-menu-item:hover{background:var(--bg);}
+  .patient-tab{background:none;border:none;border-bottom:2px solid transparent;padding:8px 14px;font-size:12px;font-weight:500;color:var(--text-3);cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:-1px;transition:all .15s;}
+  .patient-tab:hover{color:var(--text-2);}
+  .patient-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
   .coming-soon{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:12px;color:var(--text-3);}
   .coming-soon-icon{font-size:40px;}
   .coming-soon h2{font-size:16px;font-weight:600;color:var(--text-2);}
@@ -294,25 +297,112 @@
   <!-- 2: PATIENT -->
   <div class="step-panel" id="panel-2">
     <div class="card">
-      <div class="card-title">Dados do paciente</div>
-      <div class="form-grid" style="margin-bottom:12px">
-        <div class="field"><label>Nombre completo</label><input id="name" placeholder="Juan Pérez"></div>
-        <div class="field"><label>Email</label><input id="email" placeholder="juan@email.com"></div>
-        <div class="field"><label>Telefone</label><input id="phone" placeholder="+52 664 ..."></div>
-        <div class="field"><label>Peso (kg)</label><input id="weight" type="number" placeholder="75"></div>
-        <div class="field"><label>Altura (cm)</label><input id="height" type="number" placeholder="175"></div>
-        <div class="field"><label>Edad</label><input id="age" type="number" placeholder="28"></div>
+      <div class="card-title">Datos del paciente</div>
+
+      <!-- Tabs -->
+      <div style="display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:0;">
+        <button class="patient-tab active" id="tab-personal" onclick="switchPatientTab('personal')">👤 Datos personales</button>
+        <button class="patient-tab" id="tab-antro" onclick="switchPatientTab('antro')">📏 Antropometría</button>
+        <button class="patient-tab" id="tab-clinico" onclick="switchPatientTab('clinico')">🏥 Historial clínico</button>
       </div>
-      <div class="form-grid-3" style="margin-bottom:16px">
-        <div class="field"><label>Género</label><select id="gender"><option value="male">Masculino</option><option value="female">Femenino</option></select></div>
-        <div class="field"><label>Actividad</label><select id="activity"><option value="1.2">Sedentario</option><option value="1.375">Ligero</option><option value="1.55">Moderado</option><option value="1.725">Activo</option><option value="1.9">Muy activo</option><option value="3.0">Atleta</option></select></div>
-        <div class="field"><label>Objetivo</label><select id="goal"><option value="cut">Cutting</option><option value="maintenance">Mantenimiento</option><option value="bulk">Bulk</option></select></div>
+
+      <!-- ABA 1: Datos personales -->
+      <div id="tab-content-personal">
+        <div class="form-grid" style="margin-bottom:12px">
+          <div class="field"><label>Nombre completo *</label><input id="name" placeholder="Juan Pérez"></div>
+          <div class="field"><label>Fecha de nacimiento</label><input id="birth_date" type="date"></div>
+          <div class="field"><label>Email</label><input id="email" placeholder="juan@email.com"></div>
+          <div class="field"><label>Teléfono principal</label><input id="phone" placeholder="+52 664 123 4567"></div>
+          <div class="field"><label>Teléfono de emergencia</label><input id="phone_emergency" placeholder="+52 664 987 6543"></div>
+          <div class="field"><label>Dirección</label><input id="address" placeholder="Calle, colonia, ciudad"></div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:8px;">
+          <button class="btn btn-primary" style="padding:8px 20px;font-size:12px;" onclick="switchPatientTab('antro')">Siguiente → Antropometría</button>
+        </div>
       </div>
-      <div class="form-grid" style="margin-bottom:16px">
-        <div class="field"><label>Fórmula</label><select id="formula"><option value="mifflin">Mifflin-St Jeor</option><option value="harris">Harris-Benedict</option></select></div>
+
+      <!-- ABA 2: Antropometría -->
+      <div id="tab-content-antro" style="display:none;">
+        <div class="form-grid" style="margin-bottom:12px">
+          <div class="field"><label>Peso (kg) *</label><input id="weight" type="number" placeholder="75" oninput="updateIMCPreview()"></div>
+          <div class="field"><label>Altura (cm) *</label><input id="height" type="number" placeholder="175" oninput="updateIMCPreview()"></div>
+          <div class="field"><label>Edad *</label><input id="age" type="number" placeholder="28"></div>
+          <div class="field"><label>Género *</label><select id="gender"><option value="male">Masculino</option><option value="female">Femenino</option></select></div>
+        </div>
+        <div class="form-grid" style="margin-bottom:12px">
+          <div class="field"><label>Objetivo *</label><select id="goal"><option value="cut">Cutting — Pérdida de peso</option><option value="maintenance">Mantenimiento</option><option value="bulk">Bulk — Ganancia muscular</option></select></div>
+          <div class="field"><label>Nivel de actividad *</label><select id="activity"><option value="1.2">Sedentario</option><option value="1.375">Ligero</option><option value="1.55">Moderado</option><option value="1.725">Activo</option><option value="1.9">Muy activo</option><option value="3.0">Atleta</option></select></div>
+          <div class="field"><label>Fórmula</label><select id="formula"><option value="mifflin">Mifflin-St Jeor</option><option value="harris">Harris-Benedict</option></select></div>
+        </div>
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;margin-bottom:12px;">
+          <div style="font-size:11px;font-weight:600;color:var(--text-2);margin-bottom:8px;">CIRCUNFERENCIAS (cm) — opcional</div>
+          <div class="form-grid">
+            <div class="field"><label>Cintura</label><input id="circ_cintura" type="number" placeholder="80"></div>
+            <div class="field"><label>Cadera</label><input id="circ_cadera" type="number" placeholder="95"></div>
+            <div class="field"><label>Abdomen</label><input id="circ_abdomen" type="number" placeholder="85"></div>
+            <div class="field"><label>Brazo</label><input id="circ_brazo" type="number" placeholder="30"></div>
+          </div>
+        </div>
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;margin-bottom:12px;">
+          <div style="font-size:11px;font-weight:600;color:var(--text-2);margin-bottom:8px;">DOBRAS CUTÂNEAS (mm) — adipômetro opcional</div>
+          <div class="form-grid-3">
+            <div class="field"><label>Tricipital</label><input id="dobra_tricipital" type="number" placeholder="0"></div>
+            <div class="field"><label>Subescapular</label><input id="dobra_subescapular" type="number" placeholder="0"></div>
+            <div class="field"><label>Suprailíaca</label><input id="dobra_suprailiaca" type="number" placeholder="0"></div>
+            <div class="field"><label>Abdominal</label><input id="dobra_abdominal" type="number" placeholder="0"></div>
+            <div class="field"><label>Coxa</label><input id="dobra_coxa" type="number" placeholder="0"></div>
+            <div class="field"><label>% Grasa (calculado)</label><input id="pct_grasa" type="number" placeholder="—" readonly style="background:var(--bg);color:var(--text-2);"></div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:8px;">
+          <button class="btn btn-secondary" style="padding:8px 20px;font-size:12px;" onclick="switchPatientTab('personal')">← Datos personales</button>
+          <button class="btn btn-primary" style="padding:8px 20px;font-size:12px;" onclick="switchPatientTab('clinico')">Siguiente → Historial clínico</button>
+        </div>
       </div>
-      <div class="loading-inline" id="loading-plan"><div class="spinner"></div> Calculando...</div>
-      <button class="btn btn-primary btn-full" onclick="generatePlan()">Calcular plan metabólico</button>
+
+      <!-- ABA 3: Historial clínico -->
+      <div id="tab-content-clinico" style="display:none;">
+        <div class="form-grid" style="margin-bottom:12px">
+          <div class="field"><label>Patologías</label>
+            <select id="patologias" multiple style="height:90px;">
+              <option value="diabetes">Diabetes</option>
+              <option value="hipertension">Hipertensión</option>
+              <option value="hipotiroidismo">Hipotiroidismo</option>
+              <option value="cancer">Cáncer</option>
+              <option value="enfermedad_renal">Enfermedad renal</option>
+              <option value="celiaco">Celiaquía</option>
+              <option value="colesterol">Colesterol alto</option>
+            </select>
+          </div>
+          <div class="field"><label>Alergias e intolerancias</label>
+            <select id="alergias" multiple style="height:90px;">
+              <option value="lactosa">Lactosa</option>
+              <option value="gluten">Gluten</option>
+              <option value="nueces">Nueces/frutos secos</option>
+              <option value="mariscos">Mariscos</option>
+              <option value="huevo">Huevo</option>
+              <option value="soya">Soya</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-grid" style="margin-bottom:12px">
+          <div class="field"><label>Medicamentos en uso</label><input id="medicamentos" placeholder="Metformina, Losartán..."></div>
+          <div class="field"><label>Presión arterial</label><input id="presion" placeholder="120/80 mmHg"></div>
+          <div class="field"><label>Glicemia en ayunas (mg/dL)</label><input id="glicemia" type="number" placeholder="90"></div>
+          <div class="field"><label>Meta: perder/ganar (kg)</label><input id="meta_kg" type="number" placeholder="5"></div>
+        </div>
+        <div class="field" style="margin-bottom:16px;">
+          <label>Observaciones del nutricionista</label>
+          <textarea id="observaciones" placeholder="Notas clínicas relevantes..." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:'DM Sans',sans-serif;resize:vertical;min-height:80px;"></textarea>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:8px;">
+          <button class="btn btn-secondary" style="padding:8px 20px;font-size:12px;" onclick="switchPatientTab('antro')">← Antropometría</button>
+          <div>
+            <div class="loading-inline" id="loading-plan"><div class="spinner"></div> Calculando...</div>
+            <button class="btn btn-primary" style="padding:10px 24px;font-size:13px;" onclick="generatePlan()">🧮 Calcular plan metabólico</button>
+          </div>
+        </div>
+      </div>
       <div class="plan-result" id="plan-result">
         <div class="plan-result-title">¡Plan generado con éxito!</div>
         <div class="plan-metrics">
@@ -1258,6 +1348,52 @@ function newPlanForPatient(id, name, email, phone){
     if(ph) ph.value = phone;
   }, 150);
 }
+
+// ===== TABS PACIENTE =====
+function switchPatientTab(tab){
+  ['personal','antro','clinico'].forEach(t=>{
+    document.getElementById('tab-content-'+t).style.display = t===tab ? 'block' : 'none';
+    document.getElementById('tab-'+t).classList.toggle('active', t===tab);
+  });
+}
+
+function updateIMCPreview(){
+  const w = parseFloat(document.getElementById('weight')?.value);
+  const h = parseFloat(document.getElementById('height')?.value);
+  if(w && h){
+    const imc = w / ((h/100)**2);
+    // Calcula % grasa se tiver dobras
+    calcPctGrasa();
+  }
+}
+
+function calcPctGrasa(){
+  const t = parseFloat(document.getElementById('dobra_tricipital')?.value)||0;
+  const s = parseFloat(document.getElementById('dobra_subescapular')?.value)||0;
+  const si = parseFloat(document.getElementById('dobra_suprailiaca')?.value)||0;
+  const a = parseFloat(document.getElementById('dobra_abdominal')?.value)||0;
+  const c = parseFloat(document.getElementById('dobra_coxa')?.value)||0;
+  const age = parseFloat(document.getElementById('age')?.value)||25;
+  const gender = document.getElementById('gender')?.value||'male';
+  const sum = t + s + si + a + c;
+  if(sum > 0){
+    // Jackson-Pollock 5 dobras
+    const density = gender==='male'
+      ? 1.10938 - (0.0008267*sum) + (0.0000016*sum*sum) - (0.0002574*age)
+      : 1.0994921 - (0.0009929*sum) + (0.0000023*sum*sum) - (0.0001392*age);
+    const pct = ((4.95/density) - 4.5) * 100;
+    const el = document.getElementById('pct_grasa');
+    if(el) el.value = pct.toFixed(1);
+  }
+}
+
+// Adicionar listeners para dobras
+document.addEventListener('DOMContentLoaded', ()=>{
+  ['dobra_tricipital','dobra_subescapular','dobra_suprailiaca','dobra_abdominal','dobra_coxa','age','gender'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('input', calcPctGrasa);
+  });
+});
 
 function showSection(name){
   document.querySelectorAll('.section-area').forEach(el=>el.classList.remove('active'));
