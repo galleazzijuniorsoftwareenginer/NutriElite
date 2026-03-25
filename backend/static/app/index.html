@@ -808,10 +808,24 @@
 
 <!-- SECTION: PLANTILLAS -->
 <div id="section-plantillas" class="section-area">
-  <div class="coming-soon">
-    <div class="coming-soon-icon">📌</div>
-    <h2>Plantillas</h2>
-    <p>Guarda planes como plantillas y reutilízalos para pacientes con perfil similar. Disponible en Sprint 4.</p>
+  <div class="main" style="padding:28px 32px;max-width:900px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="font-size:18px;font-weight:600;">Plantillas</div>
+        <span id="templates-counter" style="font-size:11px;color:var(--text-3);background:var(--bg);border:1px solid var(--border);padding:2px 8px;border-radius:20px;"></span>
+      </div>
+    </div>
+    <div style="background:var(--accent-light);border:1px solid #b7deca;border-radius:var(--radius);padding:12px 16px;font-size:12px;color:var(--accent);margin-bottom:20px;">
+      💡 Guarda cualquier plan como plantilla desde el <b>Historial</b> — botón "Guardar como plantilla". Luego úsala aquí para nuevos pacientes.
+    </div>
+    <div id="templates-loading" style="display:none;color:var(--text-3);font-size:13px;padding:20px 0;">Cargando plantillas...</div>
+    <div id="templates-empty" style="display:none;text-align:center;padding:40px;color:var(--text-3);">
+      <div style="font-size:32px;margin-bottom:8px;">📌</div>
+      <div style="font-size:14px;font-weight:500;margin-bottom:4px;">Sin plantillas aún</div>
+      <div style="font-size:12px;">Ve al Historial, abre un plan y guárdalo como plantilla</div>
+      <button onclick="showSection('historial')" class="btn btn-primary" style="margin-top:12px;font-size:12px;padding:8px 16px;">Ir al Historial →</button>
+    </div>
+    <div id="templates-list"></div>
   </div>
 </div>
 
@@ -1140,6 +1154,7 @@ function renderHistorial(list){
       </div>
       <div style="display:flex;gap:6px;flex-shrink:0;">
         <button class="btn btn-primary" style="font-size:11px;padding:5px 12px;" onclick="openPlan(${p.id})">Abrir</button>
+        <button class="btn btn-secondary" style="font-size:11px;padding:5px 10px;" onclick="saveAsTemplate(${p.id})">📌 Plantilla</button>
         <button style="background:#fef2f2;border:1px solid #fca5a5;border-radius:var(--radius);font-size:11px;padding:5px 10px;cursor:pointer;color:#b91c1c;font-family:inherit;" onclick="deletePlan(${p.id},'${nm}')">Eliminar</button>
       </div>
     </div>`;
@@ -1430,6 +1445,94 @@ function newPlanForPatient(id, name, email, phone){
   }, 150);
 }
 
+// ===== PLANTILLAS =====
+async function loadTemplates(){
+  document.getElementById('templates-loading').style.display='block';
+  document.getElementById('templates-list').innerHTML='';
+  try {
+    const res = await fetch(API+'/templates', {headers:{'Authorization':'Bearer '+token}});
+    const templates = await res.json();
+    const counter = document.getElementById('templates-counter');
+    if(counter) counter.textContent = templates.length + ' plantilla(s)';
+    const empty = document.getElementById('templates-empty');
+    const wrap = document.getElementById('templates-list');
+    if(!templates.length){ empty.style.display='block'; wrap.innerHTML=''; }
+    else {
+      empty.style.display='none';
+      const goalLabel = {cut:'Pérdida de peso', bulk:'Ganancia muscular', maintenance:'Mantenimiento'};
+      const goalColor = {cut:'var(--danger)', bulk:'var(--accent)', maintenance:'var(--blue)'};
+      wrap.innerHTML = templates.map(t => `
+        <div class="patient-row" style="margin-bottom:8px;">
+          <div style="width:36px;height:36px;border-radius:var(--radius);background:var(--accent-light);color:var(--accent);font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">📌</div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:600;">${t.template_name}</div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:2px;">
+              <span style="color:${goalColor[t.goal]};font-weight:600;">${goalLabel[t.goal]||t.goal}</span>
+              · ${t.weight}kg · GET ${t.get} kcal · Prot ${t.protein}g · Carb ${t.carbs}g · Grasa ${t.fats}g
+            </div>
+            <div style="font-size:10px;color:var(--text-3);margin-top:2px;">Creada el ${t.created_at}</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-primary" style="font-size:11px;padding:5px 12px;" onclick="useTemplate(${t.id})">Usar plantilla</button>
+            <button style="background:#fef2f2;border:1px solid #fca5a5;border-radius:var(--radius);font-size:11px;padding:5px 10px;cursor:pointer;color:#b91c1c;font-family:inherit;" onclick="deleteTemplate(${t.id})">Eliminar</button>
+          </div>
+        </div>`).join('');
+    }
+  } catch(e) { console.error('Templates error:', e); }
+  document.getElementById('templates-loading').style.display='none';
+}
+
+async function useTemplate(id){
+  // Abre modal de seleção de paciente e depois aplica o template
+  templateToApply = id;
+  await showNewPlanModal();
+  // Após selecionar paciente, openPlan será chamado com o template
+}
+
+async function applyTemplate(planId, patientId, patientName, patientEmail, patientPhone){
+  const res = await fetch(API+'/plans/'+planId, {headers:{'Authorization':'Bearer '+token}});
+  const data = await res.json();
+  currentPatientId = patientId;
+  showSection('nuevo');
+  setTimeout(()=>{
+    const nm = document.getElementById('name');
+    const em = document.getElementById('email');
+    const ph = document.getElementById('phone');
+    if(nm) nm.value = patientName;
+    if(em) em.value = patientEmail;
+    if(ph) ph.value = patientPhone;
+    // Preenche dados clínicos do template
+    document.getElementById('weight').value = data.weight||'';
+    document.getElementById('height').value = data.height||'';
+    document.getElementById('age').value = data.age||'';
+    document.getElementById('gender').value = data.gender||'male';
+    document.getElementById('activity').value = data.activity_level||'1.55';
+    document.getElementById('goal').value = data.goal||'maintenance';
+    switchPatientTab('antro');
+  }, 150);
+}
+
+async function saveAsTemplate(planId){
+  const name = prompt('Nombre para esta plantilla:');
+  if(!name || !name.trim()) return;
+  const res = await fetch(API+'/plans/'+planId+'/save-template?template_name='+encodeURIComponent(name.trim()), {
+    method:'POST',
+    headers:{'Authorization':'Bearer '+token}
+  });
+  if(res.ok){ alert('✓ Plantilla guardada: '+name.trim()); }
+}
+
+async function deleteTemplate(id){
+  if(!confirm('¿Eliminar esta plantilla?')) return;
+  const res = await fetch(API+'/templates/'+id, {
+    method:'DELETE',
+    headers:{'Authorization':'Bearer '+token}
+  });
+  if(res.ok) loadTemplates();
+}
+
+let templateToApply = null;
+
 // ===== DASHBOARD =====
 async function loadDashboard(){
   // Saudação
@@ -1562,6 +1665,7 @@ function showSection(name){
   if(name==='inicio' && token) loadDashboard();
   if(name==='pacientes' && token) loadPatients();
   if(name==='historial' && token) loadHistorial();
+  if(name==='plantillas' && token) loadTemplates();
   if(name==='perfil') loadPerfil();
   const sb=document.getElementById('wizard-stepbar');
   if(sb)sb.style.display=name==='nuevo'?'flex':'none';

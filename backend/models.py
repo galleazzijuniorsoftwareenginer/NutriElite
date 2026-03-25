@@ -54,6 +54,8 @@ class Plan(Base):
         server_default=func.now(),
         nullable=False
     )
+    is_template = Column(Integer, default=0)
+    template_name = Column(String, nullable=True)
 from sqlalchemy import Column, Integer, String, Float
 from backend.database import Base
 

@@ -311,3 +311,60 @@ def delete_plan(
     db.delete(plan)
     db.commit()
     return {"ok": True}
+
+# ---------- PLANTILLAS ----------
+@router.post("/plans/{plan_id}/save-template")
+def save_as_template(
+    plan_id: int,
+    db: Session = Depends(get_db),
+    token: dict = Depends(verify_token),
+    template_name: str = "Mi plantilla"
+):
+    username = token["sub"]
+    db_user = db.query(User).filter(User.username == username).first()
+    plan = db.query(Plan).filter(Plan.id == plan_id, Plan.user_id == db_user.id).first()
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plano não encontrado")
+    plan.is_template = 1
+    plan.template_name = template_name
+    db.commit()
+    return {"ok": True, "template_name": template_name}
+
+@router.get("/templates")
+def list_templates(
+    db: Session = Depends(get_db),
+    token: dict = Depends(verify_token)
+):
+    username = token["sub"]
+    db_user = db.query(User).filter(User.username == username).first()
+    templates = db.query(Plan).filter(
+        Plan.user_id == db_user.id,
+        Plan.is_template == 1
+    ).order_by(Plan.created_at.desc()).all()
+    return [{
+        "id": p.id,
+        "template_name": p.template_name,
+        "goal": p.goal,
+        "weight": p.weight,
+        "get": round(p.get, 0),
+        "protein": round(p.protein, 1),
+        "carbs": round(p.carbs, 1),
+        "fats": round(p.fats, 1),
+        "created_at": str(p.created_at)[:10]
+    } for p in templates]
+
+@router.delete("/templates/{plan_id}")
+def delete_template(
+    plan_id: int,
+    db: Session = Depends(get_db),
+    token: dict = Depends(verify_token)
+):
+    username = token["sub"]
+    db_user = db.query(User).filter(User.username == username).first()
+    plan = db.query(Plan).filter(Plan.id == plan_id, Plan.user_id == db_user.id).first()
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plano não encontrado")
+    plan.is_template = 0
+    plan.template_name = None
+    db.commit()
+    return {"ok": True}
