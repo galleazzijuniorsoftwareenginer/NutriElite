@@ -579,11 +579,81 @@
     <div class="side-card">
       <div class="radar-wrap"><canvas id="radar-chart"></canvas></div>
     </div>
+
+    <!-- Dietocálculo Meta -->
+    <div class="side-card">
+      <div class="side-title">Dietocálculo (Meta)</div>
+      <table style="width:100%;font-size:11px;border-collapse:collapse;">
+        <thead><tr style="color:var(--text-3);font-weight:600;">
+          <td></td><td style="text-align:center">Carb</td><td style="text-align:center">Prot</td><td style="text-align:center">Grasa</td><td style="text-align:center">Kcal</td>
+        </tr></thead>
+        <tbody>
+          <tr><td style="color:var(--text-2);padding:3px 0">%</td>
+            <td style="text-align:center;font-weight:600;color:var(--carb-color)" id="dc-pct-carb-side">—</td>
+            <td style="text-align:center;font-weight:600;color:var(--prot-color)" id="dc-pct-prot-side">—</td>
+            <td style="text-align:center;font-weight:600;color:var(--fat-color)" id="dc-pct-fat-side">—</td>
+            <td style="text-align:center;font-weight:600" id="dc-kcal-side">—</td>
+          </tr>
+          <tr><td style="color:var(--text-2);padding:3px 0">gr.</td>
+            <td style="text-align:center" id="dc-gr-carb-side">—</td>
+            <td style="text-align:center" id="dc-gr-prot-side">—</td>
+            <td style="text-align:center" id="dc-gr-fat-side">—</td>
+            <td></td>
+          </tr>
+          <tr><td style="color:var(--text-2);padding:3px 0">g/kg</td>
+            <td style="text-align:center" id="dc-gkg-carb-side">—</td>
+            <td style="text-align:center" id="dc-gkg-prot-side">—</td>
+            <td style="text-align:center" id="dc-gkg-fat-side">—</td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Distribución real -->
+    <div class="side-card">
+      <div class="side-title">Distribución real (SMAE)</div>
+      <table style="width:100%;font-size:11px;border-collapse:collapse;">
+        <thead><tr style="color:var(--text-3);font-weight:600;">
+          <td></td><td style="text-align:center">Carb</td><td style="text-align:center">Prot</td><td style="text-align:center">Grasa</td><td style="text-align:center">Kcal</td>
+        </tr></thead>
+        <tbody>
+          <tr><td style="color:var(--text-2);padding:3px 0">%</td>
+            <td style="text-align:center;font-weight:600" id="real-pct-carb">—</td>
+            <td style="text-align:center;font-weight:600" id="real-pct-prot">—</td>
+            <td style="text-align:center;font-weight:600" id="real-pct-fat">—</td>
+            <td style="text-align:center" id="real-kcal">—</td>
+          </tr>
+          <tr><td style="color:var(--text-2);padding:3px 0">gr.</td>
+            <td style="text-align:center" id="real-gr-carb">—</td>
+            <td style="text-align:center" id="real-gr-prot">—</td>
+            <td style="text-align:center" id="real-gr-fat">—</td>
+            <td></td>
+          </tr>
+          <tr><td style="color:var(--text-2);padding:3px 0">Rango</td>
+            <td style="text-align:center"><span id="rango-carb" style="font-size:10px;padding:2px 5px;border-radius:10px;">—</span></td>
+            <td style="text-align:center"><span id="rango-prot" style="font-size:10px;padding:2px 5px;border-radius:10px;">—</span></td>
+            <td style="text-align:center"><span id="rango-fat" style="font-size:10px;padding:2px 5px;border-radius:10px;">—</span></td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Cierre energético -->
     <div class="side-card">
       <div class="side-title">Cierre energético</div>
       <div class="side-metric"><span>GET planificado</span><span class="side-metric-val" id="side-get">—</span></div>
       <div class="side-metric"><span>Total SMAE</span><span class="side-metric-val" id="side-smae-total">—</span></div>
       <div class="side-metric"><span>Diferencia</span><span class="side-metric-val" id="side-diff">—</span></div>
+    </div>
+
+    <!-- Botão Ajustar -->
+    <button id="btn-ajustar-dc" onclick="ajustarDietocalculo()" style="width:100%;margin-top:8px;padding:10px;background:var(--accent);color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">
+      ↺ Ajustar Dietocálculo
+    </button>
+    <div style="font-size:10px;color:var(--text-3);margin-top:6px;line-height:1.4;">
+      Ajusta o dietocálculo aos valores reais da distribuição SMAE selecionada.
     </div>
   </div>
 
@@ -2037,6 +2107,7 @@ async function viewAudit(){
       carbs: Math.round(orig.carbs * factor),
     };
     renderSmaeTable();
+    if(window.updateRealDistrib) window.updateRealDistrib();
   }
 
   function renderSmaeTable() {
@@ -2063,8 +2134,88 @@ async function viewAudit(){
     });
   }
 
+  window._planGet = get;
+  window._planWeight = planData ? planData.weight || 1 : 1;
   renderSmaeTable();
+  setTimeout(()=>{ if(window.updateRealDistrib) window.updateRealDistrib(); }, 50);
   unlockStep(4);unlockStep(5);unlockStep(6);showPanel(4);
+}
+
+// UPDATE REAL DISTRIB
+window.updateRealDistrib = function() {
+  const planGet = window._planGet || 2000;
+  const weight = window._planWeight || 1;
+  const rows = window._smaeRows;
+  if(!rows) return;
+  let tKcal=0,tProt=0,tFat=0,tCarb=0;
+  rows.forEach(r=>{tKcal+=r.kcal;tProt+=r.protein;tFat+=r.fats;tCarb+=r.carbs;});
+  const rProt=tKcal>0?(tProt*4/tKcal*100):0;
+  const rCarb=tKcal>0?(tCarb*4/tKcal*100):0;
+  const rFat=tKcal>0?(tFat*9/tKcal*100):0;
+  const setEl=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+  setEl('real-pct-carb', rCarb.toFixed(1)+'%');
+  setEl('real-pct-prot', rProt.toFixed(1)+'%');
+  setEl('real-pct-fat',  rFat.toFixed(1)+'%');
+  setEl('real-kcal',     tKcal.toFixed(0)+' kcal');
+  setEl('real-gr-carb',  tCarb.toFixed(1)+'g');
+  setEl('real-gr-prot',  tProt.toFixed(1)+'g');
+  setEl('real-gr-fat',   tFat.toFixed(1)+'g');
+  // Dietocalculo meta
+  const carbPct=parseFloat(document.getElementById('pct-carb')?document.getElementById('pct-carb').value:0)||0;
+  const protPct=parseFloat(document.getElementById('pct-prot')?document.getElementById('pct-prot').value:0)||0;
+  const fatPct=parseFloat(document.getElementById('pct-fat')?document.getElementById('pct-fat').value:0)||0;
+  const grCarb=(planGet*carbPct/100)/4;
+  const grProt=(planGet*protPct/100)/4;
+  const grFat=(planGet*fatPct/100)/9;
+  setEl('dc-pct-carb-side', carbPct+'%');
+  setEl('dc-pct-prot-side', protPct+'%');
+  setEl('dc-pct-fat-side',  fatPct+'%');
+  setEl('dc-kcal-side',     planGet.toFixed(0)+' kcal');
+  setEl('dc-gr-carb-side',  grCarb.toFixed(1)+'g');
+  setEl('dc-gr-prot-side',  grProt.toFixed(1)+'g');
+  setEl('dc-gr-fat-side',   grFat.toFixed(1)+'g');
+  setEl('dc-gkg-carb-side', (grCarb/weight).toFixed(2)+' g/kg');
+  setEl('dc-gkg-prot-side', (grProt/weight).toFixed(2)+' g/kg');
+  setEl('dc-gkg-fat-side',  (grFat/weight).toFixed(2)+' g/kg');
+  // Rangos OMS
+  function rango(val,min,max,id){
+    const el=document.getElementById(id);
+    if(!el)return;
+    const ok=val>=min&&val<=max;
+    el.textContent=ok?'✓ Dentro':'✗ Fora';
+    el.style.background=ok?'var(--accent-light)':'#fce8e8';
+    el.style.color=ok?'var(--accent)':'var(--warn)';
+  }
+  rango(rCarb,45,65,'rango-carb');
+  rango(rProt,10,35,'rango-prot');
+  rango(rFat,20,35,'rango-fat');
+  // Cierre energético
+  setEl('side-smae-total', tKcal.toFixed(0)+' kcal');
+  const diff=tKcal-planGet;
+  const diffEl=document.getElementById('side-diff');
+  if(diffEl){
+    diffEl.textContent=(diff>=0?'+':'')+diff.toFixed(0)+' kcal';
+    diffEl.style.color=Math.abs(diff)/planGet<0.1?'var(--accent)':'var(--warn)';
+  }
+};
+
+// AJUSTAR DIETOCALCULO
+function ajustarDietocalculo() {
+  if(!window._smaeRows) return;
+  const rows = window._smaeRows;
+  let tKcal=0,tProt=0,tFat=0,tCarb=0;
+  rows.forEach(r=>{tKcal+=r.kcal;tProt+=r.protein;tFat+=r.fats;tCarb+=r.carbs;});
+  if(tKcal===0) return;
+  const newCarbPct = Math.round(tCarb*4/tKcal*100);
+  const newProtPct = Math.round(tProt*4/tKcal*100);
+  const newFatPct  = 100 - newCarbPct - newProtPct;
+  document.getElementById('pct-carb').value = newCarbPct;
+  document.getElementById('pct-prot').value = newProtPct;
+  document.getElementById('pct-fat').value  = newFatPct;
+  if(window.recalcDC) recalcDC();
+  // feedback visual
+  const btn = document.getElementById('btn-ajustar-dc');
+  if(btn){ btn.textContent='✓ Ajustado!'; btn.style.background='var(--accent)'; setTimeout(()=>{ btn.textContent='↺ Ajustar Dietocálculo'; }, 2000); }
 }
 
 // AI MENU
