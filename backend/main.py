@@ -30,6 +30,12 @@ with engine.connect() as conn:
     conn.execute(text("""
         ALTER TABLE plans ADD COLUMN IF NOT EXISTS patient_id INTEGER REFERENCES patients(id)
     """))
+    conn.execute(text("""
+        ALTER TABLE plans ADD COLUMN IF NOT EXISTS is_template INTEGER DEFAULT 0
+    """))
+    conn.execute(text("""
+        ALTER TABLE plans ADD COLUMN IF NOT EXISTS template_name VARCHAR
+    """))
     conn.commit()
 
 seed()
