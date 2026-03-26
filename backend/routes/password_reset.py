@@ -90,4 +90,30 @@ def reset_password(data: ResetRequest, db: Session = Depends(get_db)):
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
     user.password = pwd_context.hash(data.password[:72])
     db.commit()
+
+    # Envia email de confirmação
+    try:
+        import re
+        if user.email and re.match(r"[^@]+@[^@]+\.[^@]+", user.email):
+            resend.Emails.send({
+                "from": "NutriElite <onboarding@resend.dev>",
+                "to": user.email,
+                "subject": "Tu contraseña fue cambiada — NutriElite",
+                "html": """
+                <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;">
+                  <div style="margin-bottom:24px;">
+                    <span style="font-size:18px;font-weight:700;color:#1a6b4a;">Nutri</span>
+                    <span style="font-size:18px;font-weight:700;color:#1a1916;">Elite</span>
+                  </div>
+                  <h2 style="font-size:20px;font-weight:700;margin-bottom:8px;">✅ Contraseña actualizada</h2>
+                  <p style="color:#6b6860;font-size:14px;margin-bottom:24px;">
+                    Tu contraseña fue cambiada exitosamente. Si no realizaste este cambio, contáctanos de inmediato.
+                  </p>
+                  <p style="color:#9e9b95;font-size:12px;">NutriElite · Precisión clínica. Nutrición inteligente.</p>
+                </div>
+                """
+            })
+    except Exception:
+        pass
+
     return {"ok": True}
