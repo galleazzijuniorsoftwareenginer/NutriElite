@@ -208,3 +208,4 @@ __marimo__/
 
 # Local database
 *.db.env
+nutrielite.db
