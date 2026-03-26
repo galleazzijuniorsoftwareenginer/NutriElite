@@ -224,12 +224,16 @@
         <div class="field" style="margin-bottom:12px"><label>Usuário</label><input id="login_user" placeholder="nutricionista01"></div>
         <div class="field" style="margin-bottom:16px"><label>Senha</label><input id="login_pass" type="password" placeholder="••••••••"></div>
         <button class="btn btn-primary btn-full" onclick="login()">Entrar</button>
+        <div style="text-align:center;margin-top:10px;">
+          <a href="#" onclick="showForgotPassword()" style="font-size:12px;color:var(--accent);text-decoration:none;">¿Olvidaste tu contraseña?</a>
+        </div>
         <div id="login-error" style="display:none;margin-top:10px;font-size:12px;color:var(--danger)"></div>
       </div>
     </div>
     <div id="form-register" style="display:none">
       <div class="card" style="margin-bottom:0">
         <div class="field" style="margin-bottom:12px"><label>Usuário</label><input id="reg_user" placeholder="nutricionista01"></div>
+        <div class="field" style="margin-bottom:12px"><label>Email</label><input id="reg_email" type="email" placeholder="tu@email.com"></div>
         <div class="field" style="margin-bottom:16px"><label>Senha</label><input id="reg_pass" type="password" placeholder="••••••••"></div>
         <button class="btn btn-secondary btn-full" onclick="register()">Criar conta</button>
         <div id="reg-msg" style="display:none;margin-top:10px;font-size:12px;"></div>
@@ -1037,7 +1041,7 @@ function unlockStep(step){if(step>maxStep)maxStep=step;updateStepBar();}
 
 async function register(){
   const msg=document.getElementById('reg-msg');
-  const res=await fetch(API+'/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:document.getElementById('reg_user').value,password:document.getElementById('reg_pass').value})});
+  const res=await fetch(API+'/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:document.getElementById('reg_user').value,password:document.getElementById('reg_pass').value,email:document.getElementById('reg_email')?.value||null})});
   msg.style.display='block';
   if(res.ok){msg.style.color='var(--accent)';msg.textContent='Conta criada! Faça login.';switchTab('login');}
   else{msg.style.color='var(--danger)';msg.textContent='Erro ao criar conta.';}
@@ -2743,6 +2747,94 @@ function closeProModal(){
 document.getElementById('modal-pro').addEventListener('click', function(e){
   if(e.target===this) closeProModal();
 });
+</script>
+
+<!-- MODAL FORGOT PASSWORD -->
+<div id="modal-forgot" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#fff;border-radius:16px;max-width:400px;width:100%;padding:28px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div style="font-size:16px;font-weight:700;">Recuperar contraseña</div>
+      <span onclick="closeForgotPassword()" style="cursor:pointer;color:#9e9b95;font-size:18px;">✕</span>
+    </div>
+    <div id="forgot-step-1">
+      <p style="font-size:13px;color:#6b6860;margin-bottom:16px;">Ingresa tu email o usuario registrado. Te enviaremos un enlace para restablecer tu contraseña.</p>
+      <div class="field" style="margin-bottom:16px;"><label>Email / Usuario</label><input id="forgot-email" placeholder="tu@email.com"></div>
+      <button class="btn btn-primary btn-full" onclick="sendForgotPassword()">Enviar enlace</button>
+      <div id="forgot-msg" style="display:none;margin-top:10px;font-size:12px;"></div>
+    </div>
+    <div id="forgot-step-2" style="display:none;">
+      <div style="text-align:center;padding:16px 0;">
+        <div style="font-size:32px;margin-bottom:12px;">📧</div>
+        <div style="font-size:14px;font-weight:600;margin-bottom:8px;">¡Revisa tu email!</div>
+        <div style="font-size:13px;color:#6b6860;">Si el usuario existe, recibirás un enlace en los próximos minutos.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RESET PASSWORD -->
+<div id="modal-reset" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#fff;border-radius:16px;max-width:400px;width:100%;padding:28px;">
+    <div style="font-size:16px;font-weight:700;margin-bottom:16px;">Nueva contraseña</div>
+    <div class="field" style="margin-bottom:12px;"><label>Nueva contraseña</label><input id="reset-pass" type="password" placeholder="Mínimo 8 caracteres"></div>
+    <div class="field" style="margin-bottom:16px;"><label>Confirmar contraseña</label><input id="reset-pass2" type="password" placeholder="Repite la contraseña"></div>
+    <button class="btn btn-primary btn-full" onclick="doResetPassword()">Cambiar contraseña</button>
+    <div id="reset-msg" style="display:none;margin-top:10px;font-size:12px;"></div>
+  </div>
+</div>
+
+<script>
+function showForgotPassword(){
+  document.getElementById('modal-forgot').style.display='flex';
+  document.getElementById('forgot-step-1').style.display='block';
+  document.getElementById('forgot-step-2').style.display='none';
+  document.getElementById('forgot-msg').style.display='none';
+}
+function closeForgotPassword(){
+  document.getElementById('modal-forgot').style.display='none';
+}
+async function sendForgotPassword(){
+  const email = document.getElementById('forgot-email').value.trim();
+  if(!email){ return; }
+  const res = await fetch(API+'/forgot-password', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({email})
+  });
+  document.getElementById('forgot-step-1').style.display='none';
+  document.getElementById('forgot-step-2').style.display='block';
+}
+
+// Verifica se voltou com token de reset
+const urlParams = new URLSearchParams(window.location.search);
+const resetToken = urlParams.get('reset');
+if(resetToken){
+  document.getElementById('modal-reset').style.display='flex';
+  history.replaceState({}, '', '/app/');
+}
+
+async function doResetPassword(){
+  const pass = document.getElementById('reset-pass').value;
+  const pass2 = document.getElementById('reset-pass2').value;
+  const msg = document.getElementById('reset-msg');
+  if(pass.length < 8){ msg.style.display='block'; msg.style.color='var(--danger)'; msg.textContent='Mínimo 8 caracteres'; return; }
+  if(pass !== pass2){ msg.style.display='block'; msg.style.color='var(--danger)'; msg.textContent='Las contraseñas no coinciden'; return; }
+  const res = await fetch(API+'/reset-password', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({token: resetToken, password: pass})
+  });
+  const data = await res.json();
+  msg.style.display='block';
+  if(res.ok){
+    msg.style.color='var(--accent)';
+    msg.textContent='¡Contraseña actualizada! Ya puedes iniciar sesión.';
+    setTimeout(()=>{ document.getElementById('modal-reset').style.display='none'; }, 2000);
+  } else {
+    msg.style.color='var(--danger)';
+    msg.textContent = data.detail || 'Error al restablecer';
+  }
+}
 </script>
 </body>
 </html>

@@ -35,3 +35,4 @@ websockets==15.0.1
 psycopg2-binary
 stripe
 stripe
+resend

@@ -15,6 +15,7 @@ services:
       - STRIPE_PRICE_ID=${STRIPE_PRICE_ID}
       - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - RESEND_API_KEY=${RESEND_API_KEY}
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/nutrielite
 
   db:
