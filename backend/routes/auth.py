@@ -15,7 +15,8 @@ def get_db():
         yield db
     finally:
         db.close()
-SECRET_KEY = "supersecretkey"
+import os
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", "supersecretkey")
 ALGORITHM = "HS256"
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
