@@ -250,10 +250,9 @@
       <button class="topbar-btn" id="nav-historial" onclick="showSection('historial')">Historial</button>
       <button class="topbar-btn" id="nav-plantillas" onclick="showSection('plantillas')">Plantillas</button>
     </nav>
-<button id="btn-pro-topbar" onclick="startCheckout()" style="margin-left:auto;margin-right:16px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;border:none;border-radius:20px;padding:6px 16px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">⭐ Upgrade Pro — $199 MXN/mês</button>
+<button id="btn-pro-topbar" onclick="openProModal()" style="margin-left:auto;margin-right:16px;background:linear-gradient(135deg,#1a6b4a,#2d9e6f);color:#fff;border:none;border-radius:20px;padding:6px 16px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">⭐ Ser Pro</button>
   </div>
   <div class="topbar-right">
-    <button class="topbar-btn-pro" onclick="showSection('upgrade')">⭐ Pro</button>
     <div style="position:relative;" id="profile-menu-wrap">
       <button onclick="toggleProfileMenu()" style="display:flex;align-items:center;gap:8px;background:#2a2a27;border:none;border-radius:8px;padding:5px 10px;cursor:pointer;color:white;">
         <div class="avatar" id="avatar-initials" style="width:26px;height:26px;font-size:11px;background:#1a6b4a;color:white;">--</div>
@@ -1050,7 +1049,7 @@ async function login(){
   const du=document.getElementById('dropdown-username'); if(du) du.textContent=user;
   document.getElementById('auth-screen').style.display='none';
   document.getElementById('clinical-area').style.display='block';
-  setTimeout(()=>{ if(token) loadDashboard(); initLang(); }, 100);
+  setTimeout(()=>{ if(token) loadDashboard(); initLang(); checkProStatus(); }, 100);
   unlockStep(2);showPanel(2);
 }
 
@@ -2424,15 +2423,18 @@ async function checkProStatus() {
     headers: { 'Authorization': 'Bearer ' + token }
   });
   const data = await res.json();
+  const btn = document.getElementById('btn-pro-topbar');
+  if (!btn) return;
   if (data.is_pro) {
-    const btn = document.getElementById('btn-pro-topbar');
-    if (btn) btn.style.display = 'none';
+    btn.style.display = 'none';
+  } else {
+    btn.style.display = 'flex';
   }
 }
 
 // Verifica se voltou do checkout com sucesso
 if (window.location.search.includes('pro=success')) {
-  alert('🎉 Bem-vindo ao NutriElite Pro!');
+  alert('🎉 ¡Bienvenido a NutriElite Pro!');
   history.replaceState({}, '', '/app/');
 }
 </script>
@@ -2670,5 +2672,70 @@ showSidePanel(2);
 </div>
 
 
+
+<!-- MODAL PRO -->
+<div id="modal-pro" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#fff;border-radius:20px;max-width:480px;width:100%;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,0.2);">
+    <!-- Header -->
+    <div style="background:linear-gradient(135deg,#1a6b4a,#2d9e6f);padding:28px 28px 24px;color:white;position:relative;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;opacity:.8;margin-bottom:6px;">NutriElite</div>
+      <div style="font-size:26px;font-weight:700;letter-spacing:-.5px;margin-bottom:4px;">⭐ Plan Pro</div>
+      <div style="font-size:13px;opacity:.85;">Todo lo que un nutricionista profesional necesita</div>
+      <div style="position:absolute;top:20px;right:20px;cursor:pointer;opacity:.7;font-size:20px;" onclick="closeProModal()">✕</div>
+    </div>
+    <!-- Price -->
+    <div style="padding:20px 28px;border-bottom:1px solid #f0f0f0;display:flex;align-items:baseline;gap:4px;">
+      <span style="font-size:32px;font-weight:700;color:#1a1916;">$199</span>
+      <span style="font-size:14px;color:#6b6860;">MXN / mes</span>
+      <span style="margin-left:auto;font-size:11px;background:#e8f5ee;color:#1a6b4a;font-weight:600;padding:3px 10px;border-radius:20px;">Cancela cuando quieras</span>
+    </div>
+    <!-- Comparison -->
+    <div style="padding:20px 28px;">
+      <div style="display:grid;grid-template-columns:1fr 80px 80px;gap:0;font-size:11px;font-weight:700;color:#9e9b95;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">
+        <div></div><div style="text-align:center;">Free</div><div style="text-align:center;color:#1a6b4a;">Pro</div>
+      </div>
+      <div id="pro-features-list"></div>
+    </div>
+    <!-- CTA -->
+    <div style="padding:0 28px 28px;">
+      <button onclick="startCheckout()" style="width:100%;background:linear-gradient(135deg,#1a6b4a,#2d9e6f);color:white;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:-.2px;">
+        ⭐ Comenzar con Pro — $199 MXN/mes
+      </button>
+      <div style="text-align:center;font-size:11px;color:#9e9b95;margin-top:10px;">Pago seguro via Stripe · Sin contratos</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const proFeatures = [
+  {label: "Planes por semana",    free: "3",    pro: "Ilimitado"},
+  {label: "PDF con tu branding",  free: "✗",    pro: "✓"},
+  {label: "Menú IA por plan",     free: "1",    pro: "Ilimitado"},
+  {label: "Historial de planes",  free: "10",   pro: "Completo"},
+  {label: "Envío PDF por email",  free: "✗",    pro: "✓"},
+  {label: "Exportar pacientes",   free: "✗",    pro: "✓"},
+  {label: "Soporte prioritario",  free: "✗",    pro: "✓"},
+];
+function renderProFeatures(){
+  const list = document.getElementById('pro-features-list');
+  if(!list) return;
+  list.innerHTML = proFeatures.map((f,i)=>`
+    <div style="display:grid;grid-template-columns:1fr 80px 80px;padding:9px 0;border-bottom:${i<proFeatures.length-1?'1px solid #f5f5f5':'none'};">
+      <div style="font-size:13px;color:#1a1916;">${f.label}</div>
+      <div style="text-align:center;font-size:12px;color:${f.free==='✗'?'#ccc':'#6b6860'};font-weight:500;">${f.free}</div>
+      <div style="text-align:center;font-size:12px;color:${f.pro==='✓'?'#1a6b4a':'#1a6b4a'};font-weight:700;">${f.pro}</div>
+    </div>`).join('');
+}
+function openProModal(){ 
+  renderProFeatures();
+  document.getElementById('modal-pro').style.display='flex';
+}
+function closeProModal(){ 
+  document.getElementById('modal-pro').style.display='none';
+}
+document.getElementById('modal-pro').addEventListener('click', function(e){
+  if(e.target===this) closeProModal();
+});
+</script>
 </body>
 </html>
