@@ -736,7 +736,7 @@
       </div>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr 200px;gap:16px;align-items:start;">
 
       <!-- Pacientes recentes -->
       <div class="card" style="margin-bottom:0;">
@@ -760,29 +760,29 @@
         </div>
       </div>
 
-    </div>
-
-    <!-- Accesos rápidos -->
-    <div class="card" style="margin-top:16px;margin-bottom:0;">
-      <div class="card-title">Accesos rápidos</div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
-        <button onclick="showNewPlanModal()" style="background:var(--accent-light);border:1px solid #b7deca;border-radius:var(--radius);padding:14px;cursor:pointer;text-align:center;font-family:'DM Sans',sans-serif;">
-          <div style="font-size:20px;margin-bottom:4px;">📋</div>
-          <div style="font-size:12px;font-weight:600;color:var(--accent);">Nuevo plan</div>
-        </button>
-        <button onclick="showSection('pacientes')" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:14px;cursor:pointer;text-align:center;font-family:'DM Sans',sans-serif;">
-          <div style="font-size:20px;margin-bottom:4px;">👥</div>
-          <div style="font-size:12px;font-weight:600;color:var(--text-2);">Mis pacientes</div>
-        </button>
-        <button onclick="showSection('historial')" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:14px;cursor:pointer;text-align:center;font-family:'DM Sans',sans-serif;">
-          <div style="font-size:20px;margin-bottom:4px;">📊</div>
-          <div style="font-size:12px;font-weight:600;color:var(--text-2);">Historial</div>
-        </button>
-        <button onclick="closeProfileMenu();showSection('perfil')" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:14px;cursor:pointer;text-align:center;font-family:'DM Sans',sans-serif;">
-          <div style="font-size:20px;margin-bottom:4px;">👤</div>
-          <div style="font-size:12px;font-weight:600;color:var(--text-2);">Mi perfil</div>
-        </button>
+      <!-- Accesos rápidos lado direito -->
+      <div class="card" style="margin-bottom:0;padding:12px;">
+        <div class="card-title" style="margin-bottom:10px;">Accesos</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <button onclick="showNewPlanModal()" style="background:var(--accent-light);border:1px solid #b7deca;border-radius:var(--radius);padding:12px 6px;cursor:pointer;text-align:center;font-family:'DM Sans',sans-serif;">
+            <div style="font-size:18px;margin-bottom:4px;">📋</div>
+            <div style="font-size:11px;font-weight:600;color:var(--accent);">Nuevo plan</div>
+          </button>
+          <button onclick="showSection('pacientes')" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px 6px;cursor:pointer;text-align:center;font-family:'DM Sans',sans-serif;">
+            <div style="font-size:18px;margin-bottom:4px;">👥</div>
+            <div style="font-size:11px;font-weight:600;color:var(--text-2);">Pacientes</div>
+          </button>
+          <button onclick="showSection('historial')" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px 6px;cursor:pointer;text-align:center;font-family:'DM Sans',sans-serif;">
+            <div style="font-size:18px;margin-bottom:4px;">📊</div>
+            <div style="font-size:11px;font-weight:600;color:var(--text-2);">Historial</div>
+          </button>
+          <button onclick="closeProfileMenu();showSection('perfil')" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px 6px;cursor:pointer;text-align:center;font-family:'DM Sans',sans-serif;">
+            <div style="font-size:18px;margin-bottom:4px;">👤</div>
+            <div style="font-size:11px;font-weight:600;color:var(--text-2);">Mi perfil</div>
+          </button>
+        </div>
       </div>
+
     </div>
 
   </div>
