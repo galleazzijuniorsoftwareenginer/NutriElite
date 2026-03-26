@@ -41,6 +41,19 @@ def generate_plan(
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
 
+    # Limite Free: 3 planos/semana
+    from datetime import datetime
+    if not db_user.is_pro:
+        now = datetime.utcnow()
+        week_key = now.strftime("%Y-W%W")
+        if db_user.plans_month_reset != week_key:
+            db_user.plans_this_month = 0
+            db_user.plans_month_reset = week_key
+            db.commit()
+        if (db_user.plans_this_month or 0) >= 3:
+            raise HTTPException(status_code=403, detail="LIMIT_REACHED")
+        db_user.plans_this_month = (db_user.plans_this_month or 0) + 1
+        db.commit()
     plan = create_plan(data, db, db_user.id)
 
     return {
@@ -325,6 +338,12 @@ def delete_plan(
     from backend.models import PlanFoodGroup
     db.query(PlanFoodGroup).filter(PlanFoodGroup.plan_id == plan_id).delete()
     db.delete(plan)
+    # Decrementa contador do mês se o plano foi criado neste mês
+    from datetime import datetime
+    now = datetime.utcnow()
+    month_key = now.strftime("%Y-%m")
+    if db_user.plans_month_reset == month_key and (db_user.plans_this_month or 0) > 0:
+        db_user.plans_this_month = db_user.plans_this_month - 1
     db.commit()
     return {"ok": True}
 

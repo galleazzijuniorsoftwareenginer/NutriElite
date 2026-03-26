@@ -103,11 +103,11 @@ def generate_plan_pdf(plan, portions, menu_data=None, perfil_data=None):
         ["Email:", f"{plan.patient_email}"],
         ["Teléfono:", f"{plan.patient_phone}"],
         ["Edad:", f"{plan.age} años"],
-        ["Género:", f"{plan.gender}"],
+        ["Género:", {"male":"Masculino","female":"Femenino"}.get(plan.gender, plan.gender)],
         ["Peso:", f"{plan.weight} kg"],
         ["Altura:", f"{plan.height} cm"],
         ["Nivel de actividad:", f"{plan.activity_level}"],
-        ["Objetivo:", f"{plan.goal}"],
+        ["Objetivo:", {"cut":"Pérdida de peso","bulk":"Ganancia de masa","maintenance":"Mantenimiento"}.get(plan.goal, plan.goal)],
         ["Fecha:", f"{plan.created_at}"],
     ]
 
@@ -124,7 +124,7 @@ def generate_plan_pdf(plan, portions, menu_data=None, perfil_data=None):
     elements.append(Paragraph("Evaluación Antropométrica", styles["Heading2"]))
     elements.append(Spacer(1, 0.2 * inch))
 
-    goal_label = getattr(plan, 'goal', '') or ''
+    goal_label = {'cut':'Pérdida de peso','bulk':'Ganancia de masa','maintenance':'Mantenimiento'}.get(getattr(plan,'goal',''), getattr(plan,'goal',''))
     activity_label = getattr(plan, 'activity_level', '') or ''
 
     antro_data = [

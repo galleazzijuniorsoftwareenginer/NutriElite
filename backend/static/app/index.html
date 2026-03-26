@@ -250,6 +250,7 @@
       <button class="topbar-btn" id="nav-historial" onclick="showSection('historial')">Historial</button>
       <button class="topbar-btn" id="nav-plantillas" onclick="showSection('plantillas')">Plantillas</button>
     </nav>
+<button id="btn-pro-topbar" onclick="startCheckout()" style="margin-left:auto;margin-right:16px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;border:none;border-radius:20px;padding:6px 16px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">⭐ Upgrade Pro — $199 MXN/mês</button>
   </div>
   <div class="topbar-right">
     <button class="topbar-btn-pro" onclick="showSection('upgrade')">⭐ Pro</button>
@@ -330,9 +331,9 @@
           <div class="field"><label>Género *</label><select id="gender"><option value="male">Masculino</option><option value="female">Femenino</option></select></div>
         </div>
         <div class="form-grid" style="margin-bottom:12px">
-          <div class="field"><label>Objetivo *</label><select id="goal"><option value="cut">Cutting — Pérdida de peso</option><option value="maintenance">Mantenimiento</option><option value="bulk">Bulk — Ganancia muscular</option></select></div>
+          <div class="field"><label>Objetivo *</label><select id="goal"><option value="cut">Pérdida de peso</option><option value="maintenance">Mantenimiento</option><option value="bulk">Bulk — Ganancia muscular</option></select></div>
           <div class="field"><label>Nivel de actividad *</label><select id="activity"><option value="1.2">Sedentario</option><option value="1.375">Ligero</option><option value="1.55">Moderado</option><option value="1.725">Activo</option><option value="1.9">Muy activo</option><option value="3.0">Atleta</option></select></div>
-          <div class="field"><label>Fórmula</label><select id="formula"><option value="mifflin">Mifflin-St Jeor</option><option value="harris">Harris-Benedict</option></select></div>
+          <div class="field"><label>Fórmula</label><select id="formula"><option value="harris">Harris-Benedict</option><option value="mifflin">Mifflin-St Jeor</option></select></div>
         </div>
         <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;margin-bottom:12px;">
           <div style="font-size:11px;font-weight:600;color:var(--text-2);margin-bottom:8px;">CIRCUNFERENCIAS (cm) — opcional</div>
@@ -470,7 +471,7 @@
       <div class="insights-grid">
         <div class="insight-card"><div class="insight-label">Déficit / Superávit calórico</div><div class="insight-val" id="ins-deficit">—</div><div class="insight-sub">en relación al GET</div></div>
         <div class="insight-card"><div class="insight-label">Proteína por kg</div><div class="insight-val" id="ins-prot-kg">—</div><div class="insight-sub">recomendado: 1.6–2.2 g/kg</div></div>
-        <div class="insight-card"><div class="insight-label">Relação prot/carb</div><div class="insight-val" id="ins-ratio">—</div><div class="insight-sub">cutting: arriba de 0.4</div></div>
+        <div class="insight-card"><div class="insight-label">Relación prot/carb</div><div class="insight-val" id="ins-ratio">—</div><div class="insight-sub">recomendado: arriba de 0.4</div></div>
         <div class="insight-card"><div class="insight-label">IMC</div><div class="insight-val" id="ins-imc-class">—</div><div class="insight-sub" id="ins-imc-val">—</div></div>
       </div>
       <div class="loading-inline" id="loading-audit"><div class="spinner"></div> Generando auditoría...</div>
@@ -1060,6 +1061,15 @@ async function generatePlan(){
   document.getElementById('loading-plan').classList.add('visible');
   const res=await fetch(API+'/plan',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({patient_name:document.getElementById('name').value,patient_email:document.getElementById('email').value,patient_phone:document.getElementById('phone').value,patient_id:currentPatientId,weight:w,height:h,age:parseInt(document.getElementById('age').value),gender:document.getElementById('gender').value,activity_level:parseFloat(document.getElementById('activity').value),goal:document.getElementById('goal').value,formula:document.getElementById('formula').value})});
   document.getElementById('loading-plan').classList.remove('visible');
+  if(res.status===403){
+    const err=await res.json();
+    if(err.detail==='LIMIT_REACHED'){
+      if(confirm('Has alcanzado el límite de 3 planes/mes del plan Free.\n\n¿Actualizar a Pro por $199 MXN/mes?')){
+        startCheckout();
+      }
+      return;
+    }
+  }
   const data=await res.json();
   planId=data.plan_id;planData=data;
   document.getElementById('res-tmb').textContent=data.TMB?data.TMB.toFixed(0):'—';
@@ -1972,7 +1982,7 @@ function recalcDC(){
   const base=planData?planData.GET:2000;
   const adj=parseInt(document.getElementById('kcal-adjustment')?document.getElementById('kcal-adjustment').value:0)||0;
   const get=base+Math.max(-500,Math.min(500,adj));
-  const peso=planData?parseFloat(document.getElementById('weight').value):70;
+  const peso=planData?(planData.weight||parseFloat(document.getElementById('weight').value)||70):70;
   const carbPct=parseFloat(document.getElementById('pct-carb').value)||0;
   const protPct=parseFloat(document.getElementById('pct-prot').value)||0;
   const fatPct=parseFloat(document.getElementById('pct-fat').value)||0;
@@ -2397,6 +2407,33 @@ async function downloadPDF(){
   const blob=await res.blob();
   const url=window.URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=url;a.download='nutrielite_'+planId+'.pdf';a.click();
+}
+
+async function startCheckout() {
+  const res = await fetch(API + '/stripe/checkout', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + token }
+  });
+  const data = await res.json();
+  if (data.url) window.location.href = data.url;
+}
+
+async function checkProStatus() {
+  if (!token) return;
+  const res = await fetch(API + '/stripe/status', {
+    headers: { 'Authorization': 'Bearer ' + token }
+  });
+  const data = await res.json();
+  if (data.is_pro) {
+    const btn = document.getElementById('btn-pro-topbar');
+    if (btn) btn.style.display = 'none';
+  }
+}
+
+// Verifica se voltou do checkout com sucesso
+if (window.location.search.includes('pro=success')) {
+  alert('🎉 Bem-vindo ao NutriElite Pro!');
+  history.replaceState({}, '', '/app/');
 }
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>

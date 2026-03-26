@@ -5,6 +5,7 @@ from backend.routes.auth import router as auth_router
 from backend.routes.food import router as food_router
 from backend.routes.patients import router as patients_router
 from backend.routes.profile import router as profile_router
+from backend.routes.stripe_routes import router as stripe_router
 from backend.routes import smae
 from backend.database import engine
 from backend.models import Base
@@ -51,6 +52,10 @@ with engine.connect() as conn:
             updated_at TIMESTAMPTZ DEFAULT NOW()
         )
     """))
+    conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_pro INTEGER DEFAULT 0"))
+    conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id VARCHAR"))
+    conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS plans_this_month INTEGER DEFAULT 0"))
+    conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS plans_month_reset VARCHAR"))
     conn.commit()
 
 seed()
@@ -62,6 +67,7 @@ app.include_router(food_router)
 app.include_router(smae.router)
 app.include_router(patients_router)
 app.include_router(profile_router)
+app.include_router(stripe_router)
 
 @app.get("/app")
 @app.get("/app/")

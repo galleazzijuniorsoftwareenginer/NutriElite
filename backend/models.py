@@ -9,6 +9,10 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
     password = Column(String)
+    is_pro = Column(Integer, default=0)
+    stripe_customer_id = Column(String, nullable=True)
+    plans_this_month = Column(Integer, default=0)
+    plans_month_reset = Column(String, nullable=True)
 
 
 
