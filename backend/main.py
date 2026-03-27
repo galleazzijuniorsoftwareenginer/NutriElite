@@ -54,6 +54,7 @@ with engine.connect() as conn:
         )
     """))
     conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS email VARCHAR"))
+    conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS first_login INTEGER DEFAULT 1"))
     conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_pro INTEGER DEFAULT 0"))
     conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id VARCHAR"))
     conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS plans_this_month INTEGER DEFAULT 0"))

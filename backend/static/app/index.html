@@ -1060,7 +1060,17 @@ async function login(){
   const du=document.getElementById('dropdown-username'); if(du) du.textContent=user;
   document.getElementById('auth-screen').style.display='none';
   document.getElementById('clinical-area').style.display='block';
-  setTimeout(()=>{ if(token) loadDashboard(); initLang(); checkProStatus(); }, 100);
+  setTimeout(async ()=>{ 
+    if(token) loadDashboard(); 
+    initLang(); 
+    checkProStatus();
+    // Verifica primeiro login
+    try {
+      const meRes = await fetch(API+'/me', {headers:{'Authorization':'Bearer '+token}});
+      const meData = await meRes.json();
+      if(meData.first_login) showOnboarding();
+    } catch(e) {}
+  }, 100);
   unlockStep(2);showPanel(2);
 }
 
@@ -2834,6 +2844,78 @@ async function doResetPassword(){
     msg.style.color='var(--danger)';
     msg.textContent = data.detail || 'Error al restablecer';
   }
+}
+</script>
+
+<!-- MODAL ONBOARDING -->
+<div id="modal-onboarding" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:10000;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#fff;border-radius:24px;max-width:520px;width:100%;overflow:hidden;box-shadow:0 32px 100px rgba(0,0,0,0.25);">
+    
+    <!-- Hero -->
+    <div style="background:linear-gradient(135deg,#1a6b4a 0%,#2d9e6f 60%,#1a6b4a 100%);padding:40px 36px 32px;color:white;text-align:center;">
+      <div style="margin-bottom:16px;">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="24" cy="24" r="23" fill="rgba(255,255,255,0.15)"/>
+          <circle cx="24" cy="24" r="16" fill="rgba(255,255,255,0.2)"/>
+          <path d="M16 24 L24 14 L32 24 L24 34 Z" fill="white" opacity="0.95"/>
+          <line x1="24" y1="8" x2="24" y2="40" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div style="font-size:13px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;opacity:.75;margin-bottom:10px;">Bienvenido a</div>
+      <div style="font-size:32px;font-weight:700;letter-spacing:-.5px;margin-bottom:8px;">Nutri<span style="color:#4ade80;">Elite</span></div>
+      <div style="font-size:15px;opacity:.85;font-style:italic;letter-spacing:-.2px;">Precisión clínica. Nutrición inteligente.</div>
+    </div>
+
+    <!-- Steps -->
+    <div style="padding:28px 36px;">
+      <div style="font-size:14px;font-weight:600;color:#1a1916;margin-bottom:20px;">¿Cómo funciona? Es muy simple:</div>
+      
+      <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:28px;">
+        <div style="display:flex;align-items:flex-start;gap:14px;">
+          <div style="width:32px;height:32px;border-radius:50%;background:#e8f5ee;color:#1a6b4a;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</div>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#1a1916;margin-bottom:2px;">Registra tu paciente</div>
+            <div style="font-size:12px;color:#6b6860;">Datos personales, antropometría e historial clínico</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:14px;">
+          <div style="width:32px;height:32px;border-radius:50%;background:#e8f5ee;color:#1a6b4a;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">2</div>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#1a1916;margin-bottom:2px;">Calcula el plan metabólico</div>
+            <div style="font-size:12px;color:#6b6860;">TMB, GET, distribución de macros con Harris-Benedict o Mifflin</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:14px;">
+          <div style="width:32px;height:32px;border-radius:50%;background:#e8f5ee;color:#1a6b4a;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">3</div>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#1a1916;margin-bottom:2px;">Genera auditoría SMAE</div>
+            <div style="font-size:12px;color:#6b6860;">Distribución por grupos alimentarios según % de macros</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:14px;">
+          <div style="width:32px;height:32px;border-radius:50%;background:#e8f5ee;color:#1a6b4a;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">4</div>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#1a1916;margin-bottom:2px;">Menú IA + PDF clínico</div>
+            <div style="font-size:12px;color:#6b6860;">Genera el menú semanal con IA y exporta el PDF con tu branding</div>
+          </div>
+        </div>
+      </div>
+
+      <button onclick="closeOnboarding()" style="width:100%;background:linear-gradient(135deg,#1a6b4a,#2d9e6f);color:white;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:-.2px;">
+        ¡Comenzar ahora! →
+      </button>
+      <div style="text-align:center;font-size:11px;color:#9e9b95;margin-top:10px;">Plan Free · 3 planes por semana sin costo</div>
+    </div>
+  </div>
+</div>
+
+<script>
+function showOnboarding(){
+  document.getElementById('modal-onboarding').style.display='flex';
+}
+function closeOnboarding(){
+  document.getElementById('modal-onboarding').style.display='none';
+  showNewPlanModal();
 }
 </script>
 </body>

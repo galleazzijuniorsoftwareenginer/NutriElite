@@ -78,6 +78,17 @@ def register(user: UserRegister, db: Session = Depends(get_db)):
 
     return {"message": "User created successfully"}
 
+@router.get("/me")
+def get_me(token: dict = Depends(verify_token), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == token["sub"]).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    first = bool(user.first_login)
+    if first:
+        user.first_login = 0
+        db.commit()
+    return {"username": user.username, "is_pro": bool(user.is_pro), "first_login": first}
+
 @router.post("/login")
 def login(user: UserLogin, db: Session = Depends(get_db)):
 
