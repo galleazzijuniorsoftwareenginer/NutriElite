@@ -1,11 +1,18 @@
 import type { HTMLAttributes } from 'react'
 import clsx from 'clsx'
 
-export function Card({ className, ...rest }: HTMLAttributes<HTMLDivElement>) {
+interface CardProps extends HTMLAttributes<HTMLDivElement> {
+  variant?: 'default' | 'deep'
+}
+
+export function Card({ className, variant = 'default', ...rest }: CardProps) {
   return (
     <div
       className={clsx(
-        'bg-surface border border-border rounded-lg p-6 shadow-card',
+        variant === 'default' &&
+          'bg-surface border border-border rounded-lg p-6 shadow-card',
+        variant === 'deep' &&
+          'aurora-bg rounded-lg p-6 text-deep-text border border-white/10 shadow-float relative overflow-hidden',
         className
       )}
       {...rest}

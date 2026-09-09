@@ -6,6 +6,7 @@ import type { MenuDay, WeeklyMenu } from '../../../types'
 import { Card } from '../../../components/Card'
 import { Button } from '../../../components/Button'
 import { Spinner } from '../../../components/Spinner'
+import { LogoMark } from '../../../components/Logo'
 import type { WizardPlanData } from '../planTypes'
 
 const DIAS_SEMANA = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
@@ -90,13 +91,17 @@ export function MenuStep({ plan, weeklyMenu, onMenuReady, onContinue }: Props) {
   return (
     <div className="flex flex-col gap-4">
       {!weeklyMenu && days.every((d) => d === null) && !generating && (
-        <Card className="flex flex-col items-center gap-3 py-12 text-center">
-          <p className="font-display text-lg text-text">Generador de menú semanal con IA</p>
-          <p className="max-w-md text-sm text-text-2">
+        <Card variant="deep" className="flex flex-col items-center gap-3 py-14 text-center">
+          <div className="pointer-events-none absolute -top-16 -left-16 opacity-20 aurora-orb">
+            <LogoMark size={280} />
+          </div>
+          <LogoMark size={52} animated />
+          <p className="font-display text-xl font-semibold tracking-tight">Generador de menú semanal con IA</p>
+          <p className="max-w-md text-sm text-deep-text-2">
             Genera un plan alimenticio de 7 días con platillos mexicanos auténticos, respetando la distribución SMAE
             de tu auditoría. Los 7 días se generan en paralelo — verás cada uno aparecer en tiempo real.
           </p>
-          <Button onClick={startGeneration} className="mt-2">
+          <Button variant="ai" onClick={startGeneration} className="relative mt-2">
             ✨ Generar cardápio semanal
           </Button>
         </Card>
@@ -105,6 +110,23 @@ export function MenuStep({ plan, weeklyMenu, onMenuReady, onContinue }: Props) {
       {(generating || days.some((d) => d !== null)) && (
         <>
           <Card>
+            <div className="mb-3 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs font-medium text-text-2">
+                {generating && <Spinner className="h-3.5 w-3.5 border" />}
+                {generating
+                  ? 'Generando con IA…'
+                  : `${statuses.filter((s) => s === 'done').length}/7 días listos`}
+              </div>
+              <div className="h-1.5 w-28 overflow-hidden rounded-full bg-bg">
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: `${(statuses.filter((s) => s !== 'pending').length / 7) * 100}%`,
+                    background: 'linear-gradient(90deg,var(--color-glow-violet),var(--color-glow-cyan))',
+                  }}
+                />
+              </div>
+            </div>
             <div className="flex flex-wrap gap-2">
               {DIAS_SEMANA.map((dia, i) => (
                 <button
@@ -134,7 +156,7 @@ export function MenuStep({ plan, weeklyMenu, onMenuReady, onContinue }: Props) {
                 <h3 className="text-sm font-semibold text-text">{activeMenuDay.dia}</h3>
                 <Button
                   size="sm"
-                  variant="secondary"
+                  variant="ai"
                   loading={regenMut.isPending && regenMut.variables === activeMenuDay.dia}
                   onClick={() => regenMut.mutate(activeMenuDay.dia)}
                 >
@@ -183,7 +205,7 @@ export function MenuStep({ plan, weeklyMenu, onMenuReady, onContinue }: Props) {
               <Button variant="secondary" onClick={startGeneration}>
                 ↺ Regenerar semana completa
               </Button>
-              <Button onClick={onContinue}>Continuar al resumen →</Button>
+              <Button variant="primary" onClick={onContinue}>Continuar al resumen →</Button>
             </div>
           )}
         </>

@@ -109,7 +109,7 @@ export function DietocalculoStep({
               step={10}
               value={kcalAdjustment}
               onChange={(e) => onChangeAdjustment(parseInt(e.target.value, 10))}
-              className="w-full"
+              className="w-full accent-accent"
             />
           </div>
         </Card>

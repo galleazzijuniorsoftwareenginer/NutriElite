@@ -12,7 +12,7 @@ export function OnboardingModal({ open, onClose }: { open: boolean; onClose: () 
   return (
     <Modal open={open} onClose={onClose} width={520}>
       <div className="flex flex-col items-center gap-1 pb-2 text-center">
-        <Logo className="text-lg" />
+        <Logo size={28} />
         <p className="mt-3 font-display text-xl font-semibold text-text">Bienvenido a NutriElite</p>
         <p className="text-sm text-text-2">Tu flujo clínico completo, potenciado con IA.</p>
       </div>

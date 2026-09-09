@@ -1,46 +1,54 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..700;1,9..40,400..700&family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,500..700;1,9..144,500..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Inter:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
-  /* Superfícies */
-  --color-bg: #f7f6f3;
+  /* Superficies — blanco con leve sesgo violeta */
+  --color-bg: #f7f6fc;
   --color-surface: #ffffff;
-  --color-surface-2: #fbfaf8;
-  --color-border: #e8e6e1;
-  --color-border-strong: #d0cdc6;
+  --color-surface-2: #fbfaff;
+  --color-border: #e6e3f2;
+  --color-border-strong: #cfc9e8;
 
   /* Texto */
-  --color-text: #1a1916;
-  --color-text-2: #6b6860;
-  --color-text-3: #9e9b95;
+  --color-text: #171132;
+  --color-text-2: #6b6584;
+  --color-text-3: #9992b3;
 
-  /* Marca */
-  --color-accent: #1a6b4a;
-  --color-accent-light: #e8f5ee;
-  --color-accent-dark: #0f4a32;
-  --color-accent-2: #2563a8;
-  --color-accent-2-light: #eff5ff;
+  /* Marca — Aurora de Datos */
+  --color-accent: #6d5bff;
+  --color-accent-light: #efebff;
+  --color-accent-dark: #4a37d1;
+  --color-accent-2: #0e9c92;
+  --color-accent-2-light: #e3f9f6;
 
-  /* Estado */
-  --color-warn: #b45309;
+  /* Estado (semántico, separado del acento) */
+  --color-warn: #b7791f;
   --color-warn-light: #fef3c7;
   --color-danger: #b91c1c;
   --color-danger-light: #fef2f2;
 
   /* Macros */
-  --color-carb: #2563a8;
-  --color-prot: #1a6b4a;
-  --color-fat: #b45309;
+  --color-carb: #0e9c92;
+  --color-prot: #6d5bff;
+  --color-fat: #b7791f;
 
-  --font-sans: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
-  --font-mono: 'DM Mono', ui-monospace, monospace;
-  --font-display: 'Fraunces', ui-serif, serif;
+  /* Paneles "aurora" (hero, IA) — oscuros a propósito */
+  --color-deep: #14122b;
+  --color-deep-2: #1f1a44;
+  --color-deep-text: #f1effa;
+  --color-deep-text-2: #b4acdf;
+  --color-glow-cyan: #29e0ce;
+  --color-glow-violet: #9f8bff;
+
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
 
   --radius-md: 10px;
   --radius-lg: 16px;
 
-  --shadow-card: 0 1px 2px rgba(26,25,22,.04), 0 8px 24px -12px rgba(26,25,22,.08);
-  --shadow-float: 0 12px 32px -8px rgba(26,25,22,.18);
+  --shadow-card: 0 1px 2px rgba(23,17,50,.04), 0 8px 24px -12px rgba(23,17,50,.10);
+  --shadow-float: 0 20px 48px -12px rgba(23,17,50,.28);
+  --shadow-glow: 0 0 0 1px rgba(159,139,255,.25), 0 8px 28px -6px rgba(109,91,255,.45);
 }
 
 @layer base {
@@ -55,6 +63,7 @@
     color: var(--color-text);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    font-variant-numeric: tabular-nums;
   }
   ::selection {
     background: var(--color-accent-light);
@@ -70,6 +79,15 @@
   from { opacity: 0; }
   to { opacity: 1; }
 }
+@keyframes nx-pulse {
+  0%, 100% { opacity: .6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.18); }
+}
+@keyframes aurora-drift {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  50% { transform: translate(2%, -3%) rotate(6deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
 
 @layer utilities {
   .font-display {
@@ -81,6 +99,20 @@
   .animate-fade-in {
     animation: fade-in .15s ease-out;
   }
+  .nx-pulse {
+    animation: nx-pulse 2.4s ease-in-out infinite;
+    transform-origin: center;
+  }
+  .aurora-bg {
+    background:
+      radial-gradient(60% 50% at 15% 15%, rgba(159,139,255,.35), transparent 60%),
+      radial-gradient(50% 45% at 90% 25%, rgba(41,224,206,.22), transparent 60%),
+      radial-gradient(70% 60% at 50% 100%, rgba(109,91,255,.28), transparent 60%),
+      linear-gradient(160deg, var(--color-deep), var(--color-deep-2));
+  }
+  .aurora-orb {
+    animation: aurora-drift 14s ease-in-out infinite;
+  }
   .scrollbar-thin::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -88,5 +120,10 @@
   .scrollbar-thin::-webkit-scrollbar-thumb {
     background: var(--color-border-strong);
     border-radius: 999px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .nx-pulse, .aurora-orb {
+      animation: none;
+    }
   }
 }

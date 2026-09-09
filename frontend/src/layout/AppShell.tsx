@@ -30,7 +30,7 @@ export function AppShell() {
     <div className="min-h-screen bg-bg">
       <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-surface px-6">
         <div className="flex items-center gap-8">
-          <Logo className="text-base" />
+          <Logo size={26} />
           <nav className="hidden items-center gap-1 md:flex">
             {NAV_ITEMS.map((item) => (
               <NavLink
@@ -39,25 +39,40 @@ export function AppShell() {
                 end={item.end}
                 className={({ isActive }) =>
                   clsx(
-                    'rounded-md px-3 py-1.5 text-[13px] font-medium transition-colors',
-                    isActive ? 'bg-accent-light text-accent' : 'text-text-2 hover:bg-bg hover:text-text'
+                    'relative rounded-md px-3 py-1.5 text-[13px] font-medium transition-colors',
+                    isActive ? 'text-accent' : 'text-text-2 hover:bg-bg hover:text-text'
                   )
                 }
               >
-                {item.label}
+                {({ isActive }) => (
+                  <>
+                    {item.label}
+                    {isActive && (
+                      <span
+                        className="absolute inset-x-2 -bottom-[9px] h-[2.5px] rounded-full"
+                        style={{ background: 'linear-gradient(90deg,var(--color-accent),var(--color-glow-cyan))' }}
+                      />
+                    )}
+                  </>
+                )}
               </NavLink>
             ))}
           </nav>
         </div>
 
         <div className="relative flex items-center gap-3">
-          {isPro && <Badge tone="accent">PRO</Badge>}
+          {isPro && <Badge tone="ai">PRO</Badge>}
           <button
             onClick={() => setMenuOpen((v) => !v)}
             className="flex items-center gap-2 rounded-md px-2 py-1 text-[13px] text-text-2 hover:bg-bg"
           >
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-accent-light text-[11px] font-semibold text-accent">
-              {initial}
+            <span
+              className="flex h-7 w-7 items-center justify-center rounded-full p-[1.5px]"
+              style={{ background: 'linear-gradient(135deg,var(--color-accent),var(--color-glow-cyan))' }}
+            >
+              <span className="flex h-full w-full items-center justify-center rounded-full bg-surface text-[11px] font-semibold text-accent">
+                {initial}
+              </span>
             </span>
             <span className="hidden sm:inline">{username}</span>
           </button>

@@ -1,7 +1,7 @@
 import { type ButtonHTMLAttributes, forwardRef } from 'react'
 import clsx from 'clsx'
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'danger'
+type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'ai'
 type Size = 'sm' | 'md' | 'lg'
 
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -11,7 +11,9 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantClasses: Record<Variant, string> = {
-  primary: 'bg-accent text-white border-accent hover:bg-accent-dark shadow-sm',
+  primary:
+    'text-white border-transparent shadow-glow hover:brightness-110 [background:linear-gradient(120deg,var(--color-accent),var(--color-accent-dark))]',
+  ai: 'text-white border-transparent shadow-glow hover:brightness-110 [background:linear-gradient(120deg,var(--color-glow-violet),var(--color-glow-cyan))]',
   secondary: 'bg-surface text-text border-border-strong hover:bg-bg',
   ghost: 'bg-transparent text-text-2 border-transparent hover:bg-bg hover:text-text',
   danger: 'bg-danger text-white border-danger hover:opacity-90',
@@ -30,8 +32,8 @@ export const Button = forwardRef<HTMLButtonElement, Props>(
         ref={ref}
         disabled={disabled || loading}
         className={clsx(
-          'inline-flex items-center justify-center gap-2 rounded-md border font-medium transition-all duration-150',
-          'disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]',
+          'inline-flex items-center justify-center gap-2 rounded-md border font-semibold transition-all duration-150',
+          'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:brightness-100 active:scale-[0.98]',
           variantClasses[variant],
           sizeClasses[size],
           className

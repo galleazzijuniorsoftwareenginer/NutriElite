@@ -38,15 +38,20 @@ export function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-display text-2xl font-semibold text-text">Hola, {username}</h1>
-          <p className="text-sm text-text-2">Este es el resumen de tu actividad clínica.</p>
+      <Card variant="deep" className="flex flex-wrap items-center justify-between gap-5">
+        <div className="relative max-w-md">
+          <p className="text-xs font-semibold uppercase tracking-wide text-deep-text-2">Panel clínico</p>
+          <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight">Hola, {username}</h1>
+          <p className="mt-2 text-sm text-deep-text-2">
+            {plans && plans.length > 0
+              ? 'Este es el resumen de tu actividad clínica.'
+              : 'Empieza generando tu primer plan — el cardápio semanal con IA se genera en segundos.'}
+          </p>
         </div>
-        <Link to="/plan/nuevo">
-          <Button>+ Nuevo plan</Button>
+        <Link to="/plan/nuevo" className="relative">
+          <Button variant="ai">✨ Nuevo plan con IA</Button>
         </Link>
-      </div>
+      </Card>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard label="Pacientes activos" value={patients?.length ?? '—'} />

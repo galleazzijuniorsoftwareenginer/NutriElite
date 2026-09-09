@@ -1,6 +1,6 @@
 import clsx from 'clsx'
 
-type Tone = 'accent' | 'blue' | 'warn' | 'danger' | 'neutral'
+type Tone = 'accent' | 'blue' | 'warn' | 'danger' | 'neutral' | 'ai'
 
 const toneClasses: Record<Tone, string> = {
   accent: 'bg-accent-light text-accent',
@@ -8,6 +8,7 @@ const toneClasses: Record<Tone, string> = {
   warn: 'bg-warn-light text-warn',
   danger: 'bg-danger-light text-danger',
   neutral: 'bg-bg text-text-2',
+  ai: 'text-white [background:linear-gradient(120deg,var(--color-glow-violet),var(--color-glow-cyan))]',
 }
 
 export function Badge({ tone = 'neutral', children }: { tone?: Tone; children: React.ReactNode }) {
