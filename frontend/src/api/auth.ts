@@ -1,9 +1,11 @@
 import { api } from './client'
+import type { UserRole } from '../store/authStore'
 
 export interface MeResponse {
   username: string
   is_pro: boolean
   first_login: boolean
+  role: UserRole
 }
 
 export async function login(username: string, password: string) {
@@ -11,8 +13,8 @@ export async function login(username: string, password: string) {
   return data
 }
 
-export async function register(username: string, password: string, email?: string) {
-  const { data } = await api.post('/register', { username, password, email: email || null })
+export async function register(username: string, password: string, email?: string, role: UserRole = 'professional') {
+  const { data } = await api.post('/register', { username, password, email: email || null, role })
   return data
 }
 

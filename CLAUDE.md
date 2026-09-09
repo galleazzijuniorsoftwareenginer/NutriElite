@@ -59,21 +59,37 @@ The frontend's router uses `basename="/app"` in production (`import.meta.env.PRO
 
 8. **Renal module (KDOQI)** (`POST /patients/{id}/renal-assessment`): `renal_service.calculate_renal_targets()` computes kcal/kg, protein g/kg, sodium/potassium/phosphorus (mg) and fluid (mL) targets from CKD stage (1/2/3a/3b/4/5) + dialysis modality (none/hemodialysis/peritoneal), adjusting potassium/phosphorus by lab values when provided (KDOQI does not recommend a universal restriction — it's individualized by serum level). Results are explicitly framed as starting points requiring clinical judgment, not a diagnosis. Stored as `RenalAssessment` rows (history kept, not overwritten).
 
+9. **Appointments** (`POST/GET/PUT/DELETE /appointments`, `POST /appointments/{id}/send-reminder`, `GET /appointments/due-reminders`): booking a `patient_id` + `scheduled_at` sends a confirmation email immediately (Resend) if the patient has one. There's no cron/task queue in this project, so reminders are on-demand — the frontend dashboard surfaces appointments due within 24h with a "send reminder" button; `due-reminders` is the endpoint a future scheduled job would poll instead.
+
+10. **Recipes & shopping list** (`GET/POST/DELETE /recipes`, `POST /shopping-list`): `Recipe` rows are either system-seeded (`created_by=null`, see `seed_recipes.py`) or created by a nutritionist (`created_by=user_id`, private to them). The shopping list is **not** recipe-based — `shopping_list_service.build_shopping_list()` aggregates grams per unique food name straight out of a weekly AI menu's `semana` structure (same shape `ai_menu_service` returns), so it stays in sync with whatever the AI actually generated.
+
+11. **Patient portal (public link)** (`POST /plans/{id}/share`, `GET /public/plans/{token}` — no auth): generates a `Plan.public_token` (only on request, not by default) and serves a sanitized read of that plan (first name only, goal, kcal target, weekly menu, shopping list) — no email/phone/clinical data. `Plan.weekly_menu` is persisted server-side whenever the AI menu is generated or a single day is regenerated (sync endpoint, SSE stream, and per-day endpoint all write it), which is also what makes the portal link always reflect the latest menu without the frontend re-sending anything.
+
+12. **Student accounts & classrooms** (`User.role`: `professional`|`student`): registering as a student (`POST /register` with `role: "student"`) auto-seeds 3 clearly-labeled fictional practice patients (`student_service.seed_practice_patients`) so they can practice TMB/GET/SMAE calculations without real clinical data. `Classroom`/`ClassroomEnrollment` (`/classrooms*` routes) let a professor create a class with a join code; a professor can only read (never edit) an enrolled student's practice patients/plans, gated by checking both classroom ownership and enrollment on every request.
+
 ## Code Structure
 
 ```
 backend/
   main.py                  # App init, route registration, DB seeding + Postgres-only migrations on startup
   database.py              # SQLAlchemy engine + session, env-based DB URL
-  models.py                # ORM: User, Patient, Plan, FoodGroup, FitnessReference, PlanFoodGroup, NutritionistProfile, ClinicalRecord, Consultation, RenalAssessment
+  models.py                # ORM: User, Patient, Plan, FoodGroup, FitnessReference, PlanFoodGroup, NutritionistProfile, ClinicalRecord, Consultation, RenalAssessment, Appointment, Recipe, Classroom, ClassroomEnrollment
   schemas/
     plan.py                # Pydantic request validation for plans
     clinical.py            # Pydantic schemas for clinical record, consultations, renal assessment
+    appointments.py        # Pydantic schemas for appointments
+    recipes.py             # Pydantic schemas for recipes + shopping list request
+    classroom.py           # Pydantic schemas for classrooms/enrollments
   routes/
-    auth.py                # Register, login, JWT (verify_token for headers, verify_token_str for SSE query params)
-    calculator.py          # Plan CRUD, audit, PDF, AI menu (sync + SSE stream + per-day regen) endpoints
+    auth.py                # Register (role professional|student), login, JWT (verify_token for headers, verify_token_str for SSE query params)
+    calculator.py          # Plan CRUD, audit, PDF, AI menu (sync + SSE stream + per-day regen), plan sharing (/plans/{id}/share)
     patients.py            # Patient CRUD + per-patient plan history
     clinical.py            # Clinical record, consultations, AI lab extraction, renal (KDOQI) assessment
+    appointments.py        # Appointment CRUD + email reminders
+    recipes.py             # Recipe CRUD + shopping list generation
+    classroom.py           # Classrooms, join codes, professor's read-only view of student practice data
+    reference.py           # Static reference/study content (BMR formulas, activity factors, SMAE guide, KDOQI summary)
+    public.py              # Unauthenticated /public/plans/{token} — patient portal
     profile.py             # Nutritionist profile (name, cédula, clínica, logo) used in the PDF header
     stripe_routes.py        # Checkout session, webhook, Pro status
     password_reset.py       # Forgot/reset password via Resend email
@@ -87,25 +103,32 @@ backend/
     ai_menu_service.py     # Parallel Claude API calls for weekly meal plans (sync, streaming, and single-day variants)
     renal_service.py       # KDOQI 2020-based CKD nutrition target calculations
     lab_extraction_service.py  # Claude vision call to read lab values from a photo
+    email_service.py       # Shared Resend wrapper + branded HTML template (used by appointments; password_reset.py predates it and has its own inline version)
+    shopping_list_service.py  # Aggregates a weekly AI menu into a shopping list
+    student_service.py     # Seeds fictional practice patients for new student accounts
   scripts/
     seed_smae.py           # Seeds food groups and default admin
+    seed_recipes.py        # Seeds the system recipe bank (created_by=null)
   static/app/               # Built frontend output lives here in the container (git-ignored); index_backup.html is the old vanilla-JS SPA kept for reference
 
 frontend/
   src/
-    api/                    # axios client + one module per resource (auth, plans, patients, profile, menu, billing)
-    store/authStore.ts       # Zustand store (JWT, username, is_pro, first_login) persisted to localStorage
+    api/                    # axios client + one module per resource (auth, plans, patients, profile, menu, billing, clinical, appointments, recipes, classroom, reference, public)
+    store/authStore.ts       # Zustand store (JWT, username, is_pro, first_login, role) persisted to localStorage
     components/              # UI primitives (Button, Card, Field, Modal, Badge, Spinner, OnboardingModal, Logo)
     layout/AppShell.tsx       # Topbar + nav + onboarding modal wrapper for all authenticated routes
     features/
-      auth/                   # Login, register, forgot/reset password
-      dashboard/               # Metrics + recent patients/plans
-      patients/                # CRUD + per-patient plan history; tabs/ holds ClinicalRecordTab, ConsultationsTab (+ weight evolution chart, AI lab photo extraction), RenalTab
+      auth/                   # Login, register (role selector), forgot/reset password
+      dashboard/               # Metrics + recent patients/plans + upcoming-appointments widget
+      patients/                # CRUD + per-patient plan history; tabs/ holds ClinicalRecordTab, ConsultationsTab (+ weight evolution chart, AI lab photo extraction, appointment scheduling), RenalTab
       profile/                 # Nutritionist profile + logo upload for PDF branding
       billing/                 # Free vs Pro, Stripe checkout
-      plan/                    # The core wizard: Datos → Dietocálculo → Auditoría SMAE → Menú IA → Resumen/PDF
+      plan/                    # The core wizard: Datos → Dietocálculo → Auditoría SMAE → Menú IA → Resumen/PDF (+ share-link generation)
         steps/                  # One component per wizard step
         planMath.ts             # Pure functions: macro grams from %, OMS range checks, clinical alerts
+      reference/               # Static-content study/reference page (formulas, SMAE guide, KDOQI table)
+      classroom/                # Classroom mode — role-dependent view (professor creates/manages, student joins by code)
+      public/                  # PublicPlanPage — no-auth route rendered at /portal/:token (outside ProtectedRoute)
   vite.config.ts             # base:'/app/' in prod (matches FastAPI mount point), '/' in dev; dev proxy to :8000
 ```
 

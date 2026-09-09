@@ -1,4 +1,5 @@
-import { pdfDownloadUrl } from '../../../api/plans'
+import { useState } from 'react'
+import { pdfDownloadUrl, sharePlan } from '../../../api/plans'
 import { Card } from '../../../components/Card'
 import { Button } from '../../../components/Button'
 import type { WizardPlanData } from '../planTypes'
@@ -17,9 +18,28 @@ interface Props {
 
 export function ResumenStep({ plan, carbPct, protPct, fatPct, kcalAdjustment, weeklyMenu }: Props) {
   const token = useAuthStore((s) => s.token)
+  const [shareUrl, setShareUrl] = useState('')
+  const [sharing, setSharing] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   const get = plan.originalGet + clampAdjustment(kcalAdjustment)
   const { carbG, protG, fatG } = gramsFromPct(get, carbPct, protPct, fatPct)
+
+  async function handleShare() {
+    setSharing(true)
+    try {
+      const { url } = await sharePlan(plan.planId)
+      setShareUrl(url)
+    } finally {
+      setSharing(false)
+    }
+  }
+
+  async function handleCopy() {
+    await navigator.clipboard.writeText(shareUrl)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   async function handleDownload() {
     // No pasamos "perfil" por query string: el backend ya busca los datos del
@@ -81,6 +101,31 @@ export function ResumenStep({ plan, carbPct, protPct, fatPct, kcalAdjustment, we
         <Button onClick={handleDownload} className="w-full">
           ⬇ Descargar PDF
         </Button>
+      </Card>
+
+      <Card className="flex flex-col gap-3 lg:col-span-3">
+        <h3 className="text-sm font-semibold text-text">Portal del paciente</h3>
+        <p className="text-xs text-text-2">
+          Comparte un enlace donde tu paciente ve el cardápio de la semana y la lista de compras —
+          sin necesidad de crear una cuenta. Se actualiza automáticamente si regeneras el menú.
+        </p>
+        {shareUrl ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              readOnly
+              value={shareUrl}
+              className="h-9 min-w-0 flex-1 rounded-md border border-border bg-bg px-3 text-xs text-text-2"
+              onFocus={(e) => e.target.select()}
+            />
+            <Button size="sm" variant="secondary" onClick={handleCopy}>
+              {copied ? '✓ Copiado' : 'Copiar enlace'}
+            </Button>
+          </div>
+        ) : (
+          <Button variant="secondary" loading={sharing} onClick={handleShare} className="w-fit">
+            🔗 Generar enlace para el paciente
+          </Button>
+        )}
       </Card>
     </div>
   )

@@ -1,7 +1,8 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { listPatients } from '../../api/patients'
 import { listPlans } from '../../api/plans'
+import { listAppointments, sendAppointmentReminder } from '../../api/appointments'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { useAuthStore } from '../../store/authStore'
@@ -25,8 +26,14 @@ function StatCard({ label, value, tone }: { label: string; value: string | numbe
 
 export function DashboardPage() {
   const username = useAuthStore((s) => s.username)
+  const queryClient = useQueryClient()
   const { data: patients } = useQuery({ queryKey: ['patients'], queryFn: listPatients })
   const { data: plans } = useQuery({ queryKey: ['plans'], queryFn: () => listPlans() })
+  const { data: appointments } = useQuery({ queryKey: ['appointments', true], queryFn: () => listAppointments(true) })
+  const reminderMut = useMutation({
+    mutationFn: sendAppointmentReminder,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['appointments', true] }),
+  })
 
   const recentPatients = (patients ?? []).slice(0, 5)
   const recentPlans = (plans ?? []).slice(0, 5)
@@ -121,6 +128,27 @@ export function DashboardPage() {
           )}
         </Card>
       </div>
+
+      {appointments && appointments.length > 0 && (
+        <Card>
+          <h2 className="mb-3 text-sm font-semibold text-text">📅 Próximas consultas (24h)</h2>
+          <ul className="flex flex-col divide-y divide-border">
+            {appointments.map((a) => (
+              <li key={a.id} className="flex items-center justify-between py-2.5">
+                <div>
+                  <p className="text-sm font-medium text-text">{a.patient_name}</p>
+                  <p className="text-xs text-text-3">
+                    {new Date(a.scheduled_at).toLocaleString('es-MX', { weekday: 'short', hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+                <Button size="sm" variant="secondary" loading={reminderMut.isPending && reminderMut.variables === a.id} onClick={() => reminderMut.mutate(a.id)}>
+                  Enviar recordatorio
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
     </div>
   )
 }

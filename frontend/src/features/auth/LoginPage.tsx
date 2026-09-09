@@ -24,7 +24,7 @@ export function LoginPage() {
       setSession(access_token, username)
       try {
         const profile = await me()
-        setProfile(profile.is_pro, profile.first_login)
+        setProfile(profile.is_pro, profile.first_login, profile.role)
       } catch {
         // segue mesmo se /me falhar — sessão já está válida
       }

@@ -8,6 +8,12 @@ from backend.routes.profile import router as profile_router
 from backend.routes.stripe_routes import router as stripe_router
 from backend.routes.password_reset import router as password_router
 from backend.routes.clinical import router as clinical_router
+from backend.routes.appointments import router as appointments_router
+from backend.routes.recipes import router as recipes_router
+from backend.routes.public import router as public_router
+from backend.routes.reference import router as reference_router
+from backend.routes.classroom import router as classroom_router
+from backend.scripts.seed_recipes import seed_recipes
 from backend.routes import smae
 from backend.database import engine
 from backend.models import Base
@@ -41,10 +47,15 @@ if engine.dialect.name == "postgresql":
         conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id VARCHAR"))
         conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS plans_this_month INTEGER DEFAULT 0"))
         conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS plans_month_reset VARCHAR"))
+        conn.execute(text("ALTER TABLE plans ADD COLUMN IF NOT EXISTS weekly_menu JSON"))
+        conn.execute(text("ALTER TABLE plans ADD COLUMN IF NOT EXISTS public_token VARCHAR"))
+        conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS ix_plans_public_token ON plans (public_token)"))
+        conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR DEFAULT 'professional'"))
         conn.commit()
 
 seed()
 seed_default_user()
+seed_recipes()
 
 app.include_router(calculator_router)
 app.include_router(auth_router)
@@ -55,6 +66,11 @@ app.include_router(profile_router)
 app.include_router(stripe_router)
 app.include_router(password_router)
 app.include_router(clinical_router)
+app.include_router(appointments_router)
+app.include_router(recipes_router)
+app.include_router(public_router)
+app.include_router(reference_router)
+app.include_router(classroom_router)
 
 @app.get("/app")
 @app.get("/app/")

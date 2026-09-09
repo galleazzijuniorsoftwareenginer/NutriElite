@@ -187,6 +187,8 @@ def generate_ai_menu_endpoint(
 
     try:
         menu = generate_ai_menu(plan_data, audit)
+        plan.weekly_menu = menu
+        db.commit()
         return menu
     except Exception as e:
         import traceback
@@ -218,7 +220,13 @@ def regenerate_ai_menu_day(
     plan_data = {"goal": plan.goal, "weight": plan.weight, "get": plan.get}
 
     try:
-        return regenerate_single_day(dia, plan_data, audit)
+        day_data = regenerate_single_day(dia, plan_data, audit)
+        if plan.weekly_menu:
+            updated = dict(plan.weekly_menu)
+            updated["semana"] = [day_data if d.get("dia") == dia else d for d in updated.get("semana", [])]
+            plan.weekly_menu = updated
+            db.commit()
+        return day_data
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -255,10 +263,14 @@ def generate_ai_menu_stream_endpoint(
     plan_data = {"goal": plan.goal, "weight": plan.weight, "get": plan.get}
 
     def event_source():
+        collected: dict[int, dict] = {}
         try:
             for idx, day_data in generate_ai_menu_stream(plan_data, audit):
+                collected[idx] = day_data
                 msg = json.dumps({"idx": idx, "day": day_data})
                 yield f"data: {msg}\n\n"
+            plan.weekly_menu = {"semana": [collected[i] for i in sorted(collected.keys())]}
+            db.commit()
             yield "event: done\ndata: {}\n\n"
         except Exception as e:
             import traceback
@@ -360,6 +372,28 @@ def delete_plan(
         db_user.plans_this_month = db_user.plans_this_month - 1
     db.commit()
     return {"ok": True}
+
+# ---------- PORTAL DO PACIENTE (link público) ----------
+@router.post("/plans/{plan_id}/share")
+def share_plan(
+    plan_id: int,
+    db: Session = Depends(get_db),
+    token: dict = Depends(verify_token)
+):
+    import secrets
+    from backend.services.email_service import PUBLIC_BASE_URL
+
+    username = token["sub"]
+    db_user = db.query(User).filter(User.username == username).first()
+    plan = db.query(Plan).filter(Plan.id == plan_id, Plan.user_id == db_user.id).first()
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plano não encontrado")
+
+    if not plan.public_token:
+        plan.public_token = secrets.token_urlsafe(16)
+        db.commit()
+
+    return {"public_token": plan.public_token, "url": f"{PUBLIC_BASE_URL}/app/portal/{plan.public_token}"}
 
 # ---------- PLANTILLAS ----------
 @router.post("/plans/{plan_id}/save-template")

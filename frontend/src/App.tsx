@@ -12,6 +12,9 @@ import { ProfilePage } from './features/profile/ProfilePage'
 import { TemplatesPage } from './features/plan/TemplatesPage'
 import { BillingPage } from './features/billing/BillingPage'
 import { PlanWizardPage } from './features/plan/PlanWizardPage'
+import { PublicPlanPage } from './features/public/PublicPlanPage'
+import { ReferencePage } from './features/reference/ReferencePage'
+import { ClassroomsPage } from './features/classroom/ClassroomsPage'
 
 export function App() {
   const [params] = useSearchParams()
@@ -26,6 +29,7 @@ export function App() {
       <Route path="/registro" element={<RegisterPage />} />
       <Route path="/olvide-password" element={<ForgotPasswordPage />} />
       <Route path="/redefinir-senha" element={<ResetPasswordPage />} />
+      <Route path="/portal/:token" element={<PublicPlanPage />} />
 
       <Route element={<ProtectedRoute />}>
         <Route element={<AppShell />}>
@@ -35,6 +39,8 @@ export function App() {
           <Route path="plan/nuevo" element={<PlanWizardPage />} />
           <Route path="plan/:planId" element={<PlanWizardPage />} />
           <Route path="plantillas" element={<TemplatesPage />} />
+          <Route path="referencia" element={<ReferencePage />} />
+          <Route path="salon" element={<ClassroomsPage />} />
           <Route path="perfil" element={<ProfilePage />} />
           <Route path="plan-pro" element={<BillingPage />} />
         </Route>

@@ -51,6 +51,11 @@ export function pdfDownloadUrl(planId: number, params: {
   return `/plans/${planId}/pdf${query ? `?${query}` : ''}`
 }
 
+export async function sharePlan(planId: number) {
+  const { data } = await api.post<{ public_token: string; url: string }>(`/plans/${planId}/share`)
+  return data
+}
+
 export async function saveAsTemplate(planId: number, templateName: string) {
   const { data } = await api.post(`/plans/${planId}/save-template`, null, {
     params: { template_name: templateName },

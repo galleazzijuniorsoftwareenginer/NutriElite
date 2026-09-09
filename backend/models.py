@@ -15,6 +15,7 @@ class User(Base):
     stripe_customer_id = Column(String, nullable=True)
     plans_this_month = Column(Integer, default=0)
     plans_month_reset = Column(String, nullable=True)
+    role = Column(String, default="professional")  # professional|student
 
 
 
@@ -61,6 +62,8 @@ class Plan(Base):
     )
     is_template = Column(Integer, default=0)
     template_name = Column(String, nullable=True)
+    weekly_menu = Column(JSON, nullable=True)
+    public_token = Column(String, unique=True, nullable=True, index=True)
 from sqlalchemy import Column, Integer, String, Float
 from backend.database import Base
 
@@ -194,6 +197,61 @@ class RenalAssessment(Base):
     phosphorus_mg = Column(Float, nullable=False)
     fluid_ml = Column(Float, nullable=True)
     notes = Column(Text, nullable=True)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class Recipe(Base):
+    """Receta del banco de la app (created_by=null) o creada por un
+    nutricionista (created_by=user_id, solo visible para él)."""
+    __tablename__ = "recipes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    created_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+
+    nombre = Column(String, nullable=False)
+    tiempo_comida = Column(String, nullable=False)  # Desayuno|Colación|Comida|Cena
+    goal_tags = Column(JSON, nullable=True)  # ["cut","bulk","maintenance"]
+    ingredientes = Column(JSON, nullable=False)  # [{"alimento","cantidad_g"}]
+    instrucciones = Column(Text, nullable=True)
+    kcal_aprox = Column(Float, nullable=True)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class Classroom(Base):
+    """Turma creada por un profesor — los estudiantes se inscriben con un código."""
+    __tablename__ = "classrooms"
+
+    id = Column(Integer, primary_key=True, index=True)
+    professor_user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    nombre = Column(String, nullable=False)
+    codigo_acceso = Column(String, unique=True, nullable=False, index=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class ClassroomEnrollment(Base):
+    __tablename__ = "classroom_enrollments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    classroom_id = Column(Integer, ForeignKey("classrooms.id"), nullable=False)
+    student_user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    joined_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class Appointment(Base):
+    """Cita agendada entre el nutricionista y un paciente."""
+    __tablename__ = "appointments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False)
+
+    scheduled_at = Column(DateTime(timezone=True), nullable=False)
+    duration_minutes = Column(Integer, default=30)
+    status = Column(String, default="scheduled")  # scheduled|completed|cancelled|no_show
+    notes = Column(Text, nullable=True)
+    reminder_sent = Column(Integer, default=0)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 

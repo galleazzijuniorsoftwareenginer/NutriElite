@@ -7,11 +7,45 @@ import {
   extractLabsFromImage,
   listConsultations,
 } from '../../../api/clinical'
+import { createAppointment } from '../../../api/appointments'
 import type { LabValue } from '../../../types/clinical'
 import { Card } from '../../../components/Card'
 import { Button } from '../../../components/Button'
 import { Modal } from '../../../components/Modal'
 import { FieldWrap, Input } from '../../../components/Field'
+
+function ScheduleAppointmentForm({ patientId, onSaved }: { patientId: number; onSaved: () => void }) {
+  const [scheduledAt, setScheduledAt] = useState('')
+  const [duration, setDuration] = useState('30')
+  const [notes, setNotes] = useState('')
+  const mut = useMutation({
+    mutationFn: () =>
+      createAppointment({
+        patient_id: patientId,
+        scheduled_at: new Date(scheduledAt).toISOString(),
+        duration_minutes: parseInt(duration, 10) || 30,
+        notes,
+      }),
+    onSuccess: onSaved,
+  })
+  return (
+    <div className="flex flex-col gap-4">
+      <FieldWrap label="Fecha y hora">
+        <Input type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} />
+      </FieldWrap>
+      <FieldWrap label="Duración (minutos)">
+        <Input type="number" value={duration} onChange={(e) => setDuration(e.target.value)} />
+      </FieldWrap>
+      <FieldWrap label="Notas">
+        <Input value={notes} onChange={(e) => setNotes(e.target.value)} />
+      </FieldWrap>
+      <p className="text-xs text-text-3">Si el paciente tiene email registrado, recibirá una confirmación automática.</p>
+      <Button onClick={() => mut.mutate()} loading={mut.isPending} disabled={!scheduledAt} className="w-full">
+        Agendar cita
+      </Button>
+    </div>
+  )
+}
 
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -127,6 +161,8 @@ export function ConsultationsTab({ patientId }: { patientId: number }) {
     queryFn: () => listConsultations(patientId),
   })
   const [modalOpen, setModalOpen] = useState(false)
+  const [scheduleOpen, setScheduleOpen] = useState(false)
+  const [scheduled, setScheduled] = useState(false)
 
   const deleteMut = useMutation({
     mutationFn: deleteConsultation,
@@ -143,7 +179,11 @@ export function ConsultationsTab({ patientId }: { patientId: number }) {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-text">Historial de consultas</h2>
-        <Button size="sm" onClick={() => setModalOpen(true)}>+ Nueva consulta</Button>
+        <div className="flex items-center gap-2">
+          {scheduled && <span className="text-xs font-medium text-accent">✓ Cita agendada</span>}
+          <Button size="sm" variant="secondary" onClick={() => setScheduleOpen(true)}>📅 Agendar cita</Button>
+          <Button size="sm" onClick={() => setModalOpen(true)}>+ Nueva consulta</Button>
+        </div>
       </div>
 
       {chartData.length >= 2 && (
@@ -197,6 +237,17 @@ export function ConsultationsTab({ patientId }: { patientId: number }) {
           onSaved={() => {
             queryClient.invalidateQueries({ queryKey: ['consultations', patientId] })
             setModalOpen(false)
+          }}
+        />
+      </Modal>
+
+      <Modal open={scheduleOpen} onClose={() => setScheduleOpen(false)} title="Agendar cita" width={420}>
+        <ScheduleAppointmentForm
+          patientId={patientId}
+          onSaved={() => {
+            setScheduleOpen(false)
+            setScheduled(true)
+            setTimeout(() => setScheduled(false), 3000)
           }}
         />
       </Modal>

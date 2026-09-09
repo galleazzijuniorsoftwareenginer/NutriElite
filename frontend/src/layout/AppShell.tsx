@@ -11,10 +11,12 @@ const NAV_ITEMS = [
   { to: '/pacientes', label: 'Pacientes' },
   { to: '/plan/nuevo', label: 'Nuevo plan' },
   { to: '/plantillas', label: 'Plantillas' },
+  { to: '/referencia', label: 'Referencia' },
+  { to: '/salon', label: 'Salón de clase' },
 ]
 
 export function AppShell() {
-  const { username, isPro, logout, firstLogin, setProfile } = useAuthStore()
+  const { username, isPro, role, logout, firstLogin, setProfile } = useAuthStore()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
   const [onboardingOpen, setOnboardingOpen] = useState(firstLogin)
@@ -62,6 +64,7 @@ export function AppShell() {
 
         <div className="relative flex items-center gap-3">
           {isPro && <Badge tone="ai">PRO</Badge>}
+          {role === 'student' && <Badge tone="blue">ESTUDIANTE</Badge>}
           <button
             onClick={() => setMenuOpen((v) => !v)}
             className="flex items-center gap-2 rounded-md px-2 py-1 text-[13px] text-text-2 hover:bg-bg"

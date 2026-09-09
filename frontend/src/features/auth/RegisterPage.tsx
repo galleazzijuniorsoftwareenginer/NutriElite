@@ -4,12 +4,13 @@ import { AuthLayout } from './AuthLayout'
 import { FieldWrap, Input } from '../../components/Field'
 import { Button } from '../../components/Button'
 import { register, login, me } from '../../api/auth'
-import { useAuthStore } from '../../store/authStore'
+import { useAuthStore, type UserRole } from '../../store/authStore'
 
 export function RegisterPage() {
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [role, setRole] = useState<UserRole>('professional')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
@@ -21,12 +22,12 @@ export function RegisterPage() {
     setError('')
     setLoading(true)
     try {
-      await register(username, password, email)
+      await register(username, password, email, role)
       const { access_token } = await login(username, password)
       setSession(access_token, username)
       try {
         const profile = await me()
-        setProfile(profile.is_pro, profile.first_login)
+        setProfile(profile.is_pro, profile.first_login, profile.role)
       } catch {
         // ignora falha em /me, sessão já é válida
       }
@@ -50,6 +51,29 @@ export function RegisterPage() {
         </FieldWrap>
         <FieldWrap label="Contraseña">
           <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+        </FieldWrap>
+        <FieldWrap label="Tipo de cuenta">
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setRole('professional')}
+              className={`flex-1 rounded-md border px-3 py-2 text-xs font-medium transition-colors ${role === 'professional' ? 'border-accent bg-accent-light text-accent' : 'border-border text-text-2'}`}
+            >
+              Nutricionista
+            </button>
+            <button
+              type="button"
+              onClick={() => setRole('student')}
+              className={`flex-1 rounded-md border px-3 py-2 text-xs font-medium transition-colors ${role === 'student' ? 'border-accent bg-accent-light text-accent' : 'border-border text-text-2'}`}
+            >
+              Estudiante
+            </button>
+          </div>
+          {role === 'student' && (
+            <p className="mt-1.5 text-[11px] text-text-3">
+              Empiezas con 3 pacientes de práctica ficticios para aprender a calcular planes sin riesgo clínico.
+            </p>
+          )}
         </FieldWrap>
         {error && <p className="text-xs text-danger">{error}</p>}
         <Button type="submit" loading={loading} className="w-full">

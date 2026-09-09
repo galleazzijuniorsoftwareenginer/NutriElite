@@ -34,6 +34,7 @@ class UserRegister(BaseModel):
     username: str
     password: str
     email: str = None
+    role: str = "professional"  # professional|student
 
 class UserLogin(BaseModel):
     username: str
@@ -85,16 +86,25 @@ def register(user: UserRegister, db: Session = Depends(get_db)):
     if existing_user:
         raise HTTPException(status_code=400, detail="User already exists")
 
+    if user.role not in ("professional", "student"):
+        raise HTTPException(status_code=400, detail="Rol inválido")
+
     hashed = hash_password(user.password)
 
     new_user = User(
         username=user.username,
-        password=hashed
+        password=hashed,
+        email=user.email,
+        role=user.role,
     )
 
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
+
+    if user.role == "student":
+        from backend.services.student_service import seed_practice_patients
+        seed_practice_patients(db, new_user.id)
 
     return {"message": "User created successfully"}
 
@@ -107,7 +117,12 @@ def get_me(token: dict = Depends(verify_token), db: Session = Depends(get_db)):
     if first:
         user.first_login = 0
         db.commit()
-    return {"username": user.username, "is_pro": bool(user.is_pro), "first_login": first}
+    return {
+        "username": user.username,
+        "is_pro": bool(user.is_pro),
+        "first_login": first,
+        "role": user.role or "professional",
+    }
 
 @router.post("/login")
 def login(user: UserLogin, db: Session = Depends(get_db)):
