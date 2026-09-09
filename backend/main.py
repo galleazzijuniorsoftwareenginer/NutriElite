@@ -17,49 +17,30 @@ app = FastAPI()
 
 Base.metadata.create_all(bind=engine)
 
-# Migration automática
+# Migration automática para bancos Postgres já existentes em produção, cujo schema
+# foi criado antes dessas colunas existirem nos models (Base.metadata.create_all não
+# altera tabelas já existentes, só cria as que faltam). Em SQLite local o
+# create_all acima já cria o schema completo e atualizado — "ADD COLUMN IF NOT
+# EXISTS" não é sintaxe válida no SQLite, então esse bloco roda só no Postgres.
 from sqlalchemy import text
-with engine.connect() as conn:
-    conn.execute(text("""
-        CREATE TABLE IF NOT EXISTS patients (
-            id SERIAL PRIMARY KEY,
-            name VARCHAR,
-            email VARCHAR,
-            phone VARCHAR,
-            user_id INTEGER REFERENCES users(id),
-            created_at TIMESTAMPTZ DEFAULT NOW()
-        )
-    """))
-    conn.execute(text("""
-        ALTER TABLE plans ADD COLUMN IF NOT EXISTS patient_id INTEGER REFERENCES patients(id)
-    """))
-    conn.execute(text("""
-        ALTER TABLE plans ADD COLUMN IF NOT EXISTS is_template INTEGER DEFAULT 0
-    """))
-    conn.execute(text("""
-        ALTER TABLE plans ADD COLUMN IF NOT EXISTS template_name VARCHAR
-    """))
-    conn.execute(text("""
-        CREATE TABLE IF NOT EXISTS nutritionist_profiles (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER REFERENCES users(id) UNIQUE,
-            nombre VARCHAR,
-            cedula VARCHAR,
-            especialidad VARCHAR,
-            clinica VARCHAR,
-            telefono VARCHAR,
-            email VARCHAR,
-            logo_base64 TEXT,
-            updated_at TIMESTAMPTZ DEFAULT NOW()
-        )
-    """))
-    conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS email VARCHAR"))
-    conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS first_login INTEGER DEFAULT 1"))
-    conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_pro INTEGER DEFAULT 0"))
-    conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id VARCHAR"))
-    conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS plans_this_month INTEGER DEFAULT 0"))
-    conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS plans_month_reset VARCHAR"))
-    conn.commit()
+if engine.dialect.name == "postgresql":
+    with engine.connect() as conn:
+        conn.execute(text("""
+            ALTER TABLE plans ADD COLUMN IF NOT EXISTS patient_id INTEGER REFERENCES patients(id)
+        """))
+        conn.execute(text("""
+            ALTER TABLE plans ADD COLUMN IF NOT EXISTS is_template INTEGER DEFAULT 0
+        """))
+        conn.execute(text("""
+            ALTER TABLE plans ADD COLUMN IF NOT EXISTS template_name VARCHAR
+        """))
+        conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS email VARCHAR"))
+        conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS first_login INTEGER DEFAULT 1"))
+        conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_pro INTEGER DEFAULT 0"))
+        conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id VARCHAR"))
+        conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS plans_this_month INTEGER DEFAULT 0"))
+        conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS plans_month_reset VARCHAR"))
+        conn.commit()
 
 seed()
 seed_default_user()

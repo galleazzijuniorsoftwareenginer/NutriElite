@@ -1,6 +1,19 @@
 from sqlalchemy.orm import Session
 from backend.models import Plan, FoodGroup, PlanFoodGroup
 
+
+def build_override_plan(plan: Plan, protein_g: float, carbs_g: float, fats_g: float) -> Plan:
+    """Snapshot de um Plan com macros customizados (ex: ajuste manual de % no Dietocálculo),
+    usado para recalcular auditoria/SMAE/PDF sem persistir o override no banco."""
+    override = Plan()
+    override.__dict__.update({k: v for k, v in plan.__dict__.items() if not k.startswith('_')})
+    override.protein = protein_g
+    override.carbs = carbs_g
+    override.fats = fats_g
+    override.get = protein_g * 4 + carbs_g * 4 + fats_g * 9
+    return override
+
+
 class SMAECalculationService:
     @staticmethod
     def calculate(plan_id: int, db: Session, override_plan=None):

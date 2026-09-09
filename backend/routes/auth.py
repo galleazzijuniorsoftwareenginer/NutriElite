@@ -16,8 +16,16 @@ def get_db():
     finally:
         db.close()
 import os
+import logging
+
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", "supersecretkey")
 ALGORITHM = "HS256"
+
+if SECRET_KEY == "supersecretkey":
+    logging.getLogger("uvicorn.error").warning(
+        "JWT_SECRET_KEY não configurado — usando valor default inseguro. "
+        "Defina a env var JWT_SECRET_KEY em produção."
+    )
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

@@ -11,6 +11,7 @@ router = APIRouter(prefix="/stripe", tags=["stripe"])
 stripe.api_key = os.getenv("STRIPE_API_KEY")
 PRICE_ID = os.getenv("STRIPE_PRICE_ID")
 WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
+PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "https://nutrielite-production-e88f.up.railway.app").rstrip("/")
 
 @router.post("/checkout")
 def create_checkout(token: dict = Depends(verify_token), db: Session = Depends(get_db)):
@@ -19,8 +20,8 @@ def create_checkout(token: dict = Depends(verify_token), db: Session = Depends(g
             payment_method_types=["card"],
             mode="subscription",
             line_items=[{"price": PRICE_ID, "quantity": 1}],
-            success_url="https://nutrielite-production-e88f.up.railway.app/app/?pro=success",
-            cancel_url="https://nutrielite-production-e88f.up.railway.app/app/?pro=cancel",
+            success_url=f"{PUBLIC_BASE_URL}/app/?pro=success",
+            cancel_url=f"{PUBLIC_BASE_URL}/app/?pro=cancel",
             client_reference_id=str(db.query(User).filter(User.username == token["sub"]).first().id),
             # customer_email omitido — username pode não ser email
         )

@@ -986,7 +986,7 @@
 <script>
 const API = window.location.origin;
 let token=null,planId=null,planData=null,currentStep=2,maxStep=2;
-let auditData=null,generatedMenus=[],selectedMenuOption=0,weeklyMenu=null,currentPatientId=null;
+let auditData=null,generatedMenus=[],selectedMenuOption=0,weeklyMenu=null,currentPatientId=null,lastAuditMacros=null;
 
 function switchTab(tab){
   document.getElementById('form-login').style.display=tab==='login'?'block':'none';
@@ -1009,7 +1009,7 @@ document.addEventListener('click', function(e){
 });
 
 function logout(){
-  token=null;planId=null;planData=null;currentStep=2;maxStep=2;auditData=null;generatedMenus=[];
+  token=null;planId=null;planData=null;currentStep=2;maxStep=2;auditData=null;generatedMenus=[];lastAuditMacros=null;
   document.getElementById('clinical-area').style.display='none';
   document.getElementById('auth-screen').style.display='flex';
 }
@@ -2106,6 +2106,7 @@ async function viewAudit(){
   const gProt=(get*protPct/100)/4;
   const gFat=(get*fatPct/100)/9;
   const params=`?protein_g=${gProt.toFixed(1)}&carbs_g=${gCarb.toFixed(1)}&fats_g=${gFat.toFixed(1)}`;
+  lastAuditMacros={protein_g:gProt,carbs_g:gCarb,fats_g:gFat};
   const res=await fetch(API+'/plans/'+planId+'/audit'+params,{headers:{'Authorization':'Bearer '+token}});
   document.getElementById('loading-audit').classList.remove('visible');
   auditData=await res.json();
@@ -2418,11 +2419,17 @@ async function downloadPDF(){
   const perfilRaw = getPerfilData();
   const perfilSemLogo = {...perfilRaw};
   delete perfilSemLogo.logo;
-  const perfilStr = Object.keys(perfilSemLogo).some(k=>perfilSemLogo[k]) ? encodeURIComponent(JSON.stringify(perfilSemLogo)) : '';
-  const menuParam = pdfPayload
-    ? '?menu='+encodeURIComponent(JSON.stringify(pdfPayload))+(perfilStr?'&perfil='+perfilStr:'')
-    : (perfilStr?'?perfil='+perfilStr:'');
-  const res=await fetch(API+'/plans/'+planId+'/pdf'+menuParam,{headers:{'Authorization':'Bearer '+token}});
+  const perfilStr = Object.keys(perfilSemLogo).some(k=>perfilSemLogo[k]) ? JSON.stringify(perfilSemLogo) : '';
+  const params=new URLSearchParams();
+  if(pdfPayload)params.set('menu',JSON.stringify(pdfPayload));
+  if(perfilStr)params.set('perfil',perfilStr);
+  if(lastAuditMacros){
+    params.set('protein_g',lastAuditMacros.protein_g.toFixed(1));
+    params.set('carbs_g',lastAuditMacros.carbs_g.toFixed(1));
+    params.set('fats_g',lastAuditMacros.fats_g.toFixed(1));
+  }
+  const qs=params.toString();
+  const res=await fetch(API+'/plans/'+planId+'/pdf'+(qs?'?'+qs:''),{headers:{'Authorization':'Bearer '+token}});
   document.getElementById('loading-pdf').classList.remove('visible');
   const blob=await res.blob();
   const url=window.URL.createObjectURL(blob);

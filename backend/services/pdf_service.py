@@ -7,7 +7,7 @@ from reportlab.lib.units import inch
 from io import BytesIO
 from backend.services.smae_calculation_service import SMAECalculationService
 
-def generate_plan_pdf(plan, portions, menu_data=None, perfil_data=None):
+def generate_plan_pdf(plan, menu_data=None, perfil_data=None, override_plan=None):
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer)
@@ -17,7 +17,7 @@ def generate_plan_pdf(plan, portions, menu_data=None, perfil_data=None):
 
     from backend.database import SessionLocal
     db = SessionLocal()
-    audit = SMAECalculationService.calculate(plan.id, db)
+    audit = SMAECalculationService.calculate(plan.id, db, override_plan=override_plan)
     db.close()
 
     height_m = plan.height / 100

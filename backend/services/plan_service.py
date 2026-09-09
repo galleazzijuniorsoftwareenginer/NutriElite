@@ -19,14 +19,13 @@ def create_plan(data, db, user_id):
     elif data.goal.lower() == "bulk":
         total_calories += 300
 
-    # Macros por % das kcal (padrão SMAE: 25% prot, 20% lip, 55% cho)
-    protein_pct = getattr(data, 'protein_pct', 25) or 25
-    fats_pct    = getattr(data, 'fats_pct',    20) or 20
-    carbs_pct   = getattr(data, 'carbs_pct',   55) or 55
-
-    protein = round((total_calories * protein_pct / 100) / 4, 1)
-    fats    = round((total_calories * fats_pct    / 100) / 9, 1)
-    carbs   = round((total_calories * carbs_pct   / 100) / 4, 1)
+    # Macros iniciais por % das kcal (padrão SMAE: 25% prot, 20% lip, 55% cho).
+    # O nutricionista pode reajustar os % depois (tela de Dietocálculo), o que
+    # recalcula auditoria/SMAE/PDF via override em /plans/{id}/audit e /pdf,
+    # sem alterar os valores default gravados aqui na criação do plano.
+    protein = round((total_calories * 25 / 100) / 4, 1)
+    fats    = round((total_calories * 20 / 100) / 9, 1)
+    carbs   = round((total_calories * 55 / 100) / 4, 1)
 
     new_plan = Plan(
         patient_name=data.patient_name,

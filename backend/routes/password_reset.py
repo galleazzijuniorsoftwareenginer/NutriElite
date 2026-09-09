@@ -13,6 +13,7 @@ router = APIRouter()
 
 resend.api_key = os.getenv("RESEND_API_KEY")
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", "supersecretkey")
+PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "https://nutrielite-production-e88f.up.railway.app").rstrip("/")
 
 def get_db():
     db = SessionLocal()
@@ -43,7 +44,7 @@ def forgot_password(data: ForgotRequest, db: Session = Depends(get_db)):
         SECRET_KEY, algorithm="HS256"
     )
     
-    reset_url = f"https://nutrielite-production-e88f.up.railway.app/app/?reset={token}"
+    reset_url = f"{PUBLIC_BASE_URL}/app/?reset={token}"
     
     resend.Emails.send({
         "from": "NutriElite <onboarding@resend.dev>",

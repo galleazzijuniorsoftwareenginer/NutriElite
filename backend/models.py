@@ -24,7 +24,6 @@ class Patient(Base):
     name = Column(String, index=True)
     email = Column(String)
     phone = Column(String)
-    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
@@ -126,6 +125,5 @@ class NutritionistProfile(Base):
     clinica = Column(String, nullable=True)
     telefono = Column(String, nullable=True)
     email = Column(String, nullable=True)
-    first_login = Column(Integer, default=1)
     logo_base64 = Column(String, nullable=True)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

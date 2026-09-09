@@ -8,8 +8,6 @@ from backend.schemas.plan import PlanRequest
 from backend.routes.auth import verify_token
 
 from backend.services.plan_service import create_plan
-from backend.services.plan_service import calculate_smae_portions
-from backend.services.metabolic_service import calculate_tmb
 from backend.services.pdf_service import generate_plan_pdf
 
 from fastapi.responses import StreamingResponse
@@ -65,72 +63,6 @@ def generate_plan(
         "Fats_g": round(plan.fats, 2)
     }
 
-    # Pega o username do token
-    username = token["sub"]
-
-    # Busca usuário no banco
-    db_user = db.query(User).filter(User.username == username).first()
-
-    if not db_user:
-        return {"error": "User not found"}
-
-    # Chama o service para criar e salvar o plano
-    plan = create_plan(data, db, db_user.id)
-
-    return {
-        "TMB": round(plan.tmb, 2),
-        "GET": round(plan.get, 2),
-        "Protein_g": round(plan.protein, 2),
-        "Carbs_g": round(plan.carbs, 2),
-        "Fats_g": round(plan.fats, 2)
-    }
-
-    tmb = calculate_tmb(
-    weight,
-    height,
-    age,
-    gender,
-    data.formula
-)
-
-    # Macros
-    protein = weight * 2
-    fats = weight * 1
-    carbs = (total_calories - (protein * 4 + fats * 9)) / 4
-
-    # Get logged user
-    username = token["sub"]
-    db_user = db.query(User).filter(User.username == username).first()
-
-    # Save plan
-    new_plan = Plan(
-        weight=weight,
-        height=height,
-        age=age,
-        gender=gender,
-        activity_level=activity_level,
-        goal=goal,
-        tmb=tmb,
-        get=total_calories,
-        protein=protein,
-        carbs=carbs,
-        fats=fats,
-        user_id=db_user.id
-    )
-
-    db.add(new_plan)
-    db.commit()
-    db.refresh(new_plan)
-
-    return {
-        "TMB": round(tmb, 2),
-        "GET": round(total_calories, 2),
-        "Protein_g": round(protein, 2),
-        "Carbs_g": round(carbs, 2),
-        "Fats_g": round(fats, 2)
-    }
-
-
 
 # ---------- GET ALL PLANS ----------
 @router.get("/plans")
@@ -165,7 +97,10 @@ def export_plan_pdf(
     db: Session = Depends(get_db),
     token: dict = Depends(verify_token),
     menu: str = None,
-    perfil: str = None
+    perfil: str = None,
+    protein_g: float = None,
+    carbs_g: float = None,
+    fats_g: float = None
 ):
 
     username = token["sub"]
@@ -179,7 +114,12 @@ def export_plan_pdf(
     if not plan:
         raise HTTPException(status_code=404, detail="Plano não encontrado")
 
-    portions = calculate_smae_portions(db, plan)
+    # Se o nutricionista ajustou os macros (%) na tela de auditoria, usa esses
+    # valores no PDF em vez dos macros default salvos na criação do plano.
+    pdf_plan = plan
+    if protein_g is not None and carbs_g is not None and fats_g is not None:
+        from backend.services.smae_calculation_service import build_override_plan
+        pdf_plan = build_override_plan(plan, protein_g, carbs_g, fats_g)
 
     import json
     menu_data = None
@@ -210,7 +150,8 @@ def export_plan_pdf(
                 "email": profile.email,
                 "logo": profile.logo_base64,
             }
-    pdf_buffer = generate_plan_pdf(plan, portions, menu_data, perfil_data)
+    override_plan = pdf_plan if pdf_plan is not plan else None
+    pdf_buffer = generate_plan_pdf(plan, menu_data, perfil_data, override_plan=override_plan)
 
     return StreamingResponse(
         pdf_buffer,
@@ -253,6 +194,39 @@ def generate_ai_menu_endpoint(
         raise HTTPException(status_code=500, detail=f"Erro ao gerar menu: {str(e)}")
 
 
+# ---------- REGENERATE SINGLE DAY OF AI MENU ----------
+@router.post("/plans/{plan_id}/menu/ai/day/{dia}")
+def regenerate_ai_menu_day(
+    plan_id: int,
+    dia: str,
+    db: Session = Depends(get_db),
+    token: dict = Depends(verify_token)
+):
+    from backend.services.smae_calculation_service import SMAECalculationService
+    from backend.services.ai_menu_service import regenerate_single_day
+
+    username = token["sub"]
+    db_user = db.query(User).filter(User.username == username).first()
+    plan = db.query(Plan).filter(
+        Plan.id == plan_id,
+        Plan.user_id == db_user.id
+    ).first()
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plano não encontrado")
+
+    audit = SMAECalculationService.calculate(plan_id, db)
+    plan_data = {"goal": plan.goal, "weight": plan.weight, "get": plan.get}
+
+    try:
+        return regenerate_single_day(dia, plan_data, audit)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        import traceback
+        print("ERRO REGENERATE DAY:", traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Erro ao regenerar dia: {str(e)}")
+
+
 # ---------- AUDIT WITH CUSTOM MACROS ----------
 @router.get("/plans/{plan_id}/audit")
 def get_audit(
@@ -276,13 +250,8 @@ def get_audit(
         raise HTTPException(status_code=404, detail="Plano não encontrado")
 
     if protein_g is not None and carbs_g is not None and fats_g is not None:
-        from backend.models import Plan as PlanModel
-        override = PlanModel()
-        override.__dict__.update({k: v for k, v in plan.__dict__.items() if not k.startswith('_')})
-        override.protein = protein_g
-        override.carbs = carbs_g
-        override.fats = fats_g
-        override.get = protein_g * 4 + carbs_g * 4 + fats_g * 9
+        from backend.services.smae_calculation_service import build_override_plan
+        override = build_override_plan(plan, protein_g, carbs_g, fats_g)
         return SMAECalculationService.calculate(plan_id, db, override_plan=override)
 
     return SMAECalculationService.calculate(plan_id, db)
