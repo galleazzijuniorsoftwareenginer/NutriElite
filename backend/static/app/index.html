@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NutriElite</title>
+<link rel="manifest" href="/app/manifest.json">
+<meta name="theme-color" content="#1a1916">
+<link rel="icon" href="/app/icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="/app/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="NutriElite">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -2916,6 +2923,11 @@ function showOnboarding(){
 function closeOnboarding(){
   document.getElementById('modal-onboarding').style.display='none';
   showNewPlanModal();
+}
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('/app/service-worker.js').catch(()=>{});
+  });
 }
 </script>
 </body>
