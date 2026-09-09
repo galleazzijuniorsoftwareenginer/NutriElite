@@ -1,0 +1,92 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..700;1,9..40,400..700&family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,500..700;1,9..144,500..700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  /* Superfícies */
+  --color-bg: #f7f6f3;
+  --color-surface: #ffffff;
+  --color-surface-2: #fbfaf8;
+  --color-border: #e8e6e1;
+  --color-border-strong: #d0cdc6;
+
+  /* Texto */
+  --color-text: #1a1916;
+  --color-text-2: #6b6860;
+  --color-text-3: #9e9b95;
+
+  /* Marca */
+  --color-accent: #1a6b4a;
+  --color-accent-light: #e8f5ee;
+  --color-accent-dark: #0f4a32;
+  --color-accent-2: #2563a8;
+  --color-accent-2-light: #eff5ff;
+
+  /* Estado */
+  --color-warn: #b45309;
+  --color-warn-light: #fef3c7;
+  --color-danger: #b91c1c;
+  --color-danger-light: #fef2f2;
+
+  /* Macros */
+  --color-carb: #2563a8;
+  --color-prot: #1a6b4a;
+  --color-fat: #b45309;
+
+  --font-sans: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'DM Mono', ui-monospace, monospace;
+  --font-display: 'Fraunces', ui-serif, serif;
+
+  --radius-md: 10px;
+  --radius-lg: 16px;
+
+  --shadow-card: 0 1px 2px rgba(26,25,22,.04), 0 8px 24px -12px rgba(26,25,22,.08);
+  --shadow-float: 0 12px 32px -8px rgba(26,25,22,.18);
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+  * {
+    border-color: var(--color-border);
+  }
+  body {
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection {
+    background: var(--color-accent-light);
+    color: var(--color-accent-dark);
+  }
+}
+
+@keyframes modal-in {
+  from { opacity: 0; transform: scale(.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+  }
+  .animate-modal-in {
+    animation: modal-in .15s ease-out;
+  }
+  .animate-fade-in {
+    animation: fade-in .15s ease-out;
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: var(--color-border-strong);
+    border-radius: 999px;
+  }
+}

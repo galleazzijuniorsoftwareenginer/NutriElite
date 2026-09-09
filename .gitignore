@@ -209,3 +209,15 @@ __marimo__/
 # Local database
 *.db.env
 nutrielite.db
+
+# Frontend (React/Vite)
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Build de produção do frontend copiado para dentro do backend (gerado pelo
+# Dockerfile em tempo de build da imagem — não deve ir pro repositório)
+backend/static/app/assets/
+backend/static/app/index.html
+backend/static/app/favicon.svg
+backend/static/app/icons.svg

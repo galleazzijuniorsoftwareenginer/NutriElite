@@ -65,6 +65,18 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
         raise HTTPException(status_code=401, detail="Token expired")
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
+
+def verify_token_str(token: str) -> dict:
+    """Mesma verificação de verify_token, mas para quando o token não vem no
+    header Authorization (ex: EventSource de SSE, que não permite headers
+    customizados e por isso manda o token via query string)."""
+    try:
+        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
 @router.post("/register")
 def register(user: UserRegister, db: Session = Depends(get_db)):
 

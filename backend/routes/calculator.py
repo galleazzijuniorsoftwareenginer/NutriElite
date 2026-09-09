@@ -5,7 +5,7 @@ from backend.database import SessionLocal
 from backend.models import Plan, User
 from backend.schemas.plan import PlanRequest
 
-from backend.routes.auth import verify_token
+from backend.routes.auth import verify_token, verify_token_str
 
 from backend.services.plan_service import create_plan
 from backend.services.pdf_service import generate_plan_pdf
@@ -225,6 +225,51 @@ def regenerate_ai_menu_day(
         import traceback
         print("ERRO REGENERATE DAY:", traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Erro ao regenerar dia: {str(e)}")
+
+
+# ---------- AI MENU GENERATION (SSE, progresso ao vivo dia-a-dia) ----------
+@router.get("/plans/{plan_id}/menu/ai/stream")
+def generate_ai_menu_stream_endpoint(
+    plan_id: int,
+    token: str,
+    db: Session = Depends(get_db),
+):
+    # EventSource não permite headers customizados, então o JWT vem via query
+    # string aqui em vez do header Authorization usado pelos demais endpoints.
+    payload = verify_token_str(token)
+    username = payload["sub"]
+
+    from backend.services.smae_calculation_service import SMAECalculationService
+    from backend.services.ai_menu_service import generate_ai_menu_stream
+    import json
+
+    db_user = db.query(User).filter(User.username == username).first()
+    plan = db.query(Plan).filter(
+        Plan.id == plan_id,
+        Plan.user_id == db_user.id if db_user else False
+    ).first()
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plano não encontrado")
+
+    audit = SMAECalculationService.calculate(plan_id, db)
+    plan_data = {"goal": plan.goal, "weight": plan.weight, "get": plan.get}
+
+    def event_source():
+        try:
+            for idx, day_data in generate_ai_menu_stream(plan_data, audit):
+                msg = json.dumps({"idx": idx, "day": day_data})
+                yield f"data: {msg}\n\n"
+            yield "event: done\ndata: {}\n\n"
+        except Exception as e:
+            import traceback
+            print("ERRO MENU AI STREAM:", traceback.format_exc())
+            yield f"event: error\ndata: {json.dumps({'detail': str(e)})}\n\n"
+
+    return StreamingResponse(
+        event_source(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 
 # ---------- AUDIT WITH CUSTOM MACROS ----------

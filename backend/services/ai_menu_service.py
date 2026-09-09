@@ -214,7 +214,7 @@ def _fallback_day(dia: str, protein_g: float, carbs_g: float, fats_g: float, get
         "error": error,
     }
 
-def generate_ai_menu(plan_data: dict, audit_data: dict) -> dict:
+def _prepare_context(plan_data: dict, audit_data: dict):
     api_key = os.environ.get("ANTHROPIC_API_KEY", "")
     goal = plan_data.get("goal", "maintenance")
     weight = plan_data.get("weight", 70)
@@ -222,25 +222,50 @@ def generate_ai_menu(plan_data: dict, audit_data: dict) -> dict:
     protein_g = audit_data["totals"]["protein_g"]
     carbs_g = audit_data["totals"]["carbs_g"]
     fats_g = audit_data["totals"]["fats_g"]
-    smae_table = audit_data["smae_table"]
-
-    food_context = build_food_context(smae_table, goal)
+    food_context = build_food_context(audit_data["smae_table"], goal)
     goal_es = {"cut": "pérdida de peso", "bulk": "ganancia muscular", "maintenance": "mantenimiento"}.get(goal, goal)
+    return api_key, goal_es, weight, get, protein_g, carbs_g, fats_g, food_context
+
+
+def _run_day(idx: int, dia: str, goal_es, weight, get, protein_g, carbs_g, fats_g, food_context, api_key) -> dict:
+    try:
+        return generate_day(dia, idx, goal_es, weight, get, protein_g, carbs_g, fats_g, food_context, api_key)
+    except Exception as e:
+        print(f"ERRO dia {dia}: {e}")
+        return _fallback_day(dia, protein_g, carbs_g, fats_g, get, str(e))
+
+
+def generate_ai_menu(plan_data: dict, audit_data: dict) -> dict:
+    api_key, goal_es, weight, get, protein_g, carbs_g, fats_g, food_context = _prepare_context(plan_data, audit_data)
 
     from concurrent.futures import ThreadPoolExecutor
 
     def run(idx_dia):
         idx, dia = idx_dia
-        try:
-            return generate_day(dia, idx, goal_es, weight, get, protein_g, carbs_g, fats_g, food_context, api_key)
-        except Exception as e:
-            print(f"ERRO dia {dia}: {e}")
-            return _fallback_day(dia, protein_g, carbs_g, fats_g, get, str(e))
+        return _run_day(idx, dia, goal_es, weight, get, protein_g, carbs_g, fats_g, food_context, api_key)
 
     with ThreadPoolExecutor(max_workers=len(DIAS_SEMANA)) as executor:
         semana = list(executor.map(run, enumerate(DIAS_SEMANA)))
 
     return {"semana": semana}
+
+
+def generate_ai_menu_stream(plan_data: dict, audit_data: dict):
+    """Gera os 7 dias em paralelo e cede (yield) cada um assim que fica pronto,
+    para alimentar um endpoint SSE com progresso ao vivo no front."""
+    api_key, goal_es, weight, get, protein_g, carbs_g, fats_g, food_context = _prepare_context(plan_data, audit_data)
+
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    with ThreadPoolExecutor(max_workers=len(DIAS_SEMANA)) as executor:
+        futures = {
+            executor.submit(_run_day, idx, dia, goal_es, weight, get, protein_g, carbs_g, fats_g, food_context, api_key): idx
+            for idx, dia in enumerate(DIAS_SEMANA)
+        }
+        for future in as_completed(futures):
+            idx = futures[future]
+            day_data = future.result()
+            yield idx, day_data
 
 
 def regenerate_single_day(dia: str, plan_data: dict, audit_data: dict) -> dict:
