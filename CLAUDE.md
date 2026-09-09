@@ -53,18 +53,27 @@ The frontend's router uses `basename="/app"` in production (`import.meta.env.PRO
 
 5. **PDF export** (`GET /plans/{id}/pdf?menu=...&protein_g=&carbs_g=&fats_g=`): `pdf_service.py` uses ReportLab to generate a clinical report with patient demographics, BMI, macro audit, SMAE table, and optionally the AI-generated menu. Accepts the **same macro override** as `/audit` so the exported PDF reflects whatever the nutritionist last adjusted — this used to be a real bug (PDF always showed the default 25/20/55 macros, ignoring on-screen adjustments) and is now fixed. If no `perfil` is passed, it's read straight from `NutritionistProfile` in the DB (logo included).
 
+6. **Clinical record** (`GET/PUT /patients/{id}/clinical-record`): one `ClinicalRecord` row per patient (NOM-004-SSA3-2012 aligned) — heredofamiliar/pathological/non-pathological history, allergies, current medications. Changes rarely; per-visit data lives in `Consultation` instead (ABCD methodology: Antropométricos/Bioquímicos/Clínicos/Dietéticos), via `GET/POST /patients/{id}/consultations` and `PUT/DELETE /consultations/{id}`. `Consultation.bioquimicos` is a JSON list of `{nombre, valor, unidad}` lab values — the frontend charts `peso` across consultations to show weight evolution.
+
+7. **AI lab extraction** (`POST /patients/{id}/consultations/extract-labs`): sends a photo of a lab report to Claude (vision) and returns extracted `{nombre, valor, unidad}` values to prefill a consultation's `bioquimicos` — the nutritionist always reviews/edits before saving, this never writes directly to the record. See `lab_extraction_service.py`.
+
+8. **Renal module (KDOQI)** (`POST /patients/{id}/renal-assessment`): `renal_service.calculate_renal_targets()` computes kcal/kg, protein g/kg, sodium/potassium/phosphorus (mg) and fluid (mL) targets from CKD stage (1/2/3a/3b/4/5) + dialysis modality (none/hemodialysis/peritoneal), adjusting potassium/phosphorus by lab values when provided (KDOQI does not recommend a universal restriction — it's individualized by serum level). Results are explicitly framed as starting points requiring clinical judgment, not a diagnosis. Stored as `RenalAssessment` rows (history kept, not overwritten).
+
 ## Code Structure
 
 ```
 backend/
   main.py                  # App init, route registration, DB seeding + Postgres-only migrations on startup
   database.py              # SQLAlchemy engine + session, env-based DB URL
-  models.py                # ORM: User, Patient, Plan, FoodGroup, FitnessReference, PlanFoodGroup, NutritionistProfile
-  schemas/plan.py          # Pydantic request validation
+  models.py                # ORM: User, Patient, Plan, FoodGroup, FitnessReference, PlanFoodGroup, NutritionistProfile, ClinicalRecord, Consultation, RenalAssessment
+  schemas/
+    plan.py                # Pydantic request validation for plans
+    clinical.py            # Pydantic schemas for clinical record, consultations, renal assessment
   routes/
     auth.py                # Register, login, JWT (verify_token for headers, verify_token_str for SSE query params)
     calculator.py          # Plan CRUD, audit, PDF, AI menu (sync + SSE stream + per-day regen) endpoints
     patients.py            # Patient CRUD + per-patient plan history
+    clinical.py            # Clinical record, consultations, AI lab extraction, renal (KDOQI) assessment
     profile.py             # Nutritionist profile (name, cédula, clínica, logo) used in the PDF header
     stripe_routes.py        # Checkout session, webhook, Pro status
     password_reset.py       # Forgot/reset password via Resend email
@@ -76,6 +85,8 @@ backend/
     smae_calculation_service.py  # Energy audit validation + build_override_plan helper
     pdf_service.py         # ReportLab PDF generation
     ai_menu_service.py     # Parallel Claude API calls for weekly meal plans (sync, streaming, and single-day variants)
+    renal_service.py       # KDOQI 2020-based CKD nutrition target calculations
+    lab_extraction_service.py  # Claude vision call to read lab values from a photo
   scripts/
     seed_smae.py           # Seeds food groups and default admin
   static/app/               # Built frontend output lives here in the container (git-ignored); index_backup.html is the old vanilla-JS SPA kept for reference
@@ -89,7 +100,7 @@ frontend/
     features/
       auth/                   # Login, register, forgot/reset password
       dashboard/               # Metrics + recent patients/plans
-      patients/                # CRUD + per-patient plan history
+      patients/                # CRUD + per-patient plan history; tabs/ holds ClinicalRecordTab, ConsultationsTab (+ weight evolution chart, AI lab photo extraction), RenalTab
       profile/                 # Nutritionist profile + logo upload for PDF branding
       billing/                 # Free vs Pro, Stripe checkout
       plan/                    # The core wizard: Datos → Dietocálculo → Auditoría SMAE → Menú IA → Resumen/PDF

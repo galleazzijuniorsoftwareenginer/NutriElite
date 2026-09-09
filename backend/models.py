@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Text, JSON
 from sqlalchemy.sql import func
 from backend.database import Base
 
@@ -113,6 +113,89 @@ class PlanFoodGroup(Base):
 
     plan = relationship("Plan", backref="plan_food_groups")
     food_group = relationship("FoodGroup")
+
+
+class ClinicalRecord(Base):
+    """Expediente clínico del paciente (NOM-004-SSA3-2012) — datos que cambian
+    poco entre consultas. Los datos por visita viven en Consultation."""
+    __tablename__ = "clinical_records"
+
+    id = Column(Integer, primary_key=True, index=True)
+    patient_id = Column(Integer, ForeignKey("patients.id"), unique=True, nullable=False)
+
+    antecedentes_heredofamiliares = Column(Text, nullable=True)
+    antecedentes_patologicos = Column(Text, nullable=True)
+    antecedentes_no_patologicos = Column(Text, nullable=True)
+    alergias = Column(Text, nullable=True)
+    medicamentos_actuales = Column(Text, nullable=True)
+
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class Consultation(Base):
+    """Una nota de consulta/visita — metodología ABCD (Antropométricos,
+    Bioquímicos, Clínicos, Dietéticos) usada en evaluación nutricional."""
+    __tablename__ = "consultations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False)
+    plan_id = Column(Integer, ForeignKey("plans.id"), nullable=True)
+
+    fecha = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    motivo_consulta = Column(Text, nullable=True)
+
+    # A — Antropométricos (snapshot independiente del Plan, para graficar evolución)
+    peso = Column(Float, nullable=True)
+    talla = Column(Float, nullable=True)
+
+    # B — Bioquímicos: lista de {"nombre","valor","unidad"} (ej. glucosa, colesterol)
+    bioquimicos = Column(JSON, nullable=True)
+
+    # C — Clínicos
+    signos_vitales = Column(JSON, nullable=True)  # {"presion_arterial","frecuencia_cardiaca",...}
+    exploracion_fisica = Column(Text, nullable=True)
+
+    # D — Dietéticos
+    habitos_dieteticos = Column(Text, nullable=True)
+
+    diagnostico_nutricional = Column(Text, nullable=True)
+    plan_objetivos = Column(Text, nullable=True)
+    evolucion = Column(Text, nullable=True)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class RenalAssessment(Base):
+    """Metas nutricionales para enfermedad renal crónica, según guías KDOQI."""
+    __tablename__ = "renal_assessments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False)
+    consultation_id = Column(Integer, ForeignKey("consultations.id"), nullable=True)
+
+    ckd_stage = Column(String, nullable=False)  # "1","2","3a","3b","4","5"
+    dialysis_modality = Column(String, nullable=False, default="none")  # none|hemodialysis|peritoneal
+    weight = Column(Float, nullable=False)
+    age = Column(Integer, nullable=True)
+
+    # Laboratorios opcionales que ajustan las metas
+    potassium_meq_l = Column(Float, nullable=True)
+    phosphorus_mg_dl = Column(Float, nullable=True)
+    albumin_g_dl = Column(Float, nullable=True)
+    egfr = Column(Float, nullable=True)
+
+    # Metas calculadas
+    kcal_per_kg = Column(Float, nullable=False)
+    kcal_total = Column(Float, nullable=False)
+    protein_g_per_kg = Column(Float, nullable=False)
+    protein_g_total = Column(Float, nullable=False)
+    sodium_mg = Column(Float, nullable=False)
+    potassium_mg = Column(Float, nullable=False)
+    phosphorus_mg = Column(Float, nullable=False)
+    fluid_ml = Column(Float, nullable=True)
+    notes = Column(Text, nullable=True)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 
 class NutritionistProfile(Base):

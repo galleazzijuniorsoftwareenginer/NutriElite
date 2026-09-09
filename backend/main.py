@@ -7,6 +7,7 @@ from backend.routes.patients import router as patients_router
 from backend.routes.profile import router as profile_router
 from backend.routes.stripe_routes import router as stripe_router
 from backend.routes.password_reset import router as password_router
+from backend.routes.clinical import router as clinical_router
 from backend.routes import smae
 from backend.database import engine
 from backend.models import Base
@@ -53,6 +54,7 @@ app.include_router(patients_router)
 app.include_router(profile_router)
 app.include_router(stripe_router)
 app.include_router(password_router)
+app.include_router(clinical_router)
 
 @app.get("/app")
 @app.get("/app/")
