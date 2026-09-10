@@ -1,7 +1,9 @@
 import { useState } from 'react'
-import { pdfDownloadUrl, sharePlan } from '../../../api/plans'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { pdfDownloadUrl, saveAsTemplate, sharePlan } from '../../../api/plans'
 import { Card } from '../../../components/Card'
 import { Button } from '../../../components/Button'
+import { Input } from '../../../components/Field'
 import type { WizardPlanData } from '../planTypes'
 import type { WeeklyMenu } from '../../../types'
 import { clampAdjustment, gramsFromPct, GOAL_LABEL, FORMULA_LABEL } from '../planMath'
@@ -18,9 +20,20 @@ interface Props {
 
 export function ResumenStep({ plan, carbPct, protPct, fatPct, kcalAdjustment, weeklyMenu }: Props) {
   const token = useAuthStore((s) => s.token)
+  const queryClient = useQueryClient()
   const [shareUrl, setShareUrl] = useState('')
   const [sharing, setSharing] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [templateName, setTemplateName] = useState('')
+  const [templateSaved, setTemplateSaved] = useState(false)
+  const templateMut = useMutation({
+    mutationFn: () => saveAsTemplate(plan.planId, templateName || 'Mi plantilla'),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['templates'] })
+      setTemplateSaved(true)
+      setTimeout(() => setTemplateSaved(false), 2000)
+    },
+  })
 
   const get = plan.originalGet + clampAdjustment(kcalAdjustment)
   const { carbG, protG, fatG } = gramsFromPct(get, carbPct, protPct, fatPct)
@@ -103,11 +116,31 @@ export function ResumenStep({ plan, carbPct, protPct, fatPct, kcalAdjustment, we
         </Button>
       </Card>
 
+      <Card className="flex flex-col gap-3">
+        <h3 className="text-sm font-semibold text-text">Guardar como plantilla</h3>
+        <p className="text-xs text-text-2">
+          Guarda este plan como plantilla reutilizable para futuros pacientes con necesidades similares.
+        </p>
+        <div className="flex gap-2">
+          <Input
+            placeholder="Nombre de la plantilla"
+            value={templateName}
+            onChange={(e) => setTemplateName(e.target.value)}
+            className="h-9 text-xs"
+          />
+          <Button variant="secondary" loading={templateMut.isPending} onClick={() => templateMut.mutate()}>
+            Guardar
+          </Button>
+        </div>
+        {templateSaved && <p className="text-[11px] font-medium text-accent">✓ Plantilla guardada</p>}
+      </Card>
+
       <Card className="flex flex-col gap-3 lg:col-span-3">
         <h3 className="text-sm font-semibold text-text">Portal del paciente</h3>
         <p className="text-xs text-text-2">
-          Comparte un enlace donde tu paciente ve el cardápio de la semana y la lista de compras —
-          sin necesidad de crear una cuenta. Se actualiza automáticamente si regeneras el menú.
+          Comparte un enlace donde tu paciente ve el cardápio de la semana, la lista de compras y puede
+          agendar su próxima cita según tu disponibilidad — sin necesidad de crear una cuenta. Se actualiza
+          automáticamente si regeneras el menú.
         </p>
         {shareUrl ? (
           <div className="flex flex-wrap items-center gap-2">

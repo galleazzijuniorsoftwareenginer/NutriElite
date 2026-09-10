@@ -5,6 +5,10 @@ import type { NutritionistProfile } from '../../types'
 import { Card, CardHeader, CardTitle } from '../../components/Card'
 import { FieldWrap, Input } from '../../components/Field'
 import { Button } from '../../components/Button'
+import { LogoCropModal } from './LogoCropModal'
+
+const ACCEPTED_LOGO_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+const MAX_LOGO_SIZE_MB = 5
 
 const EMPTY: NutritionistProfile = {
   nombre: '',
@@ -30,6 +34,8 @@ export function ProfileForm() {
   const { data } = useQuery({ queryKey: ['profile'], queryFn: getProfile })
   const [form, setForm] = useState<NutritionistProfile>(EMPTY)
   const [saved, setSaved] = useState(false)
+  const [logoError, setLogoError] = useState('')
+  const [cropSrc, setCropSrc] = useState<string | null>(null)
 
   useEffect(() => {
     if (data) setForm({ ...EMPTY, ...data })
@@ -50,9 +56,19 @@ export function ProfileForm() {
 
   async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
+    e.target.value = ''
     if (!file) return
+    setLogoError('')
+    if (!ACCEPTED_LOGO_TYPES.includes(file.type)) {
+      setLogoError('Formato no soportado. Usa JPG, PNG, WEBP o GIF.')
+      return
+    }
+    if (file.size > MAX_LOGO_SIZE_MB * 1024 * 1024) {
+      setLogoError(`La imagen es muy grande (máximo ${MAX_LOGO_SIZE_MB}MB).`)
+      return
+    }
     const base64 = await fileToBase64(file)
-    set('logo_base64', base64)
+    setCropSrc(base64)
   }
 
   return (
@@ -88,23 +104,35 @@ export function ProfileForm() {
           </FieldWrap>
         </div>
 
-        <FieldWrap label="Logo (aparece en el PDF)">
+        <FieldWrap label="Logo (aparece en el PDF)" hint="JPG, PNG, WEBP o GIF, máx. 5MB.">
           <div className="flex items-center gap-4">
             {form.logo_base64 ? (
-              <img src={form.logo_base64} alt="Logo" className="h-14 w-14 rounded-md border border-border object-contain" />
+              <img src={form.logo_base64} alt="Logo" className="h-14 w-14 rounded-full border border-border object-cover" />
             ) : (
-              <div className="flex h-14 w-14 items-center justify-center rounded-md border border-dashed border-border-strong text-[10px] text-text-3">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full border border-dashed border-border-strong text-[10px] text-text-3">
                 Sin logo
               </div>
             )}
-            <input type="file" accept="image/*" onChange={handleLogoUpload} className="text-xs text-text-2" />
+            <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleLogoUpload} className="text-xs text-text-2" />
             {form.logo_base64 && (
               <Button type="button" size="sm" variant="ghost" className="text-danger" onClick={() => set('logo_base64', '')}>
                 Quitar
               </Button>
             )}
           </div>
+          {logoError && <p className="mt-1.5 text-xs text-danger">{logoError}</p>}
         </FieldWrap>
+
+        {cropSrc && (
+          <LogoCropModal
+            imageSrc={cropSrc}
+            onCancel={() => setCropSrc(null)}
+            onConfirm={(base64) => {
+              set('logo_base64', base64)
+              setCropSrc(null)
+            }}
+          />
+        )}
 
         <div className="flex items-center gap-3 pt-2">
           <Button type="submit" loading={saveMut.isPending}>

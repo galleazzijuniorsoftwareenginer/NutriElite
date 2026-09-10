@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
-import { getAudit, saveAsTemplate } from '../../../api/plans'
+import { getAudit } from '../../../api/plans'
 import type { SmaeRow } from '../../../types'
 import { Card } from '../../../components/Card'
 import { Button } from '../../../components/Button'
@@ -30,7 +30,6 @@ function RangeBadge({ ok }: { ok: boolean }) {
 }
 
 export function AuditoriaStep({ plan, carbPct, protPct, fatPct, kcalAdjustment, onAdjustPct, onContinue }: Props) {
-  const queryClient = useQueryClient()
   const get = plan.originalGet + clampAdjustment(kcalAdjustment)
   const override = useMemo(() => {
     const g = gramsFromPct(get, carbPct, protPct, fatPct)
@@ -46,17 +45,6 @@ export function AuditoriaStep({ plan, carbPct, protPct, fatPct, kcalAdjustment, 
   useEffect(() => {
     if (audit) setRows(audit.smae_table.map((r) => ({ ...r })))
   }, [audit])
-
-  const [templateName, setTemplateName] = useState('')
-  const [templateSaved, setTemplateSaved] = useState(false)
-  const templateMut = useMutation({
-    mutationFn: () => saveAsTemplate(plan.planId, templateName || 'Mi plantilla'),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['templates'] })
-      setTemplateSaved(true)
-      setTimeout(() => setTemplateSaved(false), 2000)
-    },
-  })
 
   function updatePortions(idx: number, newPortions: number) {
     setRows((prev) => {
@@ -222,22 +210,6 @@ export function AuditoriaStep({ plan, carbPct, protPct, fatPct, kcalAdjustment, 
             <Button size="sm" variant="secondary" className="mt-3 w-full" onClick={handleAdjustDietocalculo}>
               ↺ Ajustar Dietocálculo con estos %
             </Button>
-          </Card>
-
-          <Card>
-            <h3 className="mb-2 text-sm font-semibold text-text">Guardar como plantilla</h3>
-            <div className="flex gap-2">
-              <Input
-                placeholder="Nombre de la plantilla"
-                value={templateName}
-                onChange={(e) => setTemplateName(e.target.value)}
-                className="h-8 text-xs"
-              />
-              <Button size="sm" variant="secondary" loading={templateMut.isPending} onClick={() => templateMut.mutate()}>
-                Guardar
-              </Button>
-            </div>
-            {templateSaved && <p className="mt-1.5 text-[11px] font-medium text-accent">✓ Plantilla guardada</p>}
           </Card>
 
           <Button onClick={onContinue} className="w-full">
