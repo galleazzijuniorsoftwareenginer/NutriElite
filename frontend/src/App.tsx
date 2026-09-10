@@ -16,6 +16,7 @@ import { PublicPlanPage } from './features/public/PublicPlanPage'
 import { ReferencePage } from './features/reference/ReferencePage'
 import { ClassroomsPage } from './features/classroom/ClassroomsPage'
 import { RecipesPage } from './features/recipes/RecipesPage'
+import { AgendaPage } from './features/agenda/AgendaPage'
 
 export function App() {
   const [params] = useSearchParams()
@@ -43,6 +44,7 @@ export function App() {
           <Route path="recetas" element={<RecipesPage />} />
           <Route path="referencia" element={<ReferencePage />} />
           <Route path="salon" element={<ClassroomsPage />} />
+          <Route path="agenda" element={<AgendaPage />} />
           <Route path="perfil" element={<ProfilePage />} />
           <Route path="plan-pro" element={<BillingPage />} />
         </Route>

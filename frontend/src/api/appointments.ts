@@ -12,8 +12,8 @@ export interface Appointment {
   reminder_sent: boolean
 }
 
-export async function listAppointments(upcomingOnly = false) {
-  const { data } = await api.get<Appointment[]>('/appointments', { params: { upcoming_only: upcomingOnly } })
+export async function listAppointments(upcomingOnly = false, status?: string) {
+  const { data } = await api.get<Appointment[]>('/appointments', { params: { upcoming_only: upcomingOnly, status } })
   return data
 }
 

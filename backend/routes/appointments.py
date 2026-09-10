@@ -80,11 +80,14 @@ def list_appointments(
     db: Session = Depends(get_db),
     token: dict = Depends(verify_token),
     upcoming_only: bool = False,
+    status: str = None,
 ):
     user = db.query(User).filter(User.username == token["sub"]).first()
     query = db.query(Appointment).filter(Appointment.user_id == user.id)
     if upcoming_only:
         query = query.filter(Appointment.scheduled_at >= datetime.utcnow(), Appointment.status == "scheduled")
+    if status:
+        query = query.filter(Appointment.status == status)
     appointments = query.order_by(Appointment.scheduled_at.asc()).all()
 
     patient_ids = {a.patient_id for a in appointments}

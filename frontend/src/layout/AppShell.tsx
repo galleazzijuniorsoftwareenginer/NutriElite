@@ -10,6 +10,7 @@ const NAV_ITEMS: { to: string; label: string; end: boolean }[] = [
   { to: '/', label: 'Inicio', end: true },
   { to: '/pacientes', label: 'Pacientes', end: false },
   { to: '/plan/nuevo', label: 'Nuevo plan', end: false },
+  { to: '/agenda', label: 'Agenda', end: false },
   { to: '/salon', label: 'Salón de clase', end: false },
 ]
 
@@ -41,7 +42,7 @@ export function AppShell() {
         <div className="flex items-center gap-8">
           <Logo size={26} />
           <nav className="hidden items-center gap-1 md:flex">
-            {NAV_ITEMS.slice(0, 3).map((item) => (
+            {NAV_ITEMS.slice(0, 4).map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
@@ -110,7 +111,7 @@ export function AppShell() {
               )}
             </div>
 
-            {NAV_ITEMS.slice(3).map((item) => (
+            {NAV_ITEMS.slice(4).map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
@@ -187,7 +188,7 @@ export function AppShell() {
       </header>
 
       <nav className="flex items-center gap-1 overflow-x-auto border-b border-border bg-surface px-3 py-1.5 md:hidden">
-        {[...NAV_ITEMS.slice(0, 3), ...RESOURCE_ITEMS, ...NAV_ITEMS.slice(3)].map((item) => (
+        {[...NAV_ITEMS.slice(0, 4), ...RESOURCE_ITEMS, ...NAV_ITEMS.slice(4)].map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
