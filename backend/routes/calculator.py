@@ -153,8 +153,18 @@ def export_plan_pdf(
     override_plan = pdf_plan if pdf_plan is not plan else None
 
     consultations = None
+    patient_data = None
     if plan.patient_id:
-        from backend.models import Consultation
+        from backend.models import Consultation, Patient
+        patient = db.query(Patient).filter(Patient.id == plan.patient_id).first()
+        if patient:
+            patient_data = {
+                "emergency_contact_name": patient.emergency_contact_name,
+                "emergency_contact_phone": patient.emergency_contact_phone,
+                "emergency_contact_relation": patient.emergency_contact_relation,
+                "blood_type": patient.blood_type,
+                "activity_type": patient.activity_type,
+            }
         rows = (
             db.query(Consultation)
             .filter(Consultation.patient_id == plan.patient_id, Consultation.peso.isnot(None))
@@ -162,9 +172,17 @@ def export_plan_pdf(
             .all()
         )
         if rows:
-            consultations = [{"fecha": r.fecha, "peso": r.peso} for r in rows]
+            consultations = [
+                {
+                    "fecha": r.fecha,
+                    "peso": r.peso,
+                    "grasa_corporal_pct": r.grasa_corporal_pct,
+                    "grasa_corporal_metodo": r.grasa_corporal_metodo,
+                }
+                for r in rows
+            ]
 
-    pdf_buffer = generate_plan_pdf(plan, menu_data, perfil_data, override_plan=override_plan, consultations=consultations)
+    pdf_buffer = generate_plan_pdf(plan, menu_data, perfil_data, override_plan=override_plan, consultations=consultations, patient_data=patient_data)
 
     return StreamingResponse(
         pdf_buffer,

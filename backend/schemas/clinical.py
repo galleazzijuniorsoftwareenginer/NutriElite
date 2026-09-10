@@ -45,6 +45,18 @@ class ConsultationCreate(BaseModel):
     plan_objetivos: Optional[str] = ""
     evolucion: Optional[str] = ""
     plan_id: Optional[int] = None
+    # Pliegues cutáneos (adipómetro, mm) — protocolo Jackson-Pollock 3 sitios
+    pliegue_pecho: Optional[float] = None
+    pliegue_abdominal: Optional[float] = None
+    pliegue_triceps: Optional[float] = None
+    pliegue_suprailiaco: Optional[float] = None
+    pliegue_muslo: Optional[float] = None
+    # % grasa: se puede mandar directo (bioimpedancia) o se calcula de los pliegues
+    grasa_corporal_pct: Optional[float] = None
+    grasa_corporal_metodo: Optional[str] = None  # bioimpedancia|pliegues_jp3
+    # Solo para calcular JP3 a partir de los pliegues — no se persisten
+    edad_medicion: Optional[int] = None
+    sexo_medicion: Optional[str] = None
 
 
 class ConsultationResponse(BaseModel):
@@ -62,6 +74,13 @@ class ConsultationResponse(BaseModel):
     diagnostico_nutricional: Optional[str] = None
     plan_objetivos: Optional[str] = None
     evolucion: Optional[str] = None
+    pliegue_pecho: Optional[float] = None
+    pliegue_abdominal: Optional[float] = None
+    pliegue_triceps: Optional[float] = None
+    pliegue_suprailiaco: Optional[float] = None
+    pliegue_muslo: Optional[float] = None
+    grasa_corporal_pct: Optional[float] = None
+    grasa_corporal_metodo: Optional[str] = None
 
     class Config:
         from_attributes = True

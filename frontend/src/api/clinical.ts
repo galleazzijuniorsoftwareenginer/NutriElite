@@ -16,7 +16,10 @@ export async function listConsultations(patientId: number) {
   return data
 }
 
-export type ConsultationPayload = Omit<Consultation, 'id' | 'patient_id' | 'fecha'>
+export type ConsultationPayload = Omit<Consultation, 'id' | 'patient_id' | 'fecha'> & {
+  edad_medicion?: number | null
+  sexo_medicion?: 'male' | 'female' | null
+}
 
 export async function createConsultation(patientId: number, payload: Partial<ConsultationPayload>) {
   const { data } = await api.post<Consultation>(`/patients/${patientId}/consultations`, payload)

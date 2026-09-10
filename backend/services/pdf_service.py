@@ -174,7 +174,7 @@ def _build_weight_chart(consultations, styles):
     ])
 
 
-def generate_plan_pdf(plan, menu_data=None, perfil_data=None, override_plan=None, consultations=None):
+def generate_plan_pdf(plan, menu_data=None, perfil_data=None, override_plan=None, consultations=None, patient_data=None):
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(
         buffer, pagesize=letter,
@@ -247,6 +247,19 @@ def generate_plan_pdf(plan, menu_data=None, perfil_data=None, override_plan=None
         ["IMC", f"{bmi} ({bmi_class})" if bmi != "—" else bmi, "Objetivo", goal_label],
         ["Fecha", str(plan.created_at)[:10], "", ""],
     ]
+    cell_style = ParagraphStyle("pdfCell", parent=styles["normal"], fontSize=9.5, textColor=TEXT_DARK)
+    label_cell_style = ParagraphStyle("pdfLabelCell", parent=styles["normal"], fontSize=9.5, textColor=TEXT_2, fontName="Helvetica-Bold")
+    if patient_data and patient_data.get("blood_type"):
+        datos_rows.append([Paragraph("Tipo sanguíneo", label_cell_style), patient_data["blood_type"], "", ""])
+    if patient_data and patient_data.get("activity_type"):
+        datos_rows.append([Paragraph("Actividad física", label_cell_style), Paragraph(patient_data["activity_type"], cell_style), "", ""])
+    if patient_data and (patient_data.get("emergency_contact_name") or patient_data.get("emergency_contact_phone")):
+        contacto_emergencia = " · ".join(filter(None, [
+            patient_data.get("emergency_contact_name"),
+            patient_data.get("emergency_contact_phone"),
+            patient_data.get("emergency_contact_relation"),
+        ]))
+        datos_rows.append([Paragraph("Contacto de emergencia", label_cell_style), Paragraph(contacto_emergencia, cell_style), "", ""])
     datos_table = Table(datos_rows, colWidths=[70, (content_width - 32 - 140) / 2, 70, (content_width - 32 - 140) / 2])
     datos_table.setStyle(TableStyle([
         ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
@@ -331,6 +344,23 @@ def generate_plan_pdf(plan, menu_data=None, perfil_data=None, override_plan=None
         chart_block = _build_weight_chart(consultations, styles)
         if chart_block:
             elements.append(chart_block)
+
+        grasa_points = [c for c in consultations if c.get("grasa_corporal_pct") is not None]
+        if grasa_points:
+            first, last = grasa_points[0], grasa_points[-1]
+            metodo_label = {"bioimpedancia": "bioimpedancia", "pliegues_jp3": "pliegues cutáneos"}.get(last.get("grasa_corporal_metodo"), "")
+            if first is last:
+                comp_text = f"% de grasa corporal: <b>{last['grasa_corporal_pct']}%</b> ({metodo_label}, {str(last['fecha'])[:10]})"
+            else:
+                delta = round(last["grasa_corporal_pct"] - first["grasa_corporal_pct"], 1)
+                comp_text = (
+                    f"% de grasa corporal: {first['grasa_corporal_pct']}% ({str(first['fecha'])[:10]}) → "
+                    f"<b>{last['grasa_corporal_pct']}%</b> ({str(last['fecha'])[:10]}, {metodo_label}) "
+                    f"— variación {'+' if delta > 0 else ''}{delta}%"
+                )
+            elements.append(Spacer(1, 0.1 * inch))
+            elements.append(Paragraph(comp_text, styles["normal"]))
+            elements.append(Spacer(1, 0.2 * inch))
 
     # ---------- Menú semanal con fotos ----------
     if has_menu:

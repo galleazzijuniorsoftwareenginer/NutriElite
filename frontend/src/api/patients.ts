@@ -7,6 +7,11 @@ export interface PatientPayload {
   phone?: string
   status?: PatientStatus
   notas_generales?: string
+  emergency_contact_name?: string
+  emergency_contact_phone?: string
+  emergency_contact_relation?: string
+  blood_type?: string
+  activity_type?: string
 }
 
 export async function listPatients(params?: { status?: string; sort?: string }) {

@@ -37,6 +37,13 @@ export interface Consultation {
   diagnostico_nutricional: string
   plan_objetivos: string
   evolucion: string
+  pliegue_pecho: number | null
+  pliegue_abdominal: number | null
+  pliegue_triceps: number | null
+  pliegue_suprailiaco: number | null
+  pliegue_muslo: number | null
+  grasa_corporal_pct: number | null
+  grasa_corporal_metodo: string | null
 }
 
 export type CkdStage = '1' | '2' | '3a' | '3b' | '4' | '5'

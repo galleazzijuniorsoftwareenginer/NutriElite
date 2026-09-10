@@ -48,6 +48,11 @@ export interface Patient {
   phone: string
   status: PatientStatus
   notas_generales: string | null
+  emergency_contact_name: string | null
+  emergency_contact_phone: string | null
+  emergency_contact_relation: string | null
+  blood_type: string | null
+  activity_type: string | null
   created_at: string
   total_plans: number
   last_plan: string | null

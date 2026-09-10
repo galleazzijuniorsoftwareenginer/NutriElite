@@ -49,12 +49,24 @@ function PatientForm({
   const [phone, setPhone] = useState(initial?.phone ?? '')
   const [status, setStatus] = useState<PatientStatus>(initial?.status ?? 'activo')
   const [notas, setNotas] = useState(initial?.notas_generales ?? '')
+  const [emergencyName, setEmergencyName] = useState(initial?.emergency_contact_name ?? '')
+  const [emergencyPhone, setEmergencyPhone] = useState(initial?.emergency_contact_phone ?? '')
+  const [emergencyRelation, setEmergencyRelation] = useState(initial?.emergency_contact_relation ?? '')
+  const [bloodType, setBloodType] = useState(initial?.blood_type ?? '')
+  const [activityType, setActivityType] = useState(initial?.activity_type ?? '')
 
   return (
     <form
       onSubmit={(e) => {
         e.preventDefault()
-        onSubmit({ name, email, phone, status, notas_generales: notas })
+        onSubmit({
+          name, email, phone, status, notas_generales: notas,
+          emergency_contact_name: emergencyName,
+          emergency_contact_phone: emergencyPhone,
+          emergency_contact_relation: emergencyRelation,
+          blood_type: bloodType,
+          activity_type: activityType,
+        })
       }}
       className="flex flex-col gap-4"
     >
@@ -67,6 +79,35 @@ function PatientForm({
       <FieldWrap label="Teléfono">
         <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
       </FieldWrap>
+
+      <div className="h-px bg-border" />
+      <p className="text-xs font-semibold text-text-2">Contacto de emergencia</p>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <FieldWrap label="Nombre">
+          <Input value={emergencyName} onChange={(e) => setEmergencyName(e.target.value)} />
+        </FieldWrap>
+        <FieldWrap label="Teléfono">
+          <Input value={emergencyPhone} onChange={(e) => setEmergencyPhone(e.target.value)} />
+        </FieldWrap>
+        <FieldWrap label="Parentesco">
+          <Input value={emergencyRelation} onChange={(e) => setEmergencyRelation(e.target.value)} placeholder="Ej. Madre, esposo…" />
+        </FieldWrap>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <FieldWrap label="Tipo sanguíneo">
+          <Select value={bloodType} onChange={(e) => setBloodType(e.target.value)}>
+            <option value="">Desconocido</option>
+            {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map((bt) => (
+              <option key={bt} value={bt}>{bt}</option>
+            ))}
+          </Select>
+        </FieldWrap>
+        <FieldWrap label="Actividad física" hint="Desde caminata hasta el deporte que practica.">
+          <Input value={activityType} onChange={(e) => setActivityType(e.target.value)} placeholder="Ej. Camina 30 min 3x/sem, fútbol…" />
+        </FieldWrap>
+      </div>
+
       {initial && (
         <FieldWrap label="Estado">
           <Select value={status} onChange={(e) => setStatus(e.target.value as PatientStatus)}>

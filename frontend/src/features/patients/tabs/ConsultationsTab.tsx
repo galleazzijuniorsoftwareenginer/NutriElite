@@ -12,7 +12,7 @@ import type { LabValue } from '../../../types/clinical'
 import { Card } from '../../../components/Card'
 import { Button } from '../../../components/Button'
 import { Modal } from '../../../components/Modal'
-import { FieldWrap, Input } from '../../../components/Field'
+import { FieldWrap, Input, Select } from '../../../components/Field'
 
 function ScheduleAppointmentForm({ patientId, onSaved }: { patientId: number; onSaved: () => void }) {
   const [scheduledAt, setScheduledAt] = useState('')
@@ -66,6 +66,16 @@ function NewConsultationForm({ patientId, onSaved }: { patientId: number; onSave
   const [extracting, setExtracting] = useState(false)
   const [extractError, setExtractError] = useState('')
 
+  const [pliegueMetodo, setPliegueMetodo] = useState<'ninguno' | 'bioimpedancia' | 'pliegues_jp3'>('ninguno')
+  const [grasaManual, setGrasaManual] = useState('')
+  const [pliegueEdad, setPliegueEdad] = useState('')
+  const [pliegueSexo, setPliegueSexo] = useState<'male' | 'female'>('female')
+  const [pliequePecho, setPlieguePecho] = useState('')
+  const [pliegueAbdominal, setPliegueAbdominal] = useState('')
+  const [pliegueTriceps, setPliegueTriceps] = useState('')
+  const [pliegueSuprailiaco, setPliegueSuprailiaco] = useState('')
+  const [pliegueMuslo, setPliegueMuslo] = useState('')
+
   const saveMut = useMutation({
     mutationFn: () =>
       createConsultation(patientId, {
@@ -75,6 +85,15 @@ function NewConsultationForm({ patientId, onSaved }: { patientId: number; onSave
         diagnostico_nutricional: diagnostico,
         evolucion,
         bioquimicos: labs,
+        pliegue_pecho: pliequePecho ? parseFloat(pliequePecho) : null,
+        pliegue_abdominal: pliegueAbdominal ? parseFloat(pliegueAbdominal) : null,
+        pliegue_triceps: pliegueTriceps ? parseFloat(pliegueTriceps) : null,
+        pliegue_suprailiaco: pliegueSuprailiaco ? parseFloat(pliegueSuprailiaco) : null,
+        pliegue_muslo: pliegueMuslo ? parseFloat(pliegueMuslo) : null,
+        grasa_corporal_pct: pliegueMetodo === 'bioimpedancia' && grasaManual ? parseFloat(grasaManual) : null,
+        grasa_corporal_metodo: pliegueMetodo !== 'ninguno' ? pliegueMetodo : null,
+        edad_medicion: pliegueMetodo === 'pliegues_jp3' && pliegueEdad ? parseInt(pliegueEdad, 10) : null,
+        sexo_medicion: pliegueMetodo === 'pliegues_jp3' ? pliegueSexo : null,
       }),
     onSuccess: onSaved,
   })
@@ -115,6 +134,66 @@ function NewConsultationForm({ patientId, onSaved }: { patientId: number; onSave
       <FieldWrap label="Motivo de consulta">
         <Input value={motivo} onChange={(e) => setMotivo(e.target.value)} />
       </FieldWrap>
+
+      <div className="rounded-md border border-border p-3">
+        <FieldWrap label="Composición corporal" hint="Bioimpedancia (% directo) o pliegues con adipómetro (Jackson-Pollock 3 sitios).">
+          <Select value={pliegueMetodo} onChange={(e) => setPliegueMetodo(e.target.value as typeof pliegueMetodo)}>
+            <option value="ninguno">No registrar en esta consulta</option>
+            <option value="bioimpedancia">Bioimpedancia (% grasa directo)</option>
+            <option value="pliegues_jp3">Pliegues cutáneos (adipómetro)</option>
+          </Select>
+        </FieldWrap>
+
+        {pliegueMetodo === 'bioimpedancia' && (
+          <div className="mt-3">
+            <FieldWrap label="% de grasa corporal">
+              <Input type="number" step="0.1" value={grasaManual} onChange={(e) => setGrasaManual(e.target.value)} className="max-w-[140px]" />
+            </FieldWrap>
+          </div>
+        )}
+
+        {pliegueMetodo === 'pliegues_jp3' && (
+          <div className="mt-3 flex flex-col gap-3">
+            <div className="grid grid-cols-2 gap-3">
+              <FieldWrap label="Edad (al medir)">
+                <Input type="number" value={pliegueEdad} onChange={(e) => setPliegueEdad(e.target.value)} />
+              </FieldWrap>
+              <FieldWrap label="Sexo">
+                <Select value={pliegueSexo} onChange={(e) => setPliegueSexo(e.target.value as 'male' | 'female')}>
+                  <option value="female">Femenino</option>
+                  <option value="male">Masculino</option>
+                </Select>
+              </FieldWrap>
+            </div>
+            {pliegueSexo === 'male' ? (
+              <div className="grid grid-cols-3 gap-3">
+                <FieldWrap label="Pecho (mm)">
+                  <Input type="number" step="0.1" value={pliequePecho} onChange={(e) => setPlieguePecho(e.target.value)} />
+                </FieldWrap>
+                <FieldWrap label="Abdominal (mm)">
+                  <Input type="number" step="0.1" value={pliegueAbdominal} onChange={(e) => setPliegueAbdominal(e.target.value)} />
+                </FieldWrap>
+                <FieldWrap label="Muslo (mm)">
+                  <Input type="number" step="0.1" value={pliegueMuslo} onChange={(e) => setPliegueMuslo(e.target.value)} />
+                </FieldWrap>
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-3">
+                <FieldWrap label="Tríceps (mm)">
+                  <Input type="number" step="0.1" value={pliegueTriceps} onChange={(e) => setPliegueTriceps(e.target.value)} />
+                </FieldWrap>
+                <FieldWrap label="Suprailíaco (mm)">
+                  <Input type="number" step="0.1" value={pliegueSuprailiaco} onChange={(e) => setPliegueSuprailiaco(e.target.value)} />
+                </FieldWrap>
+                <FieldWrap label="Muslo (mm)">
+                  <Input type="number" step="0.1" value={pliegueMuslo} onChange={(e) => setPliegueMuslo(e.target.value)} />
+                </FieldWrap>
+              </div>
+            )}
+            <p className="text-[11px] text-text-3">El % de grasa se calcula automáticamente al guardar (Jackson-Pollock + ecuación de Siri).</p>
+          </div>
+        )}
+      </div>
 
       <FieldWrap label="Laboratorios (bioquímicos)" hint="Agrega a mano, o sube una foto del estudio para que la IA la lea">
         <div className="flex flex-col gap-2">
@@ -213,6 +292,7 @@ export function ConsultationsTab({ patientId }: { patientId: number }) {
                 <div>
                   <p className="text-sm font-medium text-text">
                     {new Date(c.fecha).toLocaleDateString()} {c.peso && `· ${c.peso} kg`}
+                    {c.grasa_corporal_pct != null && ` · ${c.grasa_corporal_pct}% grasa`}
                   </p>
                   <p className="text-xs text-text-2">{c.motivo_consulta || 'Sin motivo registrado'}</p>
                   {c.diagnostico_nutricional && <p className="text-xs text-text-3">Dx: {c.diagnostico_nutricional}</p>}

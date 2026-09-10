@@ -27,6 +27,11 @@ class Patient(Base):
     phone = Column(String)
     status = Column(String, default="activo")  # activo|inactivo|pausado
     notas_generales = Column(Text, nullable=True)
+    emergency_contact_name = Column(String, nullable=True)
+    emergency_contact_phone = Column(String, nullable=True)
+    emergency_contact_relation = Column(String, nullable=True)
+    blood_type = Column(String, nullable=True)  # A+|A-|B+|B-|AB+|AB-|O+|O-
+    activity_type = Column(String, nullable=True)  # descripción libre: "Camina 30min 3x/sem", "Fútbol competitivo"
     user_id = Column(Integer, ForeignKey("users.id"))
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
@@ -154,6 +159,16 @@ class Consultation(Base):
     # A — Antropométricos (snapshot independiente del Plan, para graficar evolución)
     peso = Column(Float, nullable=True)
     talla = Column(Float, nullable=True)
+
+    # Pliegues cutáneos (adipómetro) — protocolo Jackson-Pollock 3 sitios, en mm.
+    # Hombre usa pecho/abdominal/muslo; mujer usa tríceps/suprailíaco/muslo.
+    pliegue_pecho = Column(Float, nullable=True)
+    pliegue_abdominal = Column(Float, nullable=True)
+    pliegue_triceps = Column(Float, nullable=True)
+    pliegue_suprailiaco = Column(Float, nullable=True)
+    pliegue_muslo = Column(Float, nullable=True)
+    grasa_corporal_pct = Column(Float, nullable=True)
+    grasa_corporal_metodo = Column(String, nullable=True)  # bioimpedancia|pliegues_jp3
 
     # B — Bioquímicos: lista de {"nombre","valor","unidad"} (ej. glucosa, colesterol)
     bioquimicos = Column(JSON, nullable=True)

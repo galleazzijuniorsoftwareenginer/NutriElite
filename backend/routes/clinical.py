@@ -12,9 +12,30 @@ from backend.schemas.clinical import (
     RenalAssessmentResponse,
 )
 from backend.services.renal_service import calculate_renal_targets
+from backend.services.anthropometry_service import calculate_body_fat_jp3
 from pydantic import BaseModel
 
 router = APIRouter()
+
+
+def _process_consultation_payload(payload: dict) -> dict:
+    """Saca los campos transitorios (edad/sexo de la medición, no son
+    columnas) y calcula % de grasa por Jackson-Pollock 3 sitios si vinieron
+    pliegues pero no un % de grasa manual (bioimpedancia)."""
+    edad = payload.pop("edad_medicion", None)
+    sexo = payload.pop("sexo_medicion", None)
+
+    if payload.get("grasa_corporal_pct") is None and edad and sexo:
+        sexo = sexo.lower()
+        if sexo == "male":
+            folds = [payload.get("pliegue_pecho"), payload.get("pliegue_abdominal"), payload.get("pliegue_muslo")]
+        else:
+            folds = [payload.get("pliegue_triceps"), payload.get("pliegue_suprailiaco"), payload.get("pliegue_muslo")]
+        if all(f is not None for f in folds):
+            payload["grasa_corporal_pct"] = calculate_body_fat_jp3(sum(folds), edad, sexo)
+            payload["grasa_corporal_metodo"] = "pliegues_jp3"
+
+    return payload
 
 
 class LabImagePayload(BaseModel):
@@ -94,6 +115,7 @@ def create_consultation(
     payload = data.model_dump()
     bioquimicos = payload.pop("bioquimicos", None)
     signos_vitales = payload.pop("signos_vitales", None)
+    payload = _process_consultation_payload(payload)
     consultation = Consultation(
         patient_id=patient_id,
         bioquimicos=[lv for lv in (bioquimicos or [])],
@@ -125,6 +147,7 @@ def update_consultation(
         raise HTTPException(status_code=404, detail="Consulta não encontrada")
     payload = data.model_dump()
     payload["bioquimicos"] = payload.get("bioquimicos") or []
+    payload = _process_consultation_payload(payload)
     for field, value in payload.items():
         setattr(consultation, field, value)
     db.commit()
