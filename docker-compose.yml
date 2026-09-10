@@ -8,6 +8,7 @@ services:
       - "8000:8080"
     volumes:
       - .:/app
+      - /app/backend/static/app
     restart: always
     environment:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
