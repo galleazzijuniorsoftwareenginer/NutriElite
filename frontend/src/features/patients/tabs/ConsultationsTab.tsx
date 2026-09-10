@@ -13,6 +13,7 @@ import { Card } from '../../../components/Card'
 import { Button } from '../../../components/Button'
 import { Modal } from '../../../components/Modal'
 import { FieldWrap, Input, Select } from '../../../components/Field'
+import { confirmAction } from '../../../store/confirmStore'
 
 function ScheduleAppointmentForm({ patientId, onSaved }: { patientId: number; onSaved: () => void }) {
   const [scheduledAt, setScheduledAt] = useState('')
@@ -302,7 +303,15 @@ export function ConsultationsTab({ patientId }: { patientId: number }) {
                     </p>
                   )}
                 </div>
-                <Button size="sm" variant="ghost" className="text-danger shrink-0" onClick={() => deleteMut.mutate(c.id)}>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-danger shrink-0"
+                  onClick={async () => {
+                    if (await confirmAction({ message: '¿Deseas eliminar esta consulta? Esta acción no se puede deshacer.', confirmLabel: 'Sí, eliminar' }))
+                      deleteMut.mutate(c.id)
+                  }}
+                >
                   Eliminar
                 </Button>
               </li>

@@ -9,6 +9,7 @@ import { Button } from '../../components/Button'
 import { Modal } from '../../components/Modal'
 import { Select } from '../../components/Field'
 import { CategoryTile } from '../../components/CategoryTile'
+import { confirmAction } from '../../store/confirmStore'
 
 const GOAL_LABEL: Record<string, string> = {
   cut: 'Pérdida de peso',
@@ -329,7 +330,15 @@ function MyTemplates() {
             <Button size="sm" className="flex-1" onClick={() => navigate(`/plan/nuevo?templateId=${t.id}`)}>
               Usar
             </Button>
-            <Button size="sm" variant="ghost" className="text-danger" onClick={() => deleteMut.mutate(t.id)}>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-danger"
+              onClick={async () => {
+                if (await confirmAction({ message: `¿Deseas eliminar la plantilla "${t.template_name}"? Esta acción no se puede deshacer.`, confirmLabel: 'Sí, eliminar' }))
+                  deleteMut.mutate(t.id)
+              }}
+            >
               Eliminar
             </Button>
           </div>

@@ -8,6 +8,7 @@ import { Button } from '../../components/Button'
 import { Badge } from '../../components/Badge'
 import { Modal } from '../../components/Modal'
 import { FieldWrap, Input, Select } from '../../components/Field'
+import { confirmAction } from '../../store/confirmStore'
 
 const GRID_START_HOUR = 8
 const GRID_END_HOUR = 17
@@ -264,11 +265,31 @@ function AppointmentRow({ appt }: { appt: Appointment }) {
             {isPast ? (
               <Button size="sm" variant="secondary" onClick={() => statusMut.mutate('completed')}>Marcar completada</Button>
             ) : (
-              <Button size="sm" variant="ghost" className="text-danger" onClick={() => statusMut.mutate('cancelled')}>Cancelar</Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-danger"
+                onClick={async () => {
+                  if (await confirmAction({ message: `¿Deseas cancelar la cita de ${appt.patient_name}?`, confirmLabel: 'Sí, cancelar cita' }))
+                    statusMut.mutate('cancelled')
+                }}
+              >
+                Cancelar
+              </Button>
             )}
           </>
         )}
-        <Button size="sm" variant="ghost" className="text-danger" onClick={() => deleteMut.mutate()}>Eliminar</Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="text-danger"
+          onClick={async () => {
+            if (await confirmAction({ message: `¿Deseas eliminar la cita de ${appt.patient_name}? Esta acción no se puede deshacer.`, confirmLabel: 'Sí, eliminar' }))
+              deleteMut.mutate()
+          }}
+        >
+          Eliminar
+        </Button>
       </div>
 
       <Modal open={rescheduling} onClose={() => setRescheduling(false)} title="Reagendar cita" width={380}>

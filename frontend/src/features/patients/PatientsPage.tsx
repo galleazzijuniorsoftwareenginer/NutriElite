@@ -9,6 +9,7 @@ import { Button } from '../../components/Button'
 import { Badge } from '../../components/Badge'
 import { FieldWrap, Input, Select } from '../../components/Field'
 import { Modal } from '../../components/Modal'
+import { confirmAction } from '../../store/confirmStore'
 
 const STATUS_LABEL: Record<PatientStatus, string> = {
   activo: 'Activo',
@@ -220,8 +221,8 @@ export function PatientsPage() {
     setEditing(p)
     setModalOpen(true)
   }
-  function handleDelete(p: Patient) {
-    if (confirm(`¿Eliminar a ${p.name}? Esta acción no se puede deshacer.`)) {
+  async function handleDelete(p: Patient) {
+    if (await confirmAction({ message: `¿Deseas eliminar a ${p.name}? Esta acción no se puede deshacer.`, confirmLabel: 'Sí, eliminar' })) {
       deleteMut.mutate(p.id)
     }
   }

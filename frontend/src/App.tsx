@@ -19,6 +19,7 @@ import { ClassroomsPage } from './features/classroom/ClassroomsPage'
 import { RecipesPage } from './features/recipes/RecipesPage'
 import { AgendaPage } from './features/agenda/AgendaPage'
 import { ConfiguracionPage } from './features/configuracion/ConfiguracionPage'
+import { ConfirmDialogHost } from './components/ConfirmDialog'
 
 export function App() {
   const [params] = useSearchParams()
@@ -28,6 +29,8 @@ export function App() {
   }
 
   return (
+    <>
+    <ConfirmDialogHost />
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/registro" element={<RegisterPage />} />
@@ -56,5 +59,6 @@ export function App() {
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </>
   )
 }

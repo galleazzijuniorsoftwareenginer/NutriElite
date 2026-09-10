@@ -14,6 +14,7 @@ import { useAuthStore } from '../../store/authStore'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { Input } from '../../components/Field'
+import { confirmAction } from '../../store/confirmStore'
 
 const GOAL_LABEL: Record<string, string> = { cut: 'Pérdida de peso', bulk: 'Ganancia de masa', maintenance: 'Mantenimiento' }
 
@@ -122,7 +123,15 @@ function ProfessorView() {
           <div>
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-sm font-semibold text-text">Estudiantes inscritos</h3>
-              <Button size="sm" variant="ghost" className="text-danger" onClick={() => deleteMut.mutate(selectedClassroom)}>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-danger"
+                onClick={async () => {
+                  if (await confirmAction({ message: '¿Deseas eliminar esta turma? Se perderá el vínculo con los estudiantes inscritos.', confirmLabel: 'Sí, eliminar' }))
+                    deleteMut.mutate(selectedClassroom)
+                }}
+              >
                 Eliminar turma
               </Button>
             </div>
@@ -136,7 +145,15 @@ function ProfessorView() {
                       <p className="text-sm font-medium text-accent-2 hover:underline">{s.username}</p>
                       <p className="text-xs text-text-3">{s.total_pacientes} pacientes · {s.total_planes} planes</p>
                     </button>
-                    <Button size="sm" variant="ghost" className="text-danger" onClick={() => removeStudentMut.mutate(s.user_id)}>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-danger"
+                      onClick={async () => {
+                        if (await confirmAction({ message: `¿Deseas quitar a ${s.username} de la turma?`, confirmLabel: 'Sí, quitar' }))
+                          removeStudentMut.mutate(s.user_id)
+                      }}
+                    >
                       Quitar
                     </Button>
                   </li>
