@@ -86,6 +86,18 @@ if engine.dialect.name == "postgresql":
         conn.execute(text("ALTER TABLE patients ADD COLUMN IF NOT EXISTS children_count INTEGER"))
         conn.commit()
 
+# Corrige um erro de digitação nos dados de seed (Azucares/Con grasa tinha
+# protein=25, inconsistente com a regra 4-4-9 dado seu kcal=85 publicado).
+# Roda em qualquer banco (SQLite ou Postgres) e a toda inicialização — é
+# idempotente (só afeta a linha que ainda carrega o valor errado) porque
+# seed() não re-executa depois que a tabela já tem dados.
+with engine.connect() as conn:
+    conn.execute(text(
+        "UPDATE food_groups SET protein = 0 "
+        "WHERE group_name = 'Azucares' AND subgroup_name = 'Con grasa' AND protein = 25"
+    ))
+    conn.commit()
+
 seed()
 seed_default_user()
 seed_recipes()

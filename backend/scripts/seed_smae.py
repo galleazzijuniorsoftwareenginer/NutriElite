@@ -101,7 +101,7 @@ SMAE_DATA = [
     {
         "group_name": "Azucares",
         "subgroup_name": "Con grasa",
-        "kcal": 85, "protein": 25, "fats": 5, "carbs": 10,
+        "kcal": 85, "protein": 0, "fats": 5, "carbs": 10,
         "fiber": 0.0, "calcium": 0, "iron": 0.0, "sodium": 0.0, "cholesterol": 0
     },
 ]

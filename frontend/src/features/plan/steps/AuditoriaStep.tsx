@@ -6,7 +6,7 @@ import { listFoodGroups } from '../../../api/food'
 import type { FoodGroupItem } from '../../../types'
 import { Card } from '../../../components/Card'
 import { Button } from '../../../components/Button'
-import { Input, Select } from '../../../components/Field'
+import { Input } from '../../../components/Field'
 import type { WizardPlanData } from '../planTypes'
 import { OMS_RANGES, clampAdjustment, gramsFromPct, inRange } from '../planMath'
 
@@ -29,6 +29,29 @@ interface EditableRow {
   unitFats: number
   unitCarbs: number
 }
+
+/** Orden fijo de las 17 variantes SMAE (igual a Avena) — se muestran todas
+ * siempre, con 0 porciones en las que el cálculo automático no usó, en vez
+ * de solo la variante que el algoritmo eligió según el objetivo. */
+const SMAE_ROW_ORDER: { group: string; subgroup: string | null }[] = [
+  { group: 'Verduras', subgroup: null },
+  { group: 'Frutas', subgroup: null },
+  { group: 'Cereales y tuberculos', subgroup: 'Sin grasa' },
+  { group: 'Cereales y tuberculos', subgroup: 'Con grasa' },
+  { group: 'Leguminosas', subgroup: null },
+  { group: 'Alimentos de origen animal', subgroup: 'Muy bajo aporte grasa' },
+  { group: 'Alimentos de origen animal', subgroup: 'Bajo aporte grasa' },
+  { group: 'Alimentos de origen animal', subgroup: 'Moderado aporte grasa' },
+  { group: 'Alimentos de origen animal', subgroup: 'Alto aporte grasa' },
+  { group: 'Leche', subgroup: 'Descremada' },
+  { group: 'Leche', subgroup: 'Semidescremada' },
+  { group: 'Leche', subgroup: 'Entera' },
+  { group: 'Leche', subgroup: 'Con azucar' },
+  { group: 'Aceites y Grasas', subgroup: 'Sin proteinas' },
+  { group: 'Aceites y Grasas', subgroup: 'Con proteinas' },
+  { group: 'Azucares', subgroup: 'Sin grasa' },
+  { group: 'Azucares', subgroup: 'Con grasa' },
+]
 
 const PIE_COLORS = ['var(--color-carb)', 'var(--color-prot)', 'var(--color-fat)']
 
@@ -72,30 +95,32 @@ export function AuditoriaStep({ plan, carbPct, protPct, fatPct, kcalAdjustment, 
     staleTime: Infinity,
   })
 
-  const foodGroupsByName = useMemo(() => {
-    const map: Record<string, FoodGroupItem[]> = {}
-    for (const f of foodGroups || []) {
-      if (!map[f.group_name]) map[f.group_name] = []
-      map[f.group_name].push(f)
-    }
-    return map
-  }, [foodGroups])
-
   const [rows, setRows] = useState<EditableRow[]>([])
   useEffect(() => {
-    if (!audit) return
+    if (!audit || !foodGroups || foodGroups.length === 0) return
+    const auditByKey: Record<string, (typeof audit.smae_table)[number]> = {}
+    for (const r of audit.smae_table) auditByKey[r.group + '|' + (r.subgroup || '')] = r
+    const foodByKey: Record<string, FoodGroupItem> = {}
+    for (const f of foodGroups) foodByKey[f.group_name + '|' + (f.subgroup_name || '')] = f
+
     setRows(
-      audit.smae_table.map((r) => ({
-        group: r.group,
-        subgroup: r.subgroup,
-        portions: r.portions,
-        unitKcal: r.portions > 0 ? r.kcal / r.portions : r.kcal,
-        unitProtein: r.portions > 0 ? r.protein / r.portions : r.protein,
-        unitFats: r.portions > 0 ? r.fats / r.portions : r.fats,
-        unitCarbs: r.portions > 0 ? r.carbs / r.portions : r.carbs,
-      }))
+      SMAE_ROW_ORDER.map(({ group, subgroup }) => {
+        const key = group + '|' + (subgroup || '')
+        const food = foodByKey[key]
+        const auditRow = auditByKey[key]
+        const portions = auditRow?.portions ?? 0
+        return {
+          group,
+          subgroup,
+          portions,
+          unitKcal: food?.kcal ?? 0,
+          unitProtein: food?.protein ?? 0,
+          unitFats: food?.fats ?? 0,
+          unitCarbs: food?.carbs ?? 0,
+        }
+      })
     )
-  }, [audit])
+  }, [audit, foodGroups])
 
   function updatePortions(idx: number, newPortions: number) {
     setRows((prev) => {
@@ -103,25 +128,6 @@ export function AuditoriaStep({ plan, carbPct, protPct, fatPct, kcalAdjustment, 
       const row = next[idx]
       const max = row.group === 'Alimentos de origen animal' ? 8 : 99
       next[idx] = { ...row, portions: Math.max(0, Math.min(newPortions, max)) }
-      return next
-    })
-  }
-
-  function updateSubgroup(idx: number, newSubgroup: string) {
-    setRows((prev) => {
-      const next = [...prev]
-      const row = next[idx]
-      const options = foodGroupsByName[row.group] || []
-      const food = options.find((f) => (f.subgroup_name || '') === newSubgroup)
-      if (!food) return prev
-      next[idx] = {
-        ...row,
-        subgroup: food.subgroup_name,
-        unitKcal: food.kcal,
-        unitProtein: food.protein,
-        unitFats: food.fats,
-        unitCarbs: food.carbs,
-      }
       return next
     })
   }
@@ -155,7 +161,7 @@ export function AuditoriaStep({ plan, carbPct, protPct, fatPct, kcalAdjustment, 
     onAdjustPct({ carbPct: newCarb, protPct: newProt, fatPct: newFat })
   }
 
-  if (!audit) {
+  if (!audit || !foodGroups || rows.length === 0) {
     return <Card className="py-16 text-center text-sm text-text-3">Calculando auditoría…</Card>
   }
 
@@ -197,33 +203,16 @@ export function AuditoriaStep({ plan, carbPct, protPct, fatPct, kcalAdjustment, 
             </thead>
             <tbody>
               {rows.map((row, i) => {
-                const options = foodGroupsByName[row.group] || []
                 const rowKcal = row.portions * row.unitKcal
                 const rowProtein = row.portions * row.unitProtein
                 const rowFats = row.portions * row.unitFats
                 const rowCarbs = row.portions * row.unitCarbs
                 return (
-                  <tr key={i} className="border-b border-border/60">
+                  <tr key={i} className={`border-b border-border/60 ${row.portions === 0 ? 'opacity-50' : ''}`}>
                     <td className="py-2">
                       <span className="rounded bg-accent-light px-1.5 py-0.5 text-[10px] font-medium text-accent">{row.group}</span>
                     </td>
-                    <td className="text-text-2">
-                      {options.length > 1 ? (
-                        <Select
-                          value={row.subgroup || ''}
-                          onChange={(e) => updateSubgroup(i, e.target.value)}
-                          className="h-7 min-w-[9rem] text-xs"
-                        >
-                          {options.map((o) => (
-                            <option key={o.id} value={o.subgroup_name || ''}>
-                              {o.subgroup_name || '—'}
-                            </option>
-                          ))}
-                        </Select>
-                      ) : (
-                        row.subgroup || '—'
-                      )}
-                    </td>
+                    <td className="text-text-2">{row.subgroup || '—'}</td>
                     <td>
                       <Input
                         type="number"
