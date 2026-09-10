@@ -61,6 +61,21 @@ export interface Patient {
   last_plan_id: number | null
 }
 
+export interface FoodGroupItem {
+  id: number
+  group_name: string
+  subgroup_name: string | null
+  kcal: number
+  protein: number
+  fats: number
+  carbs: number
+  fiber: number | null
+  calcium: number | null
+  iron: number | null
+  sodium: number | null
+  cholesterol: number | null
+}
+
 export interface SmaeRow {
   group: string
   subgroup: string | null

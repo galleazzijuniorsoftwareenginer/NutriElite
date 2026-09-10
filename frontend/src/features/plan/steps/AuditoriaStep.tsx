@@ -2,10 +2,11 @@ import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 import { getAudit } from '../../../api/plans'
-import type { SmaeRow } from '../../../types'
+import { listFoodGroups } from '../../../api/food'
+import type { FoodGroupItem } from '../../../types'
 import { Card } from '../../../components/Card'
 import { Button } from '../../../components/Button'
-import { Input } from '../../../components/Field'
+import { Input, Select } from '../../../components/Field'
 import type { WizardPlanData } from '../planTypes'
 import { OMS_RANGES, clampAdjustment, gramsFromPct, inRange } from '../planMath'
 
@@ -19,6 +20,16 @@ interface Props {
   onContinue: () => void
 }
 
+interface EditableRow {
+  group: string
+  subgroup: string | null
+  portions: number
+  unitKcal: number
+  unitProtein: number
+  unitFats: number
+  unitCarbs: number
+}
+
 const PIE_COLORS = ['var(--color-carb)', 'var(--color-prot)', 'var(--color-fat)']
 
 function RangeBadge({ ok }: { ok: boolean }) {
@@ -26,6 +37,20 @@ function RangeBadge({ ok }: { ok: boolean }) {
     <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${ok ? 'bg-accent-light text-accent' : 'bg-warn-light text-warn'}`}>
       {ok ? '✓ Dentro' : '✗ Fuera'}
     </span>
+  )
+}
+
+function GapLine({ label, contributed, target, unit }: { label: string; contributed: number; target: number; unit: string }) {
+  const gap = target - contributed
+  const done = Math.abs(gap) < 0.5
+  return (
+    <div className="flex items-center justify-between text-xs">
+      <span className="text-text-2">{label}</span>
+      <span className={`font-medium ${done ? 'text-accent' : gap > 0 ? 'text-warn' : 'text-danger'}`}>
+        {contributed.toFixed(1)}
+        {unit} · {done ? 'Completo' : gap > 0 ? `Faltan ${gap.toFixed(1)}${unit}` : `Sobran ${(-gap).toFixed(1)}${unit}`}
+      </span>
+    </div>
   )
 }
 
@@ -41,25 +66,61 @@ export function AuditoriaStep({ plan, carbPct, protPct, fatPct, kcalAdjustment, 
     queryFn: () => getAudit(plan.planId, override),
   })
 
-  const [rows, setRows] = useState<SmaeRow[]>([])
+  const { data: foodGroups } = useQuery({
+    queryKey: ['food-groups'],
+    queryFn: listFoodGroups,
+    staleTime: Infinity,
+  })
+
+  const foodGroupsByName = useMemo(() => {
+    const map: Record<string, FoodGroupItem[]> = {}
+    for (const f of foodGroups || []) {
+      if (!map[f.group_name]) map[f.group_name] = []
+      map[f.group_name].push(f)
+    }
+    return map
+  }, [foodGroups])
+
+  const [rows, setRows] = useState<EditableRow[]>([])
   useEffect(() => {
-    if (audit) setRows(audit.smae_table.map((r) => ({ ...r })))
+    if (!audit) return
+    setRows(
+      audit.smae_table.map((r) => ({
+        group: r.group,
+        subgroup: r.subgroup,
+        portions: r.portions,
+        unitKcal: r.portions > 0 ? r.kcal / r.portions : r.kcal,
+        unitProtein: r.portions > 0 ? r.protein / r.portions : r.protein,
+        unitFats: r.portions > 0 ? r.fats / r.portions : r.fats,
+        unitCarbs: r.portions > 0 ? r.carbs / r.portions : r.carbs,
+      }))
+    )
   }, [audit])
 
   function updatePortions(idx: number, newPortions: number) {
     setRows((prev) => {
       const next = [...prev]
-      const orig = audit!.smae_table[idx]
-      const max = orig.group === 'Alimentos de origen animal' ? 8 : 99
-      const portions = Math.max(0, Math.min(newPortions, max))
-      const factor = orig.portions > 0 ? portions / orig.portions : 0
+      const row = next[idx]
+      const max = row.group === 'Alimentos de origen animal' ? 8 : 99
+      next[idx] = { ...row, portions: Math.max(0, Math.min(newPortions, max)) }
+      return next
+    })
+  }
+
+  function updateSubgroup(idx: number, newSubgroup: string) {
+    setRows((prev) => {
+      const next = [...prev]
+      const row = next[idx]
+      const options = foodGroupsByName[row.group] || []
+      const food = options.find((f) => (f.subgroup_name || '') === newSubgroup)
+      if (!food) return prev
       next[idx] = {
-        ...orig,
-        portions,
-        kcal: Math.round(orig.kcal * factor),
-        protein: Math.round(orig.protein * factor * 10) / 10,
-        fats: Math.round(orig.fats * factor * 10) / 10,
-        carbs: Math.round(orig.carbs * factor * 10) / 10,
+        ...row,
+        subgroup: food.subgroup_name,
+        unitKcal: food.kcal,
+        unitProtein: food.protein,
+        unitFats: food.fats,
+        unitCarbs: food.carbs,
       }
       return next
     })
@@ -67,10 +128,10 @@ export function AuditoriaStep({ plan, carbPct, protPct, fatPct, kcalAdjustment, 
 
   const totals = rows.reduce(
     (acc, r) => ({
-      kcal: acc.kcal + r.kcal,
-      protein: acc.protein + r.protein,
-      fats: acc.fats + r.fats,
-      carbs: acc.carbs + r.carbs,
+      kcal: acc.kcal + r.portions * r.unitKcal,
+      protein: acc.protein + r.portions * r.unitProtein,
+      fats: acc.fats + r.portions * r.unitFats,
+      carbs: acc.carbs + r.portions * r.unitCarbs,
     }),
     { kcal: 0, protein: 0, fats: 0, carbs: 0 }
   )
@@ -135,27 +196,50 @@ export function AuditoriaStep({ plan, carbPct, protPct, fatPct, kcalAdjustment, 
               </tr>
             </thead>
             <tbody>
-              {rows.map((row, i) => (
-                <tr key={i} className="border-b border-border/60">
-                  <td className="py-2">
-                    <span className="rounded bg-accent-light px-1.5 py-0.5 text-[10px] font-medium text-accent">{row.group}</span>
-                  </td>
-                  <td className="text-text-2">{row.subgroup || '—'}</td>
-                  <td>
-                    <Input
-                      type="number"
-                      min={0}
-                      value={row.portions}
-                      onChange={(e) => updatePortions(i, parseInt(e.target.value, 10) || 0)}
-                      className="h-7 w-14 text-center text-xs"
-                    />
-                  </td>
-                  <td>{row.kcal}</td>
-                  <td>{row.protein}</td>
-                  <td>{row.fats}</td>
-                  <td>{row.carbs}</td>
-                </tr>
-              ))}
+              {rows.map((row, i) => {
+                const options = foodGroupsByName[row.group] || []
+                const rowKcal = row.portions * row.unitKcal
+                const rowProtein = row.portions * row.unitProtein
+                const rowFats = row.portions * row.unitFats
+                const rowCarbs = row.portions * row.unitCarbs
+                return (
+                  <tr key={i} className="border-b border-border/60">
+                    <td className="py-2">
+                      <span className="rounded bg-accent-light px-1.5 py-0.5 text-[10px] font-medium text-accent">{row.group}</span>
+                    </td>
+                    <td className="text-text-2">
+                      {options.length > 1 ? (
+                        <Select
+                          value={row.subgroup || ''}
+                          onChange={(e) => updateSubgroup(i, e.target.value)}
+                          className="h-7 min-w-[9rem] text-xs"
+                        >
+                          {options.map((o) => (
+                            <option key={o.id} value={o.subgroup_name || ''}>
+                              {o.subgroup_name || '—'}
+                            </option>
+                          ))}
+                        </Select>
+                      ) : (
+                        row.subgroup || '—'
+                      )}
+                    </td>
+                    <td>
+                      <Input
+                        type="number"
+                        min={0}
+                        value={row.portions}
+                        onChange={(e) => updatePortions(i, parseInt(e.target.value, 10) || 0)}
+                        className="h-7 w-14 text-center text-xs"
+                      />
+                    </td>
+                    <td>{Math.round(rowKcal)}</td>
+                    <td>{rowProtein.toFixed(1)}</td>
+                    <td>{rowFats.toFixed(1)}</td>
+                    <td>{rowCarbs.toFixed(1)}</td>
+                  </tr>
+                )
+              })}
               <tr className="font-semibold text-text">
                 <td className="py-2" colSpan={3}>TOTAL</td>
                 <td>{totals.kcal.toFixed(0)}</td>
@@ -182,7 +266,13 @@ export function AuditoriaStep({ plan, carbPct, protPct, fatPct, kcalAdjustment, 
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div className="mt-2 flex flex-col gap-1.5 text-xs">
+            <div className="mt-2 flex flex-col gap-1.5">
+              <GapLine label="Carbohidratos" contributed={totals.carbs} target={override.carbs_g} unit="g" />
+              <GapLine label="Proteína" contributed={totals.protein} target={override.protein_g} unit="g" />
+              <GapLine label="Grasas" contributed={totals.fats} target={override.fats_g} unit="g" />
+              <GapLine label="Kcal" contributed={totals.kcal} target={get} unit="" />
+            </div>
+            <div className="mt-3 flex flex-col gap-1.5 text-xs">
               <div className="flex items-center justify-between">
                 <span className="text-text-2">Carbohidratos (OMS 45-65%)</span>
                 <RangeBadge ok={inRange(realCarbPct, OMS_RANGES.carb)} />
