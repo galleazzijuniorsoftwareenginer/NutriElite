@@ -7262,6 +7262,35 @@ RECIPES = [
         "instrucciones": "Mezcla el pollo rebanado con manzana picada y cubos de queso panela.",
         "kcal_aprox": 300,
     },
+    {
+        "nombre": "Salmón al horno con miel y mostaza",
+        "imagen_url": "https://images.unsplash.com/photo-1676300185165-3f543c1fcb72?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
+        "tiempo_comida": "Cena",
+        "goal_tags": ["maintenance", "bulk"],
+        "categoria_tags": ["Alto en proteína", "Nuevas"],
+        "ingredientes": [
+            {"alimento": "Filete de salmón", "cantidad_g": 140},
+            {"alimento": "Miel de abeja", "cantidad_g": 10},
+            {"alimento": "Mostaza Dijon", "cantidad_g": 10},
+        ],
+        "instrucciones": "Unta el salmón con la mezcla de miel y mostaza, hornea a 200°C por 15 minutos.",
+        "kcal_aprox": 380,
+    },
+    {
+        "nombre": "Ensalada de pollo con pepino, eneldo y yogur",
+        "imagen_url": "https://images.unsplash.com/photo-1540420773420-3366772f4999?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
+        "tiempo_comida": "Comida",
+        "goal_tags": ["cut", "maintenance"],
+        "categoria_tags": ["Bajo en grasa", "Alto en proteína", "Ensaladas", "Nuevas"],
+        "ingredientes": [
+            {"alimento": "Pechuga de pollo a la plancha", "cantidad_g": 130},
+            {"alimento": "Pepino picado", "cantidad_g": 50},
+            {"alimento": "Yogur natural", "cantidad_g": 40},
+            {"alimento": "Eneldo fresco", "cantidad_g": 3},
+        ],
+        "instrucciones": "Mezcla el pollo rebanado con pepino, yogur y eneldo fresco picado.",
+        "kcal_aprox": 290,
+    },
 ]
 
 
