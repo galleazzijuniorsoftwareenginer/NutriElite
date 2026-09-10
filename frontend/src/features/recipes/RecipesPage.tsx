@@ -2,7 +2,9 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { favoriteRecipe, listRecipes, unfavoriteRecipe, type Recipe } from '../../api/recipes'
 import { Card } from '../../components/Card'
+import { Button } from '../../components/Button'
 import { Input } from '../../components/Field'
+import { Modal } from '../../components/Modal'
 import { CategoryTile } from '../../components/CategoryTile'
 
 const CATEGORY_ICON: Record<string, string> = {
@@ -33,24 +35,85 @@ const CATEGORY_IMAGE: Record<string, string> = {
   Ensaladas: 'https://images.unsplash.com/photo-1607532941433-304659e8198a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600',
 }
 
-function RecipeCard({ recipe }: { recipe: Recipe }) {
+function recipeVisuals(recipe: Recipe) {
+  const tag = recipe.categoria_tags?.[0]
+  const gradient = (tag && CATEGORY_GRADIENT[tag]) || DEFAULT_GRADIENT
+  const image = recipe.imagen_url || (tag && CATEGORY_IMAGE[tag])
+  const icon = tag ? CATEGORY_ICON[tag] ?? '🍽' : '🍽'
+  return { tag, gradient, image, icon }
+}
+
+function RecipeDetailModal({ recipe, onClose }: { recipe: Recipe; onClose: () => void }) {
   const queryClient = useQueryClient()
   const toggleFav = useMutation({
     mutationFn: () => (recipe.favorito ? unfavoriteRecipe(recipe.id) : favoriteRecipe(recipe.id)),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['recipes'] }),
   })
-  const tag = recipe.categoria_tags?.[0]
-  const gradient = (tag && CATEGORY_GRADIENT[tag]) || DEFAULT_GRADIENT
-  const image = recipe.imagen_url || (tag && CATEGORY_IMAGE[tag])
-  const icon = tag ? CATEGORY_ICON[tag] ?? '🍽' : '🍽'
+  const { gradient, image, icon } = recipeVisuals(recipe)
+
+  return (
+    <div className="flex flex-col gap-4 max-h-[75vh] overflow-y-auto scrollbar-thin">
+      <div className="flex gap-4">
+        <div className="h-24 w-24 shrink-0 overflow-hidden rounded-lg">
+          <CategoryTile imageUrl={image} gradient={gradient} icon={icon} alt={recipe.nombre} height={96} iconSize="text-2xl" />
+        </div>
+        <div>
+          <span className="inline-flex w-fit items-center rounded-full bg-bg px-2 py-0.5 text-[10px] font-semibold text-text-2">
+            {recipe.tiempo_comida}
+          </span>
+          <h3 className="mt-1 font-display text-lg font-bold text-text">{recipe.nombre}</h3>
+          <p className="mt-1 text-xs text-text-3">{recipe.kcal_aprox ? `${Math.round(recipe.kcal_aprox)} kcal` : ''}</p>
+        </div>
+      </div>
+
+      <div>
+        <h4 className="mb-2 text-sm font-semibold text-text">Ingredientes</h4>
+        <ul className="flex flex-col gap-1">
+          {recipe.ingredientes.map((i, idx) => (
+            <li key={idx} className="flex items-center justify-between text-sm text-text-2">
+              <span>{i.alimento}</span>
+              <span className="text-text-3">{i.cantidad_g} g</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {recipe.instrucciones && (
+        <div>
+          <h4 className="mb-2 text-sm font-semibold text-text">Preparación</h4>
+          <p className="text-sm text-text-2 leading-relaxed">{recipe.instrucciones}</p>
+        </div>
+      )}
+
+      <div className="flex items-center justify-between pt-2">
+        <button
+          onClick={() => toggleFav.mutate()}
+          className={`flex items-center gap-1 text-sm font-semibold ${recipe.favorito ? 'text-accent' : 'text-text-3 hover:text-accent'}`}
+        >
+          {recipe.favorito ? '★ Guardada' : '☆ Guardar'}
+        </button>
+        <Button variant="ghost" onClick={onClose}>Cerrar</Button>
+      </div>
+    </div>
+  )
+}
+
+function RecipeCard({ recipe, onOpen }: { recipe: Recipe; onOpen: () => void }) {
+  const queryClient = useQueryClient()
+  const toggleFav = useMutation({
+    mutationFn: () => (recipe.favorito ? unfavoriteRecipe(recipe.id) : favoriteRecipe(recipe.id)),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['recipes'] }),
+  })
+  const { gradient, image, icon } = recipeVisuals(recipe)
 
   return (
     <Card
-      className={`flex flex-col gap-0 p-0 overflow-hidden transition-transform hover:-translate-y-1 hover:shadow-float ${
+      onClick={onOpen}
+      className={`flex flex-col gap-0 p-0 overflow-hidden transition-transform hover:-translate-y-1 hover:shadow-float cursor-pointer ${
         recipe.favorito ? 'border-accent shadow-[0_0_0_1px_var(--color-accent-light)]' : ''
       }`}
     >
-      <CategoryTile imageUrl={image} gradient={gradient} icon={icon} alt={tag ?? recipe.nombre} height={100} iconSize="text-3xl" />
+      <CategoryTile imageUrl={image} gradient={gradient} icon={icon} alt={recipe.categoria_tags?.[0] ?? recipe.nombre} height={100} iconSize="text-3xl" />
       <div className="flex flex-col gap-1.5 p-3.5">
         <span className="inline-flex w-fit items-center rounded-full bg-bg px-2 py-0.5 text-[10px] font-semibold text-text-2">
           {recipe.tiempo_comida}
@@ -60,7 +123,10 @@ function RecipeCard({ recipe }: { recipe: Recipe }) {
         <div className="mt-auto flex items-center justify-between pt-1.5">
           <span className="text-[11px] text-text-3">{recipe.ingredientes.length} ingredientes</span>
           <button
-            onClick={() => toggleFav.mutate()}
+            onClick={(e) => {
+              e.stopPropagation()
+              toggleFav.mutate()
+            }}
             className={`flex items-center gap-1 text-xs font-semibold ${recipe.favorito ? 'text-accent' : 'text-text-3 hover:text-accent'}`}
           >
             {recipe.favorito ? '★ Guardada' : '☆ Guardar'}
@@ -75,6 +141,7 @@ export function RecipesPage() {
   const [tab, setTab] = useState<'todas' | 'favoritas'>('todas')
   const [categoria, setCategoria] = useState('')
   const [search, setSearch] = useState('')
+  const [openRecipeId, setOpenRecipeId] = useState<number | null>(null)
 
   const { data: recipes, isLoading } = useQuery({
     queryKey: ['recipes', categoria, tab, search],
@@ -154,10 +221,17 @@ export function RecipesPage() {
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {recipes.map((r) => (
-            <RecipeCard key={r.id} recipe={r} />
+            <RecipeCard key={r.id} recipe={r} onOpen={() => setOpenRecipeId(r.id)} />
           ))}
         </div>
       )}
+
+      <Modal open={openRecipeId !== null} onClose={() => setOpenRecipeId(null)} title="Detalle de la receta" width={520}>
+        {(() => {
+          const openRecipe = recipes?.find((r) => r.id === openRecipeId)
+          return openRecipe ? <RecipeDetailModal recipe={openRecipe} onClose={() => setOpenRecipeId(null)} /> : null
+        })()}
+      </Modal>
     </div>
   )
 }
