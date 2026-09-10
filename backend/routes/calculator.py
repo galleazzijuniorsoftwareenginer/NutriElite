@@ -199,7 +199,7 @@ def generate_ai_menu_endpoint(
     }
 
     try:
-        menu = generate_ai_menu(plan_data, audit)
+        menu = generate_ai_menu(plan_data, audit, db=db)
         plan.weekly_menu = menu
         db.commit()
         return menu
@@ -232,8 +232,17 @@ def regenerate_ai_menu_day(
     audit = SMAECalculationService.calculate(plan_id, db)
     plan_data = {"goal": plan.goal, "weight": plan.weight, "get": plan.get}
 
+    avoid_dishes = []
+    if plan.weekly_menu:
+        for d in plan.weekly_menu.get("semana", []):
+            if d.get("dia") == dia:
+                continue
+            for c in d.get("comidas", []):
+                if c.get("tiempo") in ("Desayuno", "Comida", "Cena") and c.get("itens"):
+                    avoid_dishes.append(c["itens"][0].get("alimento"))
+
     try:
-        day_data = regenerate_single_day(dia, plan_data, audit)
+        day_data = regenerate_single_day(dia, plan_data, audit, db=db, avoid_dishes=avoid_dishes)
         if plan.weekly_menu:
             updated = dict(plan.weekly_menu)
             updated["semana"] = [day_data if d.get("dia") == dia else d for d in updated.get("semana", [])]
@@ -278,7 +287,7 @@ def generate_ai_menu_stream_endpoint(
     def event_source():
         collected: dict[int, dict] = {}
         try:
-            for idx, day_data in generate_ai_menu_stream(plan_data, audit):
+            for idx, day_data in generate_ai_menu_stream(plan_data, audit, db=db):
                 collected[idx] = day_data
                 msg = json.dumps({"idx": idx, "day": day_data})
                 yield f"data: {msg}\n\n"

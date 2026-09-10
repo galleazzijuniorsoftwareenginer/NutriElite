@@ -1,4 +1,5 @@
 import json
+import random
 import urllib.request
 import os
 
@@ -118,6 +119,50 @@ def build_food_context(smae_table, goal):
             lines.append(f"- {group}: {food_str}")
     return "\n".join(lines)
 
+
+def _fetch_recipe_pool(db) -> dict:
+    """Nombres de recetas reales del banco del app (created_by=null),
+    agrupados por tiempo_comida, para enriquecer la variedad con recetas
+    que ya existen dentro de NutriElite en vez de solo la lista fija."""
+    pool = {"Desayuno": [], "Comida": [], "Cena": []}
+    if db is None:
+        return pool
+    try:
+        from backend.models import Recipe
+        rows = db.query(Recipe.nombre, Recipe.tiempo_comida).filter(Recipe.created_by.is_(None)).all()
+        for nombre, tiempo in rows:
+            if tiempo in pool:
+                pool[tiempo].append(nombre)
+    except Exception:
+        pass
+    return pool
+
+
+def _build_dish_pools(db) -> dict:
+    recipe_pool = _fetch_recipe_pool(db)
+    pools = {}
+    for tiempo, base_list in PLATILLOS_TIPICOS.items():
+        merged = list(dict.fromkeys(base_list + recipe_pool.get(tiempo, [])))
+        pools[tiempo] = merged
+    return pools
+
+
+def pick_weekly_dishes(pool: list, count: int = 7) -> list:
+    """Asigna un platillo distinto por día de la semana (sin repetir mientras
+    el pool alcance) — elimina la repetición estructural que ocurría cuando
+    varios días rotaban sobre la misma lista y colisionaban."""
+    items = list(dict.fromkeys(pool))
+    if not items:
+        return [None] * count
+    random.shuffle(items)
+    if len(items) >= count:
+        return items[:count]
+    out = []
+    while len(out) < count:
+        out.extend(items)
+        random.shuffle(items)
+    return out[:count]
+
 CLAUDE_TIMEOUT_SECONDS = 30
 
 def call_claude(prompt: str, api_key: str) -> str:
@@ -155,22 +200,17 @@ def call_claude_with_retry(prompt: str, api_key: str, retries: int = 1) -> str:
             last_error = e
     raise last_error
 
-def rotate(items: list, offset: int) -> list:
-    if not items:
-        return items
-    offset = offset % len(items)
-    return items[offset:] + items[:offset]
-
 def generate_day(dia: str, day_index: int, goal_es: str, weight: float, get: float,
                  protein_g: float, carbs_g: float, fats_g: float,
-                 food_context: str, api_key: str) -> dict:
+                 food_context: str, api_key: str,
+                 platillo_desayuno: str | None = None,
+                 platillo_comida: str | None = None,
+                 platillo_cena: str | None = None,
+                 avoid_dishes: list | None = None) -> dict:
 
-    # Cada dia recebe os catálogos de pratos típicos rotacionados (em vez de um
-    # histórico sequencial), permitindo gerar os 7 dias em paralelo mantendo
-    # variedade — o modelo é instruído a priorizar os primeiros da lista.
-    desayunos = ", ".join(rotate(PLATILLOS_TIPICOS["Desayuno"], day_index * 4))
-    comidas = ", ".join(rotate(PLATILLOS_TIPICOS["Comida"], day_index * 4))
-    cenas = ", ".join(rotate(PLATILLOS_TIPICOS["Cena"], day_index * 4))
+    avoid_txt = ""
+    if avoid_dishes:
+        avoid_txt = f"\nEVITA repetir estos platillos que ya se usaron otros días de esta misma semana: {', '.join(avoid_dishes)}."
 
     prompt = f"""Eres nutricionista clínico mexicano experto en gastronomía regional. Genera el plan alimenticio del {dia}.
 
@@ -181,17 +221,18 @@ DATOS:
 ALIMENTOS BASE (usa como referencia de porciones):
 {food_context}
 
-PLATILLOS MEXICANOS TÍPICOS sugeridos para el {dia} (prioriza los primeros de cada lista; evita duplicar platillos de otros días de la semana):
-- Desayunos: {desayunos}
-- Comidas: {comidas}
-- Cenas: {cenas}
+PLATILLO PRINCIPAL OBLIGATORIO para el {dia} (puedes ajustar guarniciones/acompañantes, pero la preparación base de cada tiempo fuerte DEBE ser esta, exactamente como está escrita, para garantizar variedad real en la semana):
+- Desayuno: {platillo_desayuno or "libre — usa un platillo mexicano típico distinto a chilaquiles"}
+- Comida: {platillo_comida or "libre — usa un platillo mexicano típico"}
+- Cena: {platillo_cena or "libre — usa un platillo mexicano típico"}
+{avoid_txt}
 
 REGLAS:
-1. Usa alimentos y platillos mexicanos auténticos y variados
-2. Puedes combinar alimentos de la lista en preparaciones típicas mexicanas
-3. Prioriza los platillos sugeridos para este día específico, para maximizar variedad en la semana
-4. Cada tiempo debe tener 3-6 alimentos específicos con gramos
-5. Los gramos deben ser realistas para el platillo
+1. Usa alimentos y platillos mexicanos auténticos, reales y variados — nunca inventes combinaciones que no existan en la gastronomía mexicana
+2. El platillo principal de Desayuno, Comida y Cena DEBE ser el indicado arriba, tal cual — no lo cambies ni lo sustituyas por otro
+3. Las colaciones (matutina/vespertina/nocturna) deben variar entre frutas, lácteos y frutos secos — evita repetir el mismo alimento de colación más de una vez en el día
+4. Cada tiempo debe tener 3-6 alimentos específicos con gramos, realistas para la preparación
+5. Los gramos y kcal deben ser nutricionalmente coherentes con el platillo real
 
 Responde SOLO con JSON:
 {{"dia":"{dia}","comidas":[
@@ -214,7 +255,7 @@ def _fallback_day(dia: str, protein_g: float, carbs_g: float, fats_g: float, get
         "error": error,
     }
 
-def _prepare_context(plan_data: dict, audit_data: dict):
+def _prepare_context(plan_data: dict, audit_data: dict, db=None):
     api_key = os.environ.get("ANTHROPIC_API_KEY", "")
     goal = plan_data.get("goal", "maintenance")
     weight = plan_data.get("weight", 70)
@@ -224,25 +265,35 @@ def _prepare_context(plan_data: dict, audit_data: dict):
     fats_g = audit_data["totals"]["fats_g"]
     food_context = build_food_context(audit_data["smae_table"], goal)
     goal_es = {"cut": "pérdida de peso", "bulk": "ganancia muscular", "maintenance": "mantenimiento"}.get(goal, goal)
-    return api_key, goal_es, weight, get, protein_g, carbs_g, fats_g, food_context
+    dish_pools = _build_dish_pools(db)
+    assigned = {
+        tiempo: pick_weekly_dishes(dish_pools.get(tiempo, []), len(DIAS_SEMANA))
+        for tiempo in ("Desayuno", "Comida", "Cena")
+    }
+    return api_key, goal_es, weight, get, protein_g, carbs_g, fats_g, food_context, assigned
 
 
-def _run_day(idx: int, dia: str, goal_es, weight, get, protein_g, carbs_g, fats_g, food_context, api_key) -> dict:
+def _run_day(idx: int, dia: str, goal_es, weight, get, protein_g, carbs_g, fats_g, food_context, api_key, assigned) -> dict:
     try:
-        return generate_day(dia, idx, goal_es, weight, get, protein_g, carbs_g, fats_g, food_context, api_key)
+        return generate_day(
+            dia, idx, goal_es, weight, get, protein_g, carbs_g, fats_g, food_context, api_key,
+            platillo_desayuno=assigned["Desayuno"][idx],
+            platillo_comida=assigned["Comida"][idx],
+            platillo_cena=assigned["Cena"][idx],
+        )
     except Exception as e:
         print(f"ERRO dia {dia}: {e}")
         return _fallback_day(dia, protein_g, carbs_g, fats_g, get, str(e))
 
 
-def generate_ai_menu(plan_data: dict, audit_data: dict) -> dict:
-    api_key, goal_es, weight, get, protein_g, carbs_g, fats_g, food_context = _prepare_context(plan_data, audit_data)
+def generate_ai_menu(plan_data: dict, audit_data: dict, db=None) -> dict:
+    api_key, goal_es, weight, get, protein_g, carbs_g, fats_g, food_context, assigned = _prepare_context(plan_data, audit_data, db)
 
     from concurrent.futures import ThreadPoolExecutor
 
     def run(idx_dia):
         idx, dia = idx_dia
-        return _run_day(idx, dia, goal_es, weight, get, protein_g, carbs_g, fats_g, food_context, api_key)
+        return _run_day(idx, dia, goal_es, weight, get, protein_g, carbs_g, fats_g, food_context, api_key, assigned)
 
     with ThreadPoolExecutor(max_workers=len(DIAS_SEMANA)) as executor:
         semana = list(executor.map(run, enumerate(DIAS_SEMANA)))
@@ -250,16 +301,16 @@ def generate_ai_menu(plan_data: dict, audit_data: dict) -> dict:
     return {"semana": semana}
 
 
-def generate_ai_menu_stream(plan_data: dict, audit_data: dict):
+def generate_ai_menu_stream(plan_data: dict, audit_data: dict, db=None):
     """Gera os 7 dias em paralelo e cede (yield) cada um assim que fica pronto,
     para alimentar um endpoint SSE com progresso ao vivo no front."""
-    api_key, goal_es, weight, get, protein_g, carbs_g, fats_g, food_context = _prepare_context(plan_data, audit_data)
+    api_key, goal_es, weight, get, protein_g, carbs_g, fats_g, food_context, assigned = _prepare_context(plan_data, audit_data, db)
 
     from concurrent.futures import ThreadPoolExecutor, as_completed
 
     with ThreadPoolExecutor(max_workers=len(DIAS_SEMANA)) as executor:
         futures = {
-            executor.submit(_run_day, idx, dia, goal_es, weight, get, protein_g, carbs_g, fats_g, food_context, api_key): idx
+            executor.submit(_run_day, idx, dia, goal_es, weight, get, protein_g, carbs_g, fats_g, food_context, api_key, assigned): idx
             for idx, dia in enumerate(DIAS_SEMANA)
         }
         for future in as_completed(futures):
@@ -268,8 +319,10 @@ def generate_ai_menu_stream(plan_data: dict, audit_data: dict):
             yield idx, day_data
 
 
-def regenerate_single_day(dia: str, plan_data: dict, audit_data: dict) -> dict:
-    """Regenera o cardápio de um único dia (para o fluxo de 'regenerar dia' no front)."""
+def regenerate_single_day(dia: str, plan_data: dict, audit_data: dict, db=None, avoid_dishes: list | None = None) -> dict:
+    """Regenera o cardápio de um único dia (para o fluxo de 'regenerar dia' no front).
+    `avoid_dishes` traz os platillos principais já usados nos outros dias da mesma
+    semana, para não repetir exatamente o que já saiu no restante do plano."""
     if dia not in DIAS_SEMANA:
         raise ValueError(f"Dia inválido: {dia}")
     api_key = os.environ.get("ANTHROPIC_API_KEY", "")
@@ -281,11 +334,24 @@ def regenerate_single_day(dia: str, plan_data: dict, audit_data: dict) -> dict:
     fats_g = audit_data["totals"]["fats_g"]
     food_context = build_food_context(audit_data["smae_table"], goal)
     goal_es = {"cut": "pérdida de peso", "bulk": "ganancia muscular", "maintenance": "mantenimiento"}.get(goal, goal)
-    import random
+
+    dish_pools = _build_dish_pools(db)
+    avoid_set = set(avoid_dishes or [])
+
+    def pick_fresh(tiempo):
+        pool = [d for d in dish_pools.get(tiempo, []) if d not in avoid_set]
+        if not pool:
+            pool = dish_pools.get(tiempo, [])
+        return random.choice(pool) if pool else None
+
     idx = DIAS_SEMANA.index(dia)
-    # offset aleatório extra para não repetir a mesma sugestão da geração anterior
-    idx += random.randint(1, len(PLATILLOS_TIPICOS["Comida"]))
     try:
-        return generate_day(dia, idx, goal_es, weight, get, protein_g, carbs_g, fats_g, food_context, api_key)
+        return generate_day(
+            dia, idx, goal_es, weight, get, protein_g, carbs_g, fats_g, food_context, api_key,
+            platillo_desayuno=pick_fresh("Desayuno"),
+            platillo_comida=pick_fresh("Comida"),
+            platillo_cena=pick_fresh("Cena"),
+            avoid_dishes=list(avoid_set) if avoid_set else None,
+        )
     except Exception as e:
         return _fallback_day(dia, protein_g, carbs_g, fats_g, get, str(e))
