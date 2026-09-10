@@ -85,8 +85,8 @@ def get_all_plans(
         "weight": p.weight,
         "height": p.height,
         "age": p.age,
-        "tmb": round(p.tmb, 0),
-        "get": round(p.get, 0),
+        "tmb": round(p.tmb, 0) if p.tmb is not None else None,
+        "get": round(p.get, 0) if p.get is not None else None,
         "created_at": str(p.created_at)[:10]
     } for p in plans]
 
@@ -330,11 +330,11 @@ def get_plan(
         raise HTTPException(status_code=404, detail="Plano não encontrado")
     return {
         "plan_id": plan.id,
-        "TMB": round(plan.tmb, 2),
-        "GET": round(plan.get, 2),
-        "Protein_g": round(plan.protein, 2),
-        "Carbs_g": round(plan.carbs, 2),
-        "Fats_g": round(plan.fats, 2),
+        "TMB": round(plan.tmb, 2) if plan.tmb is not None else None,
+        "GET": round(plan.get, 2) if plan.get is not None else None,
+        "Protein_g": round(plan.protein, 2) if plan.protein is not None else None,
+        "Carbs_g": round(plan.carbs, 2) if plan.carbs is not None else None,
+        "Fats_g": round(plan.fats, 2) if plan.fats is not None else None,
         "patient_name": plan.patient_name,
         "patient_email": plan.patient_email,
         "patient_phone": plan.patient_phone,

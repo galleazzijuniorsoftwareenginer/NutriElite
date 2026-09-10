@@ -59,7 +59,7 @@ export function DietocalculoStep({
   const { carbG, protG, fatG } = gramsFromPct(get, carbPct, protPct, fatPct)
   const sum = carbPct + protPct + fatPct
   const isValid = Math.round(sum) === 100
-  const imc = plan.weight / (plan.height / 100) ** 2
+  const imc = plan.weight && plan.height ? plan.weight / (plan.height / 100) ** 2 : null
 
   const alerts = useMemo(
     () =>
@@ -83,15 +83,15 @@ export function DietocalculoStep({
           <div className="mb-4 grid grid-cols-3 gap-3 text-center">
             <div>
               <p className="text-xs text-text-2">TMB</p>
-              <p className="font-display text-xl font-semibold text-text">{plan.tmb.toFixed(0)}</p>
+              <p className="font-display text-xl font-semibold text-text">{plan.tmb != null ? plan.tmb.toFixed(0) : '—'}</p>
             </div>
             <div>
               <p className="text-xs text-text-2">GET base</p>
-              <p className="font-display text-xl font-semibold text-text">{plan.originalGet.toFixed(0)}</p>
+              <p className="font-display text-xl font-semibold text-text">{plan.originalGet != null ? plan.originalGet.toFixed(0) : '—'}</p>
             </div>
             <div>
               <p className="text-xs text-text-2">IMC</p>
-              <p className="font-display text-xl font-semibold text-text">{imc.toFixed(1)}</p>
+              <p className="font-display text-xl font-semibold text-text">{imc != null ? imc.toFixed(1) : '—'}</p>
             </div>
           </div>
 
@@ -144,7 +144,7 @@ export function DietocalculoStep({
             ].map((m) => (
               <div key={m.label} className="rounded-md bg-bg p-2.5">
                 <p className={`font-semibold ${m.color}`}>{m.g.toFixed(1)}g</p>
-                <p className="text-text-3">{(m.g / plan.weight).toFixed(2)} g/kg</p>
+                <p className="text-text-3">{plan.weight ? `${(m.g / plan.weight).toFixed(2)} g/kg` : '—'}</p>
                 <p className="text-text-3">{m.kcal.toFixed(0)} kcal</p>
               </div>
             ))}
