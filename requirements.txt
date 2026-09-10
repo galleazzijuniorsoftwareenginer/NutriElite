@@ -36,3 +36,4 @@ psycopg2-binary
 stripe
 stripe
 resend
+requests

@@ -151,7 +151,20 @@ def export_plan_pdf(
                 "logo": profile.logo_base64,
             }
     override_plan = pdf_plan if pdf_plan is not plan else None
-    pdf_buffer = generate_plan_pdf(plan, menu_data, perfil_data, override_plan=override_plan)
+
+    consultations = None
+    if plan.patient_id:
+        from backend.models import Consultation
+        rows = (
+            db.query(Consultation)
+            .filter(Consultation.patient_id == plan.patient_id, Consultation.peso.isnot(None))
+            .order_by(Consultation.fecha.asc())
+            .all()
+        )
+        if rows:
+            consultations = [{"fecha": r.fecha, "peso": r.peso} for r in rows]
+
+    pdf_buffer = generate_plan_pdf(plan, menu_data, perfil_data, override_plan=override_plan, consultations=consultations)
 
     return StreamingResponse(
         pdf_buffer,
