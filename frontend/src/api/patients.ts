@@ -13,9 +13,16 @@ export interface PatientPayload {
   blood_type?: string
   activity_category?: string
   activity_type?: string
+  etiquetas?: string[]
 }
 
-export async function listPatients(params?: { status?: string; sort?: string }) {
+export async function listPatients(params?: {
+  status?: string
+  sort?: string
+  etiqueta?: string
+  app?: 'activada' | 'desactivada'
+  plan_hasta?: string
+}) {
   const { data } = await api.get<Patient[]>('/patients', { params })
   return data
 }

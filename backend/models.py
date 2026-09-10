@@ -33,6 +33,7 @@ class Patient(Base):
     blood_type = Column(String, nullable=True)  # A+|A-|B+|B-|AB+|AB-|O+|O-
     activity_category = Column(String, nullable=True)  # sedentario|caminata|ejercicio_moderado|deporte_recreativo|deporte_competitivo
     activity_type = Column(String, nullable=True)  # descripción libre: "Camina 30min 3x/sem", "Fútbol competitivo"
+    etiquetas = Column(JSON, nullable=True)  # ["Diabetes","Prioritario",...] — filtro libre en Mis pacientes
     user_id = Column(Integer, ForeignKey("users.id"))
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
@@ -75,6 +76,7 @@ class Plan(Base):
     weekly_menu = Column(JSON, nullable=True)
     meal_distribution = Column(JSON, nullable=True)
     public_token = Column(String, unique=True, nullable=True, index=True)
+    portal_last_accessed_at = Column(DateTime(timezone=True), nullable=True)  # última vez que el paciente abrió su portal
 from sqlalchemy import Column, Integer, String, Float
 from backend.database import Base
 

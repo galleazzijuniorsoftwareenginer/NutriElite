@@ -39,6 +39,9 @@ def get_public_plan(public_token: str, db: Session = Depends(get_db)):
     if not plan:
         raise HTTPException(status_code=404, detail="Enlace no válido o expirado")
 
+    plan.portal_last_accessed_at = datetime.utcnow()
+    db.commit()
+
     weekly_menu = plan.weekly_menu or {"semana": []}
     shopping_list = build_shopping_list(weekly_menu) if weekly_menu.get("semana") else []
 

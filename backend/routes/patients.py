@@ -1,3 +1,4 @@
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from backend.database import SessionLocal
@@ -27,6 +28,7 @@ class PatientCreate(BaseModel):
     blood_type: Optional[str] = ""
     activity_type: Optional[str] = ""
     activity_category: Optional[str] = ""
+    etiquetas: Optional[list[str]] = []
 
 @router.get("/patients")
 def list_patients(
@@ -34,6 +36,9 @@ def list_patients(
     token: dict = Depends(verify_token),
     status: str = None,
     sort: str = "recent",
+    etiqueta: str = None,
+    app: str = None,  # todos|activada|desactivada — según si el último plan tiene portal público generado
+    plan_hasta: str = None,  # "YYYY-MM-DD" — solo pacientes cuyo último plan fue asignado hasta esa fecha
 ):
     username = token["sub"]
     user = db.query(User).filter(User.username == username).first()
@@ -47,9 +52,30 @@ def list_patients(
     else:
         query = query.order_by(Patient.created_at.desc())
     patients = query.all()
+
+    plan_hasta_date = None
+    if plan_hasta:
+        try:
+            plan_hasta_date = datetime.strptime(plan_hasta, "%Y-%m-%d").date()
+        except ValueError:
+            plan_hasta_date = None
+
     result = []
     for p in patients:
+        if etiqueta and etiqueta not in (p.etiquetas or []):
+            continue
         plans = db.query(Plan).filter(Plan.patient_id == p.id).order_by(Plan.created_at.desc()).all()
+        last_plan = plans[0] if plans else None
+
+        if plan_hasta_date and (not last_plan or last_plan.created_at.date() > plan_hasta_date):
+            continue
+
+        app_activada = bool(last_plan and last_plan.public_token)
+        if app == "activada" and not app_activada:
+            continue
+        if app == "desactivada" and app_activada:
+            continue
+
         result.append({
             "id": p.id,
             "name": p.name,
@@ -63,11 +89,14 @@ def list_patients(
             "blood_type": p.blood_type,
             "activity_type": p.activity_type,
             "activity_category": p.activity_category,
+            "etiquetas": p.etiquetas or [],
             "created_at": str(p.created_at),
             "total_plans": len(plans),
-            "last_plan": str(plans[0].created_at) if plans else None,
-            "last_goal": plans[0].goal if plans else None,
-            "last_plan_id": plans[0].id if plans else None,
+            "last_plan": str(last_plan.created_at) if last_plan else None,
+            "last_goal": last_plan.goal if last_plan else None,
+            "last_plan_id": last_plan.id if last_plan else None,
+            "app_activada": app_activada,
+            "portal_last_accessed": str(last_plan.portal_last_accessed_at) if last_plan and last_plan.portal_last_accessed_at else None,
         })
     if sort == "last_plan":
         result.sort(key=lambda r: r["last_plan"] or "", reverse=True)
@@ -89,6 +118,7 @@ def create_patient(data: PatientCreate, db: Session = Depends(get_db), token: di
         blood_type=data.blood_type,
         activity_type=data.activity_type,
         activity_category=data.activity_category,
+        etiquetas=data.etiquetas or [],
         user_id=user.id,
     )
     db.add(patient)
@@ -107,6 +137,7 @@ def create_patient(data: PatientCreate, db: Session = Depends(get_db), token: di
         "blood_type": patient.blood_type,
         "activity_type": patient.activity_type,
         "activity_category": patient.activity_category,
+        "etiquetas": patient.etiquetas or [],
     }
 
 @router.get("/patients/{patient_id}/plans")
@@ -131,6 +162,7 @@ def patient_plans(patient_id: int, db: Session = Depends(get_db), token: dict = 
             "blood_type": patient.blood_type,
             "activity_type": patient.activity_type,
             "activity_category": patient.activity_category,
+            "etiquetas": patient.etiquetas or [],
         },
         "plans": [{"id": p.id, "created_at": str(p.created_at), "goal": p.goal, "weight": p.weight, "height": p.height, "get": p.get, "tmb": p.tmb} for p in plans]
     }
@@ -154,6 +186,7 @@ def update_patient(patient_id: int, data: PatientCreate, db: Session = Depends(g
     patient.blood_type = data.blood_type
     patient.activity_type = data.activity_type
     patient.activity_category = data.activity_category
+    patient.etiquetas = data.etiquetas or []
     db.commit()
     db.refresh(patient)
     return {
@@ -169,6 +202,7 @@ def update_patient(patient_id: int, data: PatientCreate, db: Session = Depends(g
         "blood_type": patient.blood_type,
         "activity_type": patient.activity_type,
         "activity_category": patient.activity_category,
+        "etiquetas": patient.etiquetas or [],
     }
 
 @router.delete("/patients/{patient_id}")

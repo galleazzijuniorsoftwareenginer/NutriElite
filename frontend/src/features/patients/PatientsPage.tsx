@@ -35,6 +35,14 @@ function lastPlanLabel(dateStr: string | null): string {
   return `Último plan: hace ${days} días`
 }
 
+function lastUsedLabel(dateStr: string | null): string {
+  const days = daysSince(dateStr)
+  if (days === null) return 'Sin uso registrado'
+  if (days === 0) return 'Hoy'
+  if (days === 1) return 'Ayer'
+  return `Hace ${days} días`
+}
+
 function CopyPortalLinkButton({ planId, mode }: { planId: number; mode: 'completo' | 'agendar' }) {
   const [state, setState] = useState<'idle' | 'loading' | 'copied'>('idle')
 
@@ -80,6 +88,7 @@ function PatientForm({
   const [bloodType, setBloodType] = useState(initial?.blood_type ?? '')
   const [activityCategory, setActivityCategory] = useState(initial?.activity_category ?? '')
   const [activityType, setActivityType] = useState(initial?.activity_type ?? '')
+  const [etiquetasText, setEtiquetasText] = useState((initial?.etiquetas ?? []).join(', '))
 
   return (
     <form
@@ -93,6 +102,7 @@ function PatientForm({
           blood_type: bloodType,
           activity_category: activityCategory,
           activity_type: activityType,
+          etiquetas: etiquetasText.split(',').map((t) => t.trim()).filter(Boolean),
         })
       }}
       className="flex flex-col gap-4"
@@ -105,6 +115,9 @@ function PatientForm({
       </FieldWrap>
       <FieldWrap label="Teléfono">
         <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+      </FieldWrap>
+      <FieldWrap label="Etiquetas" hint="Separadas por coma — ej. Diabetes, Prioritario, Deportista">
+        <Input value={etiquetasText} onChange={(e) => setEtiquetasText(e.target.value)} placeholder="Diabetes, Prioritario…" />
       </FieldWrap>
 
       <div className="h-px bg-border" />
@@ -178,13 +191,29 @@ export function PatientsPage() {
   const queryClient = useQueryClient()
   const [statusFilter, setStatusFilter] = useState<PatientStatus | 'todos'>('todos')
   const [sort, setSort] = useState<'recent' | 'name' | 'oldest' | 'last_plan'>('recent')
+  const [etiquetaFilter, setEtiquetaFilter] = useState('')
+  const [appFilter, setAppFilter] = useState<'todos' | 'activada' | 'desactivada'>('todos')
+  const [planHasta, setPlanHasta] = useState('')
   const { data: patients, isLoading } = useQuery({
-    queryKey: ['patients', statusFilter, sort],
-    queryFn: () => listPatients({ status: statusFilter === 'todos' ? undefined : statusFilter, sort }),
+    queryKey: ['patients', statusFilter, sort, etiquetaFilter, appFilter, planHasta],
+    queryFn: () =>
+      listPatients({
+        status: statusFilter === 'todos' ? undefined : statusFilter,
+        sort,
+        etiqueta: etiquetaFilter || undefined,
+        app: appFilter === 'todos' ? undefined : appFilter,
+        plan_hasta: planHasta || undefined,
+      }),
   })
   const [search, setSearch] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Patient | undefined>(undefined)
+
+  const allTags = useMemo(() => {
+    const set = new Set<string>()
+    for (const p of patients ?? []) for (const t of p.etiquetas || []) set.add(t)
+    return Array.from(set).sort()
+  }, [patients])
 
   const createMut = useMutation({
     mutationFn: createPatient,
@@ -273,6 +302,48 @@ export function PatientsPage() {
         </div>
       </div>
 
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="inline-flex gap-0.5 rounded-full border border-border bg-bg p-1">
+          {([
+            ['todos', 'Todos'],
+            ['activada', 'App activada'],
+            ['desactivada', 'App desactivada'],
+          ] as const).map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setAppFilter(key)}
+              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                appFilter === key ? 'bg-surface text-accent shadow-card' : 'text-text-2'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <Select value={etiquetaFilter} onChange={(e) => setEtiquetaFilter(e.target.value)} className="w-auto">
+          <option value="">Todas las etiquetas</option>
+          {allTags.map((t) => (
+            <option key={t} value={t}>{t}</option>
+          ))}
+        </Select>
+        <label className="flex items-center gap-2 text-xs text-text-2">
+          Plan asignado hasta
+          <Input type="date" value={planHasta} onChange={(e) => setPlanHasta(e.target.value)} className="w-auto" />
+        </label>
+        {(etiquetaFilter || appFilter !== 'todos' || planHasta) && (
+          <button
+            onClick={() => {
+              setEtiquetaFilter('')
+              setAppFilter('todos')
+              setPlanHasta('')
+            }}
+            className="text-xs font-medium text-text-3 underline hover:text-text-2"
+          >
+            Limpiar filtros
+          </button>
+        )}
+      </div>
+
       <Card className="p-0 overflow-hidden">
         {isLoading ? (
           <p className="p-6 text-sm text-text-3">Cargando…</p>
@@ -293,9 +364,18 @@ export function PatientsPage() {
                       {p.status === 'activo' && (daysSince(p.last_plan) === null || (daysSince(p.last_plan) ?? 0) >= 30) && (
                         <Badge tone="warn">⏰ Seguimiento</Badge>
                       )}
+                      <Badge tone={p.app_activada ? 'accent' : 'neutral'}>
+                        {p.app_activada ? '📱 App activada' : '📱 App desactivada'}
+                      </Badge>
+                      {p.etiquetas.map((t) => (
+                        <span key={t} className="rounded-full bg-bg px-2 py-0.5 text-[10px] font-medium text-text-2">
+                          {t}
+                        </span>
+                      ))}
                     </div>
                     <p className="truncate text-xs text-text-3">
                       {p.email || 'Sin email'} {p.phone && `· ${p.phone}`} · {lastPlanLabel(p.last_plan)}
+                      {p.app_activada && ` · Último uso: ${lastUsedLabel(p.portal_last_accessed)}`}
                     </p>
                   </div>
                 </div>

@@ -54,11 +54,14 @@ export interface Patient {
   blood_type: string | null
   activity_category: string | null
   activity_type: string | null
+  etiquetas: string[]
   created_at: string
   total_plans: number
   last_plan: string | null
   last_goal: Goal | null
   last_plan_id: number | null
+  app_activada: boolean
+  portal_last_accessed: string | null
 }
 
 export interface FoodGroupItem {
