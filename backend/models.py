@@ -47,6 +47,8 @@ class Plan(Base):
     gender = Column(String)
     activity_level = Column(Float)
     goal = Column(String)
+    body_fat_percent = Column(Float, nullable=True)  # requerido por las fórmulas Katch-McArdle/Cunningham
+    formula = Column(String, nullable=True)
 
     tmb = Column(Float)
     get = Column(Float)

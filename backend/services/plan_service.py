@@ -9,7 +9,8 @@ def create_plan(data, db, user_id):
         data.height,
         data.age,
         data.gender,
-        data.formula
+        data.formula,
+        body_fat_percent=getattr(data, "body_fat_percent", None)
     )
 
     total_calories = tmb * data.activity_level
@@ -37,6 +38,8 @@ def create_plan(data, db, user_id):
         gender=data.gender,
         activity_level=data.activity_level,
         goal=data.goal,
+        formula=data.formula,
+        body_fat_percent=getattr(data, "body_fat_percent", None),
         tmb=tmb,
         get=total_calories,
         protein=protein,

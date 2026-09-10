@@ -1,4 +1,4 @@
-export type Formula = 'mifflin' | 'harris' | 'schofield'
+export type Formula = 'mifflin' | 'harris' | 'schofield' | 'katch' | 'cunningham'
 export type Goal = 'cut' | 'bulk' | 'maintenance'
 export type Gender = 'male' | 'female'
 
@@ -14,6 +14,7 @@ export interface PlanRequest {
   activity_level: number
   goal: Goal
   formula: Formula
+  body_fat_percent?: number | null
 }
 
 export interface PlanCreateResponse {

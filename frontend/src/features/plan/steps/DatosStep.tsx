@@ -19,11 +19,22 @@ interface Props {
   onCreated: (plan: WizardPlanData) => void
 }
 
-const FORMULAS: { value: Formula; label: string; hint: string }[] = [
+const FORMULAS: { value: Formula; label: string; hint: string; needsBodyFat?: boolean }[] = [
   { value: 'mifflin', label: 'Mifflin-St Jeor', hint: 'La más usada en adultos — buena precisión general.' },
   { value: 'harris', label: 'Harris-Benedict', hint: 'Fórmula clásica, tiende a sobreestimar un poco el GET.' },
-  { value: 'schofield', label: 'Schofield', hint: 'Recomendada para población pediátrica.' },
+  { value: 'schofield', label: 'Schofield', hint: 'OMS/FAO/UNU — 6 franjas por edad y sexo, de 0 a 60+ años.' },
+  { value: 'katch', label: 'Katch-McArdle', hint: 'Usa masa magra — requiere % de grasa corporal conocido.', needsBodyFat: true },
+  { value: 'cunningham', label: 'Cunningham', hint: 'Como Katch-McArdle pero más agresiva — atletas muy magros.', needsBodyFat: true },
 ]
+
+function schofieldCategory(age: number): string {
+  if (age < 3) return '0–3 años'
+  if (age <= 10) return '3–10 años'
+  if (age <= 18) return '10–18 años'
+  if (age <= 30) return '18–30 años'
+  if (age <= 60) return '30–60 años'
+  return '60+ años'
+}
 
 export function DatosStep({ initial, onCreated }: Props) {
   const [patientName, setPatientName] = useState(initial.patientName)
@@ -36,6 +47,7 @@ export function DatosStep({ initial, onCreated }: Props) {
   const [activityLevel, setActivityLevel] = useState('1.55')
   const [goal, setGoal] = useState<Goal>('cut')
   const [formula, setFormula] = useState<Formula>('mifflin')
+  const [bodyFatPercent, setBodyFatPercent] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [prefsApplied, setPrefsApplied] = useState(false)
@@ -68,6 +80,12 @@ export function DatosStep({ initial, onCreated }: Props) {
       setError('La altura debe estar en centímetros (ej. 165), entre 40 y 250 cm.')
       return
     }
+    const needsBodyFat = FORMULAS.find((f) => f.value === formula)?.needsBodyFat
+    const bf = bodyFatPercent ? parseFloat(bodyFatPercent) : null
+    if (needsBodyFat && (!bf || bf < 3 || bf > 60)) {
+      setError('Esta fórmula requiere el % de grasa corporal (entre 3 y 60).')
+      return
+    }
     setLoading(true)
     try {
       const res = await createPlan({
@@ -82,6 +100,7 @@ export function DatosStep({ initial, onCreated }: Props) {
         activity_level: parseFloat(activityLevel),
         goal,
         formula,
+        body_fat_percent: needsBodyFat ? bf : null,
       })
       onCreated({
         planId: res.plan_id,
@@ -162,7 +181,10 @@ export function DatosStep({ initial, onCreated }: Props) {
             <FieldWrap label="Altura (cm)">
               <Input type="number" step="0.1" value={height} onChange={(e) => setHeight(e.target.value)} required />
             </FieldWrap>
-            <FieldWrap label="Edad">
+            <FieldWrap
+              label="Edad"
+              hint={formula === 'schofield' && age ? `Categoría Schofield: ${schofieldCategory(parseInt(age, 10) || 0)}` : undefined}
+            >
               <Input type="number" value={age} onChange={(e) => setAge(e.target.value)} required />
             </FieldWrap>
             <FieldWrap label="Género">
@@ -172,6 +194,20 @@ export function DatosStep({ initial, onCreated }: Props) {
               </Select>
             </FieldWrap>
           </div>
+
+          {FORMULAS.find((f) => f.value === formula)?.needsBodyFat && (
+            <FieldWrap label="% de grasa corporal" hint="Medido por bioimpedancia o pliegues cutáneos — requerido por esta fórmula.">
+              <Input
+                type="number"
+                step="0.1"
+                value={bodyFatPercent}
+                onChange={(e) => setBodyFatPercent(e.target.value)}
+                placeholder="Ej. 18.5"
+                className="max-w-[160px]"
+                required
+              />
+            </FieldWrap>
+          )}
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <FieldWrap label="Nivel de actividad">
