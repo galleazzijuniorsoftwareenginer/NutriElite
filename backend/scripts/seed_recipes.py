@@ -7,6 +7,7 @@ RECIPES = [
         "nombre": "Huevos a la mexicana con tortilla de maíz",
         "tiempo_comida": "Desayuno",
         "goal_tags": ["bulk", "maintenance"],
+        "categoria_tags": ["Alto en proteína"],
         "ingredientes": [
             {"alimento": "Huevo entero", "cantidad_g": 120},
             {"alimento": "Jitomate picado", "cantidad_g": 60},
@@ -21,6 +22,7 @@ RECIPES = [
         "nombre": "Claras revueltas con espinaca y avena",
         "tiempo_comida": "Desayuno",
         "goal_tags": ["cut"],
+        "categoria_tags": ["Bajo en grasa", "Alto en proteína"],
         "ingredientes": [
             {"alimento": "Clara de huevo", "cantidad_g": 200},
             {"alimento": "Espinaca fresca", "cantidad_g": 60},
@@ -87,6 +89,7 @@ RECIPES = [
         "nombre": "Malteada de proteína con almendras",
         "tiempo_comida": "Colación",
         "goal_tags": ["bulk"],
+        "categoria_tags": ["Alto en proteína", "Nuevas"],
         "ingredientes": [
             {"alimento": "Proteína en polvo", "cantidad_g": 30},
             {"alimento": "Leche entera", "cantidad_g": 250},
@@ -100,6 +103,7 @@ RECIPES = [
         "nombre": "Pechuga a la plancha con arroz integral y verduras al vapor",
         "tiempo_comida": "Comida",
         "goal_tags": ["cut", "maintenance"],
+        "categoria_tags": ["Bajo en grasa", "Alto en proteína"],
         "ingredientes": [
             {"alimento": "Pechuga de pollo", "cantidad_g": 150},
             {"alimento": "Arroz integral cocido", "cantidad_g": 100},
@@ -170,6 +174,7 @@ RECIPES = [
         "nombre": "Ensalada de atún con verduras frescas",
         "tiempo_comida": "Cena",
         "goal_tags": ["cut"],
+        "categoria_tags": ["Bajo en grasa", "Ensaladas"],
         "ingredientes": [
             {"alimento": "Atún en agua", "cantidad_g": 100},
             {"alimento": "Lechuga", "cantidad_g": 80},
@@ -218,6 +223,112 @@ RECIPES = [
         ],
         "instrucciones": "Calienta el nopal cocido, sirve en tortillas con queso panela y salsa al gusto.",
         "kcal_aprox": 280,
+    },
+    # ---------- ENSALADAS ----------
+    {
+        "nombre": "Ensalada mediterránea con queso feta",
+        "tiempo_comida": "Comida",
+        "goal_tags": ["cut", "maintenance"],
+        "categoria_tags": ["Ensaladas", "Bajo en grasa"],
+        "ingredientes": [
+            {"alimento": "Lechuga romana", "cantidad_g": 100},
+            {"alimento": "Jitomate cherry", "cantidad_g": 80},
+            {"alimento": "Pepino", "cantidad_g": 60},
+            {"alimento": "Aceitunas negras", "cantidad_g": 20},
+            {"alimento": "Queso feta", "cantidad_g": 30},
+            {"alimento": "Aceite de oliva", "cantidad_g": 8},
+        ],
+        "instrucciones": "Mezcla las verduras picadas, agrega el queso feta desmoronado y las aceitunas, adereza con aceite de oliva y orégano.",
+        "kcal_aprox": 290,
+    },
+    {
+        "nombre": "Ensalada de nopales con queso panela",
+        "tiempo_comida": "Comida",
+        "goal_tags": ["cut"],
+        "categoria_tags": ["Ensaladas", "Bajo en grasa"],
+        "ingredientes": [
+            {"alimento": "Nopal cocido", "cantidad_g": 150},
+            {"alimento": "Jitomate", "cantidad_g": 60},
+            {"alimento": "Cebolla morada", "cantidad_g": 20},
+            {"alimento": "Cilantro", "cantidad_g": 5},
+            {"alimento": "Queso panela", "cantidad_g": 40},
+        ],
+        "instrucciones": "Mezcla el nopal cocido con jitomate, cebolla y cilantro picados; agrega el queso panela en cubos y sazona con limón.",
+        "kcal_aprox": 210,
+    },
+    {
+        "nombre": "Ensalada de quinoa con pollo y aguacate",
+        "tiempo_comida": "Comida",
+        "goal_tags": ["maintenance", "bulk"],
+        "categoria_tags": ["Ensaladas", "Alto en proteína"],
+        "ingredientes": [
+            {"alimento": "Quinoa cocida", "cantidad_g": 100},
+            {"alimento": "Pechuga de pollo a la plancha", "cantidad_g": 120},
+            {"alimento": "Aguacate", "cantidad_g": 50},
+            {"alimento": "Jitomate cherry", "cantidad_g": 60},
+        ],
+        "instrucciones": "Combina la quinoa con el pollo desmenuzado, aguacate en cubos y jitomate cherry; adereza con limón y sal al gusto.",
+        "kcal_aprox": 420,
+    },
+    {
+        "nombre": "Ensalada César ligera con pollo",
+        "tiempo_comida": "Comida",
+        "goal_tags": ["cut", "maintenance"],
+        "categoria_tags": ["Ensaladas"],
+        "ingredientes": [
+            {"alimento": "Lechuga romana", "cantidad_g": 120},
+            {"alimento": "Pechuga de pollo a la plancha", "cantidad_g": 120},
+            {"alimento": "Queso parmesano", "cantidad_g": 15},
+            {"alimento": "Crutones integrales", "cantidad_g": 20},
+            {"alimento": "Aderezo César light", "cantidad_g": 20},
+        ],
+        "instrucciones": "Corta la lechuga y mezcla con el pollo desmenuzado, queso parmesano y crutones; agrega el aderezo al final.",
+        "kcal_aprox": 340,
+    },
+    # ---------- KETO ----------
+    {
+        "nombre": "Aguacate relleno de atún con mayonesa",
+        "tiempo_comida": "Comida",
+        "goal_tags": ["cut"],
+        "categoria_tags": ["Keto", "Bajo en grasa"],
+        "ingredientes": [
+            {"alimento": "Aguacate", "cantidad_g": 150},
+            {"alimento": "Atún en agua", "cantidad_g": 100},
+            {"alimento": "Mayonesa", "cantidad_g": 15},
+            {"alimento": "Apio picado", "cantidad_g": 20},
+        ],
+        "instrucciones": "Corta el aguacate a la mitad y retira un poco de pulpa; mezcla con atún, mayonesa y apio, y rellena las mitades.",
+        "kcal_aprox": 380,
+    },
+    # ---------- NAVIDAD ----------
+    {
+        "nombre": "Pavo navideño con vegetales asados",
+        "tiempo_comida": "Cena",
+        "goal_tags": ["maintenance", "bulk"],
+        "categoria_tags": ["Navidad", "Alto en proteína"],
+        "ingredientes": [
+            {"alimento": "Pechuga de pavo horneada", "cantidad_g": 150},
+            {"alimento": "Ejotes", "cantidad_g": 80},
+            {"alimento": "Zanahoria baby", "cantidad_g": 80},
+            {"alimento": "Arándano deshidratado", "cantidad_g": 15},
+        ],
+        "instrucciones": "Hornea la pechuga de pavo sazonada con hierbas. Asa los vegetales con un poco de aceite de oliva y decora con arándanos.",
+        "kcal_aprox": 410,
+    },
+    {
+        "nombre": "Ponche de frutas sin azúcar añadida",
+        "tiempo_comida": "Colación",
+        "goal_tags": ["cut", "maintenance"],
+        "categoria_tags": ["Navidad", "Bajo en grasa"],
+        "ingredientes": [
+            {"alimento": "Guayaba", "cantidad_g": 100},
+            {"alimento": "Manzana", "cantidad_g": 100},
+            {"alimento": "Caña", "cantidad_g": 60},
+            {"alimento": "Canela en raja", "cantidad_g": 3},
+            {"alimento": "Tejocote", "cantidad_g": 60},
+        ],
+        "instrucciones": "Hierve todas las frutas con la canela por 20 minutos. Sirve caliente sin azúcar añadida.",
+        "kcal_aprox": 120,
     },
 ]
 

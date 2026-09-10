@@ -20,17 +20,22 @@ def generate_plan_pdf(plan, menu_data=None, perfil_data=None, override_plan=None
     audit = SMAECalculationService.calculate(plan.id, db, override_plan=override_plan)
     db.close()
 
-    height_m = plan.height / 100
-    bmi = round(plan.weight / (height_m ** 2), 2)
-
-    if bmi < 18.5:
-        bmi_class = "Bajo peso"
-    elif bmi < 25:
-        bmi_class = "Normal"
-    elif bmi < 30:
-        bmi_class = "Sobrepeso"
+    if plan.height and plan.weight:
+        height_m = plan.height / 100
+        bmi = round(plan.weight / (height_m ** 2), 2)
+        if bmi < 18.5:
+            bmi_class = "Bajo peso"
+        elif bmi < 25:
+            bmi_class = "Normal"
+        elif bmi < 30:
+            bmi_class = "Sobrepeso"
+        else:
+            bmi_class = "Obesidad"
     else:
-        bmi_class = "Obesidad"
+        # Plan asignado desde la biblioteca clínica (plantilla por patología):
+        # aún no se capturó la antropometría real del paciente.
+        bmi = "—"
+        bmi_class = "Pendiente de captura"
 
     # Cabeçalho com branding do nutricionista
     import sys
@@ -102,11 +107,11 @@ def generate_plan_pdf(plan, menu_data=None, perfil_data=None, override_plan=None
         ["Paciente:", f"{plan.patient_name}"],
         ["Email:", f"{plan.patient_email}"],
         ["Teléfono:", f"{plan.patient_phone}"],
-        ["Edad:", f"{plan.age} años"],
-        ["Género:", {"male":"Masculino","female":"Femenino"}.get(plan.gender, plan.gender)],
-        ["Peso:", f"{plan.weight} kg"],
-        ["Altura:", f"{plan.height} cm"],
-        ["Nivel de actividad:", f"{plan.activity_level}"],
+        ["Edad:", f"{plan.age} años" if plan.age else "—"],
+        ["Género:", {"male":"Masculino","female":"Femenino"}.get(plan.gender, plan.gender) if plan.gender else "—"],
+        ["Peso:", f"{plan.weight} kg" if plan.weight else "—"],
+        ["Altura:", f"{plan.height} cm" if plan.height else "—"],
+        ["Nivel de actividad:", f"{plan.activity_level}" if plan.activity_level else "—"],
         ["Objetivo:", {"cut":"Pérdida de peso","bulk":"Ganancia de masa","maintenance":"Mantenimiento"}.get(plan.goal, plan.goal)],
         ["Fecha:", f"{plan.created_at}"],
     ]

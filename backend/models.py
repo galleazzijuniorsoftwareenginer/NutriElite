@@ -212,9 +212,11 @@ class Recipe(Base):
     nombre = Column(String, nullable=False)
     tiempo_comida = Column(String, nullable=False)  # Desayuno|Colación|Comida|Cena
     goal_tags = Column(JSON, nullable=True)  # ["cut","bulk","maintenance"]
+    categoria_tags = Column(JSON, nullable=True)  # ["Navidad","Nuevas","Bajo en grasa",...]
     ingredientes = Column(JSON, nullable=False)  # [{"alimento","cantidad_g"}]
     instrucciones = Column(Text, nullable=True)
     kcal_aprox = Column(Float, nullable=True)
+    imagen_url = Column(String, nullable=True)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
@@ -253,6 +255,35 @@ class Appointment(Base):
     notes = Column(Text, nullable=True)
     reminder_sent = Column(Integer, default=0)
 
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class PathologyTemplate(Base):
+    """Plan prediseñado por patología/objetivo (biblioteca clínica) — contenido
+    curado, no ligado a un paciente. Se asigna copiando su weekly_menu a un
+    Plan nuevo."""
+    __tablename__ = "pathology_templates"
+
+    id = Column(Integer, primary_key=True, index=True)
+    nombre = Column(String, nullable=False)
+    categoria = Column(String, nullable=False, index=True)  # "vegano","diabetes","keto",...
+    kcal_objetivo = Column(Float, nullable=False)
+    descripcion = Column(Text, nullable=True)
+    tiempos_por_dia = Column(Integer, default=5)
+    weekly_menu = Column(JSON, nullable=False)  # misma forma que Plan.weekly_menu
+    imagen_url = Column(String, nullable=True)
+    activo = Column(Integer, default=1)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class RecipeFavorite(Base):
+    """Receta marcada como favorita por un nutricionista."""
+    __tablename__ = "recipe_favorites"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    recipe_id = Column(Integer, ForeignKey("recipes.id"), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 

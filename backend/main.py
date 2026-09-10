@@ -13,6 +13,8 @@ from backend.routes.recipes import router as recipes_router
 from backend.routes.public import router as public_router
 from backend.routes.reference import router as reference_router
 from backend.routes.classroom import router as classroom_router
+from backend.routes.pathology_templates import router as pathology_templates_router
+from backend.scripts.seed_pathology_templates import seed_pathology_templates
 from backend.scripts.seed_recipes import seed_recipes
 from backend.routes import smae
 from backend.database import engine
@@ -51,11 +53,14 @@ if engine.dialect.name == "postgresql":
         conn.execute(text("ALTER TABLE plans ADD COLUMN IF NOT EXISTS public_token VARCHAR"))
         conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS ix_plans_public_token ON plans (public_token)"))
         conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR DEFAULT 'professional'"))
+        conn.execute(text("ALTER TABLE recipes ADD COLUMN IF NOT EXISTS categoria_tags JSON"))
+        conn.execute(text("ALTER TABLE recipes ADD COLUMN IF NOT EXISTS imagen_url VARCHAR"))
         conn.commit()
 
 seed()
 seed_default_user()
 seed_recipes()
+seed_pathology_templates()
 
 app.include_router(calculator_router)
 app.include_router(auth_router)
@@ -71,6 +76,7 @@ app.include_router(recipes_router)
 app.include_router(public_router)
 app.include_router(reference_router)
 app.include_router(classroom_router)
+app.include_router(pathology_templates_router)
 
 @app.get("/app")
 @app.get("/app/")
