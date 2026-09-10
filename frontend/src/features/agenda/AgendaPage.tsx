@@ -21,7 +21,7 @@ const STATUS_TONE: Record<string, 'accent' | 'blue' | 'warn' | 'danger' | 'neutr
   no_show: 'warn',
 }
 
-function RescheduleForm({ appt, onDone }: { appt: Appointment; onDone: () => void }) {
+export function RescheduleForm({ appt, onDone }: { appt: Appointment; onDone: () => void }) {
   const queryClient = useQueryClient()
   const [value, setValue] = useState(() => {
     const d = new Date(appt.scheduled_at)
