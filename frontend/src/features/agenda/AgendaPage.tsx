@@ -1,12 +1,162 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
-import { deleteAppointment, listAppointments, sendAppointmentReminder, updateAppointment, type Appointment } from '../../api/appointments'
+import { Link, useNavigate } from 'react-router-dom'
+import { createAppointment, deleteAppointment, listAppointments, sendAppointmentReminder, updateAppointment, type Appointment } from '../../api/appointments'
+import { listPatients } from '../../api/patients'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { Badge } from '../../components/Badge'
 import { Modal } from '../../components/Modal'
-import { FieldWrap, Input } from '../../components/Field'
+import { FieldWrap, Input, Select } from '../../components/Field'
+
+const GRID_START_HOUR = 8
+const GRID_END_HOUR = 17
+
+function startOfWeek(d: Date): Date {
+  const date = new Date(d)
+  const day = (date.getDay() + 6) % 7 // 0 = lunes
+  date.setDate(date.getDate() - day)
+  date.setHours(0, 0, 0, 0)
+  return date
+}
+
+function NewAppointmentForm({ onSaved }: { onSaved: () => void }) {
+  const { data: patients } = useQuery({ queryKey: ['patients'], queryFn: () => listPatients() })
+  const [patientId, setPatientId] = useState('')
+  const [scheduledAt, setScheduledAt] = useState('')
+  const [duration, setDuration] = useState('30')
+  const [notes, setNotes] = useState('')
+
+  const mut = useMutation({
+    mutationFn: () =>
+      createAppointment({
+        patient_id: parseInt(patientId, 10),
+        scheduled_at: new Date(scheduledAt).toISOString(),
+        duration_minutes: parseInt(duration, 10) || 30,
+        notes,
+      }),
+    onSuccess: onSaved,
+  })
+
+  return (
+    <div className="flex flex-col gap-4">
+      <FieldWrap label="Paciente">
+        <Select value={patientId} onChange={(e) => setPatientId(e.target.value)}>
+          <option value="">Selecciona un paciente…</option>
+          {(patients ?? []).map((p) => (
+            <option key={p.id} value={p.id}>{p.name}</option>
+          ))}
+        </Select>
+      </FieldWrap>
+      <FieldWrap label="Fecha y hora">
+        <Input type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} />
+      </FieldWrap>
+      <FieldWrap label="Duración (minutos)">
+        <Input type="number" value={duration} onChange={(e) => setDuration(e.target.value)} />
+      </FieldWrap>
+      <FieldWrap label="Notas">
+        <Input value={notes} onChange={(e) => setNotes(e.target.value)} />
+      </FieldWrap>
+      <Button onClick={() => mut.mutate()} loading={mut.isPending} disabled={!patientId || !scheduledAt} className="w-full">
+        Agendar cita
+      </Button>
+    </div>
+  )
+}
+
+function NuevaConsultaPicker({ onClose }: { onClose: () => void }) {
+  const navigate = useNavigate()
+  const { data: patients } = useQuery({ queryKey: ['patients'], queryFn: () => listPatients() })
+  const [patientId, setPatientId] = useState('')
+
+  return (
+    <div className="flex flex-col gap-4">
+      <FieldWrap label="Paciente" hint="Te llevaremos a su ficha para registrar la consulta.">
+        <Select value={patientId} onChange={(e) => setPatientId(e.target.value)}>
+          <option value="">Selecciona un paciente…</option>
+          {(patients ?? []).map((p) => (
+            <option key={p.id} value={p.id}>{p.name}</option>
+          ))}
+        </Select>
+      </FieldWrap>
+      <Button
+        disabled={!patientId}
+        className="w-full"
+        onClick={() => {
+          navigate(`/pacientes/${patientId}?tab=Consultas`)
+          onClose()
+        }}
+      >
+        Continuar →
+      </Button>
+    </div>
+  )
+}
+
+function WeekGrid({ appointments }: { appointments: Appointment[] }) {
+  const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()))
+  const days = useMemo(() => Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(weekStart)
+    d.setDate(d.getDate() + i)
+    return d
+  }), [weekStart])
+  const hours = useMemo(() => {
+    const arr: number[] = []
+    for (let h = GRID_START_HOUR; h <= GRID_END_HOUR; h++) arr.push(h)
+    return arr
+  }, [])
+
+  function apptsAt(day: Date, hour: number) {
+    return appointments.filter((a) => {
+      const d = new Date(a.scheduled_at)
+      return d.getFullYear() === day.getFullYear() && d.getMonth() === day.getMonth() && d.getDate() === day.getDate() && d.getHours() === hour
+    })
+  }
+
+  return (
+    <Card className="overflow-x-auto p-0">
+      <div className="flex items-center justify-between border-b border-border px-4 py-3">
+        <button onClick={() => setWeekStart((w) => { const d = new Date(w); d.setDate(d.getDate() - 7); return d })} className="rounded-md px-2 py-1 text-xs text-text-2 hover:bg-bg">
+          ← Semana anterior
+        </button>
+        <span className="text-xs font-semibold capitalize text-text">
+          {days[0].toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })} – {days[6].toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })}
+        </span>
+        <button onClick={() => setWeekStart((w) => { const d = new Date(w); d.setDate(d.getDate() + 7); return d })} className="rounded-md px-2 py-1 text-xs text-text-2 hover:bg-bg">
+          Semana siguiente →
+        </button>
+      </div>
+      <div className="min-w-[820px]">
+        <div className="grid grid-cols-[60px_repeat(7,1fr)] border-b border-border bg-bg">
+          <div />
+          {days.map((d) => (
+            <div key={d.toISOString()} className="px-2 py-2 text-center text-xs font-semibold capitalize text-text">
+              {d.toLocaleDateString('es-MX', { weekday: 'short' })}
+              <div className="text-[10px] font-normal text-text-3">{d.getDate()}</div>
+            </div>
+          ))}
+        </div>
+        {hours.map((h) => (
+          <div key={h} className="grid grid-cols-[60px_repeat(7,1fr)] border-b border-border/60">
+            <div className="flex items-center justify-center py-2 text-[11px] font-medium text-text-3">{h}:00</div>
+            {days.map((d) => {
+              const items = apptsAt(d, h)
+              return (
+                <div key={d.toISOString() + h} className="min-h-[42px] border-l border-border/60 p-1">
+                  {items.map((a) => (
+                    <div key={a.id} className="truncate rounded bg-accent-light px-1.5 py-1 text-[10px] font-medium text-accent" title={a.patient_name}>
+                      {a.patient_name}
+                    </div>
+                  ))}
+                </div>
+              )
+            })}
+          </div>
+        ))}
+      </div>
+    </Card>
+  )
+}
 
 const STATUS_LABEL: Record<string, string> = {
   scheduled: 'Agendada',
@@ -101,7 +251,11 @@ function AppointmentRow({ appt }: { appt: Appointment }) {
 }
 
 export function AgendaPage() {
+  const queryClient = useQueryClient()
   const [filter, setFilter] = useState<'proximas' | 'todas' | 'completadas' | 'canceladas'>('proximas')
+  const [view, setView] = useState<'lista' | 'grid'>('lista')
+  const [newApptOpen, setNewApptOpen] = useState(false)
+  const [newConsultaOpen, setNewConsultaOpen] = useState(false)
 
   const { data: appointments, isLoading } = useQuery({
     queryKey: ['appointments', 'agenda', filter],
@@ -145,9 +299,29 @@ export function AgendaPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <div>
-        <h1 className="font-display text-2xl font-semibold text-text">Agenda</h1>
-        <p className="text-sm text-text-2">Todas tus citas en un solo lugar.</p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="font-display text-2xl font-semibold text-text">Agenda</h1>
+          <p className="text-sm text-text-2">Todas tus citas en un solo lugar.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="secondary" onClick={() => setNewConsultaOpen(true)}>+ Nueva consulta</Button>
+          <Button size="sm" onClick={() => setNewApptOpen(true)}>📅 Agendar cita</Button>
+        </div>
+      </div>
+
+      <div className="inline-flex self-start gap-0.5 rounded-full border border-border bg-bg p-1">
+        {([['lista', 'Lista'], ['grid', 'Grid semanal']] as const).map(([key, label]) => (
+          <button
+            key={key}
+            onClick={() => setView(key)}
+            className={`rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
+              view === key ? 'bg-surface text-accent shadow-card' : 'text-text-2'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -169,48 +343,67 @@ export function AgendaPage() {
         </Card>
       </div>
 
-      <div className="inline-flex self-start gap-0.5 rounded-full border border-border bg-bg p-1">
-        {([
-          ['proximas', 'Próximas'],
-          ['todas', 'Todas'],
-          ['completadas', 'Completadas'],
-          ['canceladas', 'Canceladas'],
-        ] as const).map(([key, label]) => (
-          <button
-            key={key}
-            onClick={() => setFilter(key)}
-            className={`rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
-              filter === key ? 'bg-surface text-accent shadow-card' : 'text-text-2'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {isLoading ? (
-        <p className="text-sm text-text-3">Cargando…</p>
-      ) : grouped.length === 0 ? (
-        <Card className="py-16 text-center text-sm text-text-3">
-          No hay citas {filter === 'proximas' ? 'próximas' : 'en este filtro'}. Agenda una desde el perfil de un{' '}
-          <Link to="/pacientes" className="text-accent hover:underline">paciente</Link>.
-        </Card>
+      {view === 'grid' ? (
+        <WeekGrid appointments={allAppointments ?? []} />
       ) : (
-        <div className="flex flex-col gap-4">
-          {grouped.map(([day, items]) => (
-            <Card key={day} className="p-0 overflow-hidden">
-              <div className="border-b border-border px-5 py-3">
-                <h2 className="text-sm font-semibold capitalize text-text">{day}</h2>
-              </div>
-              <ul className="divide-y divide-border">
-                {items.map((a) => (
-                  <AppointmentRow key={a.id} appt={a} />
-                ))}
-              </ul>
+        <>
+          <div className="inline-flex self-start gap-0.5 rounded-full border border-border bg-bg p-1">
+            {([
+              ['proximas', 'Próximas'],
+              ['todas', 'Todas'],
+              ['completadas', 'Completadas'],
+              ['canceladas', 'Canceladas'],
+            ] as const).map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => setFilter(key)}
+                className={`rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
+                  filter === key ? 'bg-surface text-accent shadow-card' : 'text-text-2'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {isLoading ? (
+            <p className="text-sm text-text-3">Cargando…</p>
+          ) : grouped.length === 0 ? (
+            <Card className="py-16 text-center text-sm text-text-3">
+              No hay citas {filter === 'proximas' ? 'próximas' : 'en este filtro'}. Agenda una desde el perfil de un{' '}
+              <Link to="/pacientes" className="text-accent hover:underline">paciente</Link>.
             </Card>
-          ))}
-        </div>
+          ) : (
+            <div className="flex flex-col gap-4">
+              {grouped.map(([day, items]) => (
+                <Card key={day} className="p-0 overflow-hidden">
+                  <div className="border-b border-border px-5 py-3">
+                    <h2 className="text-sm font-semibold capitalize text-text">{day}</h2>
+                  </div>
+                  <ul className="divide-y divide-border">
+                    {items.map((a) => (
+                      <AppointmentRow key={a.id} appt={a} />
+                    ))}
+                  </ul>
+                </Card>
+              ))}
+            </div>
+          )}
+        </>
       )}
+
+      <Modal open={newApptOpen} onClose={() => setNewApptOpen(false)} title="Agendar cita" width={420}>
+        <NewAppointmentForm
+          onSaved={() => {
+            queryClient.invalidateQueries({ queryKey: ['appointments'] })
+            setNewApptOpen(false)
+          }}
+        />
+      </Modal>
+
+      <Modal open={newConsultaOpen} onClose={() => setNewConsultaOpen(false)} title="Nueva consulta" width={420}>
+        <NuevaConsultaPicker onClose={() => setNewConsultaOpen(false)} />
+      </Modal>
     </div>
   )
 }

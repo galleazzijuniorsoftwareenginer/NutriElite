@@ -57,6 +57,7 @@ export interface Patient {
   total_plans: number
   last_plan: string | null
   last_goal: Goal | null
+  last_plan_id: number | null
 }
 
 export interface SmaeRow {

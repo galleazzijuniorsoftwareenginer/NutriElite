@@ -65,6 +65,7 @@ def list_patients(
             "total_plans": len(plans),
             "last_plan": str(plans[0].created_at) if plans else None,
             "last_goal": plans[0].goal if plans else None,
+            "last_plan_id": plans[0].id if plans else None,
         })
     if sort == "last_plan":
         result.sort(key=lambda r: r["last_plan"] or "", reverse=True)

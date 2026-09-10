@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { createPatient, deletePatient, listPatients, updatePatient, type PatientPayload } from '../../api/patients'
+import { sharePlan } from '../../api/plans'
 import type { Patient, PatientStatus } from '../../types'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
@@ -31,6 +32,28 @@ function lastPlanLabel(dateStr: string | null): string {
   if (days === 0) return 'Último plan: hoy'
   if (days === 1) return 'Último plan: ayer'
   return `Último plan: hace ${days} días`
+}
+
+function CopyPortalLinkButton({ planId }: { planId: number }) {
+  const [state, setState] = useState<'idle' | 'loading' | 'copied'>('idle')
+
+  async function handleClick() {
+    setState('loading')
+    try {
+      const { url } = await sharePlan(planId)
+      await navigator.clipboard.writeText(url)
+      setState('copied')
+      setTimeout(() => setState('idle'), 2000)
+    } catch {
+      setState('idle')
+    }
+  }
+
+  return (
+    <Button size="sm" variant="ghost" loading={state === 'loading'} onClick={handleClick}>
+      {state === 'copied' ? '✓ Copiado' : '🔗 Copiar link'}
+    </Button>
+  )
 }
 
 function PatientForm({
@@ -264,6 +287,7 @@ export function PatientsPage() {
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5">
                   <span className="hidden text-xs text-text-3 sm:inline">{p.total_plans} plan(es)</span>
+                  {p.last_plan_id && <CopyPortalLinkButton planId={p.last_plan_id} />}
                   <Link to={`/pacientes/${p.id}`}>
                     <Button size="sm" variant="secondary">Ver</Button>
                   </Link>

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import clsx from 'clsx'
 import { getPatientPlans } from '../../api/patients'
 import { Card } from '../../components/Card'
@@ -33,7 +33,9 @@ function imcClass(imc: number): { label: string; tone: string } {
 export function PatientDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const [tab, setTab] = useState<Tab>('Planes')
+  const [searchParams] = useSearchParams()
+  const initialTab = TABS.find((t) => t === searchParams.get('tab')) ?? 'Planes'
+  const [tab, setTab] = useState<Tab>(initialTab)
   const { data, isLoading } = useQuery<PatientPlansResponse>({
     queryKey: ['patient', id],
     queryFn: () => getPatientPlans(Number(id)),
@@ -109,13 +111,13 @@ export function PatientDetailPage() {
         </div>
       )}
 
-      <div className="flex items-center gap-1 overflow-x-auto rounded-lg border border-border bg-surface p-1.5">
+      <div className="flex items-center gap-1.5 overflow-x-auto rounded-lg border border-border bg-surface p-1.5">
         {TABS.map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
             className={clsx(
-              'shrink-0 rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
+              'flex-1 basis-0 rounded-md px-3 py-2.5 text-center text-sm font-medium transition-colors',
               tab === t ? 'bg-accent-light text-accent' : 'text-text-2 hover:bg-bg'
             )}
           >
