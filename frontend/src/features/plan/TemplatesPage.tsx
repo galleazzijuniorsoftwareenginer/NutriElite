@@ -8,6 +8,7 @@ import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { Modal } from '../../components/Modal'
 import { Select } from '../../components/Field'
+import { CategoryTile } from '../../components/CategoryTile'
 
 const GOAL_LABEL: Record<string, string> = {
   cut: 'Pérdida de peso',
@@ -125,8 +126,8 @@ function ClinicalLibrary() {
             const style = CATEGORY_STYLE[t.categoria] ?? DEFAULT_STYLE
             return (
               <Card key={t.id} className="flex flex-col gap-0 p-0 overflow-hidden transition-transform hover:-translate-y-1 hover:shadow-float">
-                <div className="relative flex h-[120px] items-center justify-center text-4xl" style={{ background: style.gradient }}>
-                  <span>{style.icon}</span>
+                <div className="relative">
+                  <CategoryTile imageUrl={t.imagen_url} gradient={style.gradient} icon={style.icon} alt={t.categoria} />
                   <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-text">
                     {t.categoria}
                   </span>

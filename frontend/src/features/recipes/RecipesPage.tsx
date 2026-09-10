@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { favoriteRecipe, listRecipes, unfavoriteRecipe, type Recipe } from '../../api/recipes'
 import { Card } from '../../components/Card'
 import { Input } from '../../components/Field'
+import { CategoryTile } from '../../components/CategoryTile'
 
 const CATEGORY_ICON: Record<string, string> = {
   Navidad: '🌲',
@@ -23,6 +24,15 @@ const CATEGORY_GRADIENT: Record<string, string> = {
 }
 const DEFAULT_GRADIENT = 'linear-gradient(135deg,#6d5bff,#4a37d1)'
 
+const CATEGORY_IMAGE: Record<string, string> = {
+  Navidad: 'https://images.unsplash.com/photo-1574672280600-4accfa5b6f98?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600',
+  Nuevas: 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600',
+  'Bajo en grasa': 'https://images.unsplash.com/photo-1518843875459-f738682238a6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600',
+  'Alto en proteína': 'https://images.unsplash.com/photo-1670398564097-0762e1b30b3a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600',
+  Keto: 'https://images.unsplash.com/photo-1519162808019-7de1683fa2ad?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600',
+  Ensaladas: 'https://images.unsplash.com/photo-1607532941433-304659e8198a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600',
+}
+
 function RecipeCard({ recipe }: { recipe: Recipe }) {
   const queryClient = useQueryClient()
   const toggleFav = useMutation({
@@ -31,6 +41,8 @@ function RecipeCard({ recipe }: { recipe: Recipe }) {
   })
   const tag = recipe.categoria_tags?.[0]
   const gradient = (tag && CATEGORY_GRADIENT[tag]) || DEFAULT_GRADIENT
+  const image = tag && CATEGORY_IMAGE[tag]
+  const icon = tag ? CATEGORY_ICON[tag] ?? '🍽' : '🍽'
 
   return (
     <Card
@@ -38,9 +50,7 @@ function RecipeCard({ recipe }: { recipe: Recipe }) {
         recipe.favorito ? 'border-accent shadow-[0_0_0_1px_var(--color-accent-light)]' : ''
       }`}
     >
-      <div className="flex h-[100px] items-center justify-center text-3xl" style={{ background: gradient }}>
-        <span>{tag ? CATEGORY_ICON[tag] ?? '🍽' : '🍽'}</span>
-      </div>
+      <CategoryTile imageUrl={image} gradient={gradient} icon={icon} alt={tag ?? recipe.nombre} height={100} iconSize="text-3xl" />
       <div className="flex flex-col gap-1.5 p-3.5">
         <span className="inline-flex w-fit items-center rounded-full bg-bg px-2 py-0.5 text-[10px] font-semibold text-text-2">
           {recipe.tiempo_comida}

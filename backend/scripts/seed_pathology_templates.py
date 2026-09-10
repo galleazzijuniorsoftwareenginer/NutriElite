@@ -50,6 +50,7 @@ TEMPLATES = [
         nombre="Control de peso balanceado",
         categoria="Pérdida de peso",
         kcal_objetivo=1500,
+        imagen_url="https://images.unsplash.com/photo-1490645935967-10de6ba17061?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
         descripcion="Déficit calórico moderado con alta densidad de nutrientes y proteína elevada para saciedad sostenida.",
         split={"p": 30, "f": 25, "c": 45},
         tiempos={
@@ -84,6 +85,7 @@ TEMPLATES = [
         nombre="Plan basado en plantas",
         categoria="Vegano",
         kcal_objetivo=1800,
+        imagen_url="https://images.unsplash.com/photo-1649925548772-3dbd70852613?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
         descripcion="Legumbres, granos enteros y vegetales cubriendo el 100% de la proteína de fuente vegetal.",
         split={"p": 20, "f": 30, "c": 50},
         tiempos={
@@ -118,6 +120,7 @@ TEMPLATES = [
         nombre="Bajo índice glucémico",
         categoria="Diabetes",
         kcal_objetivo=1800,
+        imagen_url="https://images.unsplash.com/photo-1682342287771-ba352ea7e315?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
         descripcion="Carbohidratos complejos y proteína magra distribuidos en 5 tiempos para glucemia estable durante el día.",
         split={"p": 25, "f": 30, "c": 45},
         tiempos={
@@ -152,6 +155,7 @@ TEMPLATES = [
         nombre="Control de presión arterial",
         categoria="DASH · Hipertensión",
         kcal_objetivo=2000,
+        imagen_url="https://images.unsplash.com/photo-1518843875459-f738682238a6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
         descripcion="Rico en potasio, calcio y magnesio; sodio limitado en cada preparación según la meta DASH.",
         split={"p": 20, "f": 30, "c": 50},
         tiempos={
@@ -186,6 +190,7 @@ TEMPLATES = [
         nombre="Cetogénico clásico",
         categoria="Keto",
         kcal_objetivo=1800,
+        imagen_url="https://images.unsplash.com/photo-1519162808019-7de1683fa2ad?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
         descripcion="Grasas saludables predominantes, carbohidratos por debajo del 10% del total energético.",
         split={"p": 25, "f": 70, "c": 5},
         tiempos={
@@ -220,6 +225,7 @@ TEMPLATES = [
         nombre="Estilo mediterráneo",
         categoria="Mediterránea",
         kcal_objetivo=1500,
+        imagen_url="https://images.unsplash.com/photo-1653611540493-b3a896319fbf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
         descripcion="Aceite de oliva, pescado y vegetales frescos como base — soporte cardiovascular de fondo.",
         split={"p": 18, "f": 35, "c": 47},
         tiempos={
@@ -254,6 +260,7 @@ TEMPLATES = [
         nombre="Alto rendimiento deportivo",
         categoria="Hiperproteica",
         kcal_objetivo=2300,
+        imagen_url="https://images.unsplash.com/photo-1543352632-5a4b24e4d2a6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
         descripcion="Desayuno ligero y cena fuerte con alta carga proteica para recuperación muscular tras el entrenamiento.",
         split={"p": 35, "f": 25, "c": 40},
         tiempos={
@@ -288,6 +295,7 @@ TEMPLATES = [
         nombre="Menú antiinflamatorio",
         categoria="Antiinflamatoria",
         kcal_objetivo=1700,
+        imagen_url="https://images.unsplash.com/photo-1583949885751-23b7d1909378?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
         descripcion="Ácidos grasos omega-3, antioxidantes y especias antiinflamatorias como eje del menú semanal.",
         split={"p": 20, "f": 35, "c": 45},
         tiempos={
@@ -338,6 +346,7 @@ def seed_pathology_templates():
             descripcion=t["descripcion"],
             tiempos_por_dia=len(t["tiempos"]),
             weekly_menu=weekly_menu,
+            imagen_url=t.get("imagen_url"),
         ))
     db.commit()
     db.close()
