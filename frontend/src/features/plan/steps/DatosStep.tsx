@@ -55,10 +55,17 @@ export function DatosStep({ initial, onCreated }: Props) {
     e.preventDefault()
     setError('')
     const w = parseFloat(weight)
-    const h = parseFloat(height)
+    let h = parseFloat(height)
     const a = parseInt(age, 10)
     if (!w || !h || !a) {
       setError('Completa peso, altura y edad.')
+      return
+    }
+    if (h >= 0.5 && h <= 3) {
+      h = h * 100 // corrige el error común de escribir la altura en metros
+    }
+    if (h < 40 || h > 250) {
+      setError('La altura debe estar en centímetros (ej. 165), entre 40 y 250 cm.')
       return
     }
     setLoading(true)
