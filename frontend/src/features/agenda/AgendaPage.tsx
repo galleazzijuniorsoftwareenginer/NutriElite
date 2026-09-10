@@ -41,6 +41,10 @@ function NewAppointmentForm({ onSaved }: { onSaved: () => void }) {
 
   return (
     <div className="flex flex-col gap-4">
+      <p className="rounded-md bg-bg px-3 py-2 text-xs text-text-2">
+        Esto solo reserva un horario en el calendario. Para registrar peso, diagnóstico, laboratorios u otros datos
+        clínicos de la visita, ve a la ficha del paciente y usa <b>+ Nueva consulta</b> en su lugar.
+      </p>
       <FieldWrap label="Paciente">
         <Select value={patientId} onChange={(e) => setPatientId(e.target.value)}>
           <option value="">Selecciona un paciente…</option>
@@ -55,7 +59,7 @@ function NewAppointmentForm({ onSaved }: { onSaved: () => void }) {
       <FieldWrap label="Duración (minutos)">
         <Input type="number" value={duration} onChange={(e) => setDuration(e.target.value)} />
       </FieldWrap>
-      <FieldWrap label="Notas">
+      <FieldWrap label="Notas" hint="Nota breve sobre la cita, no es parte del expediente clínico.">
         <Input value={notes} onChange={(e) => setNotes(e.target.value)} />
       </FieldWrap>
       <Button onClick={() => mut.mutate()} loading={mut.isPending} disabled={!patientId || !scheduledAt} className="w-full">
@@ -263,7 +267,12 @@ function AppointmentRow({ appt }: { appt: Appointment }) {
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setRescheduling(true)}>Reagendar</Button>
             {isPast ? (
-              <Button size="sm" variant="secondary" onClick={() => statusMut.mutate('completed')}>Marcar completada</Button>
+              <>
+                <Button size="sm" variant="secondary" onClick={() => statusMut.mutate('completed')}>Marcar completada</Button>
+                <Link to={`/pacientes/${appt.patient_id}?tab=Consultas`}>
+                  <Button size="sm" variant="ghost">📋 Registrar consulta</Button>
+                </Link>
+              </>
             ) : (
               <Button
                 size="sm"

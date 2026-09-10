@@ -8,7 +8,7 @@ import {
   listConsultations,
 } from '../../../api/clinical'
 import { createAppointment } from '../../../api/appointments'
-import type { LabValue } from '../../../types/clinical'
+import type { Consultation, LabValue } from '../../../types/clinical'
 import { Card } from '../../../components/Card'
 import { Button } from '../../../components/Button'
 import { Modal } from '../../../components/Modal'
@@ -31,13 +31,17 @@ function ScheduleAppointmentForm({ patientId, onSaved }: { patientId: number; on
   })
   return (
     <div className="flex flex-col gap-4">
+      <p className="rounded-md bg-bg px-3 py-2 text-xs text-text-2">
+        Esto solo reserva un horario en tu calendario. Para registrar peso, diagnóstico, laboratorios u otros datos
+        clínicos de la visita, usa <b>+ Nueva consulta</b> en su lugar.
+      </p>
       <FieldWrap label="Fecha y hora">
         <Input type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} />
       </FieldWrap>
       <FieldWrap label="Duración (minutos)">
         <Input type="number" value={duration} onChange={(e) => setDuration(e.target.value)} />
       </FieldWrap>
-      <FieldWrap label="Notas">
+      <FieldWrap label="Notas" hint="Nota breve sobre la cita (ej. 'trae estudios'), no es parte del expediente clínico.">
         <Input value={notes} onChange={(e) => setNotes(e.target.value)} />
       </FieldWrap>
       <p className="text-xs text-text-3">Si el paciente tiene email registrado, recibirá una confirmación automática.</p>
@@ -57,7 +61,47 @@ function fileToBase64(file: File): Promise<string> {
   })
 }
 
-function NewConsultationForm({ patientId, onSaved }: { patientId: number; onSaved: () => void }) {
+function daysSince(dateStr: string): number {
+  const then = new Date(dateStr).getTime()
+  return Math.max(0, Math.round((Date.now() - then) / 86400000))
+}
+
+function formatElapsed(days: number): string {
+  if (days === 0) return 'hoy'
+  if (days === 1) return 'hace 1 día'
+  if (days < 30) return `hace ${days} días`
+  if (days < 60) return 'hace 1 mes'
+  if (days < 365) return `hace ${Math.round(days / 30)} meses`
+  const years = Math.round(days / 365)
+  return years === 1 ? 'hace 1 año' : `hace ${years} años`
+}
+
+function VisitBadge({ previousConsultations }: { previousConsultations: Consultation[] }) {
+  if (previousConsultations.length === 0) {
+    return (
+      <div className="rounded-md bg-accent-2-light px-3 py-2 text-xs font-medium text-accent-2">
+        ✨ Esta es la primera consulta del paciente.
+      </div>
+    )
+  }
+  const last = previousConsultations[0]
+  const visitNumber = previousConsultations.length + 1
+  return (
+    <div className="rounded-md bg-accent-light px-3 py-2 text-xs font-medium text-accent">
+      🔁 Consulta de retorno — visita #{visitNumber}. Última consulta {formatElapsed(daysSince(last.fecha))} ({new Date(last.fecha).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })}).
+    </div>
+  )
+}
+
+function NewConsultationForm({
+  patientId,
+  previousConsultations,
+  onSaved,
+}: {
+  patientId: number
+  previousConsultations: Consultation[]
+  onSaved: () => void
+}) {
   const [motivo, setMotivo] = useState('')
   const [peso, setPeso] = useState('')
   const [talla, setTalla] = useState('')
@@ -124,6 +168,7 @@ function NewConsultationForm({ patientId, onSaved }: { patientId: number; onSave
 
   return (
     <div className="flex flex-col gap-4">
+      <VisitBadge previousConsultations={previousConsultations} />
       <div className="grid grid-cols-2 gap-3">
         <FieldWrap label="Peso (kg)">
           <Input type="number" step="0.1" value={peso} onChange={(e) => setPeso(e.target.value)} />
@@ -323,6 +368,7 @@ export function ConsultationsTab({ patientId }: { patientId: number }) {
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Nueva consulta" width={560}>
         <NewConsultationForm
           patientId={patientId}
+          previousConsultations={consultations ?? []}
           onSaved={() => {
             queryClient.invalidateQueries({ queryKey: ['consultations', patientId] })
             setModalOpen(false)
