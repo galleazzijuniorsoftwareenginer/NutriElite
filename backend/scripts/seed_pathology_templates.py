@@ -337,18 +337,232 @@ TEMPLATES = [
             ],
         },
     ),
+    dict(
+        nombre="Manejo nutricional del SOP",
+        categoria="SOP",
+        kcal_objetivo=1600,
+        imagen_url="https://images.unsplash.com/photo-1547592180-85f173990554?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
+        descripcion="Bajo índice glucémico con proteína y grasas saludables elevadas para mejorar la sensibilidad a la insulina — pilar del manejo nutricional del síndrome de ovario poliquístico.",
+        split={"p": 30, "f": 32, "c": 38},
+        tiempos={
+            "Desayuno": [
+                [{"alimento": "Avena con canela y chía", "quantidade_g": 220, "kcal": 300}],
+                [{"alimento": "Yogur griego natural", "quantidade_g": 200, "kcal": 130}, {"alimento": "Fresas", "quantidade_g": 100, "kcal": 35}, {"alimento": "Nueces", "quantidade_g": 15, "kcal": 100}],
+                [{"alimento": "Omelette de claras con champiñones", "quantidade_g": 200, "kcal": 180}, {"alimento": "Aguacate con sal y limón", "quantidade_g": 60, "kcal": 95}],
+            ],
+            "Colación AM": [
+                [{"alimento": "Almendras", "quantidade_g": 20, "kcal": 116}],
+                [{"alimento": "Manzana", "quantidade_g": 150, "kcal": 78}],
+                [{"alimento": "Té verde con almendras", "quantidade_g": 20, "kcal": 116}],
+            ],
+            "Comida": [
+                [{"alimento": "Pechuga de pollo a la plancha", "quantidade_g": 180, "kcal": 280}, {"alimento": "Ensalada de quinoa con nuez y aguacate", "quantidade_g": 200, "kcal": 260}],
+                [{"alimento": "Salmón al horno", "quantidade_g": 180, "kcal": 320}, {"alimento": "Brócoli al vapor", "quantidade_g": 150, "kcal": 50}],
+                [{"alimento": "Lentejas guisadas con verduras", "quantidade_g": 280, "kcal": 340}],
+            ],
+            "Colación PM": [
+                [{"alimento": "Yogur natural con nuez y linaza", "quantidade_g": 180, "kcal": 190}],
+                [{"alimento": "Zanahoria y pepino con limón", "quantidade_g": 150, "kcal": 40}],
+                [{"alimento": "Queso panela", "quantidade_g": 40, "kcal": 95}],
+            ],
+            "Cena": [
+                [{"alimento": "Filete de pescado al vapor", "quantidade_g": 180, "kcal": 220}, {"alimento": "Verduras al vapor", "quantidade_g": 150, "kcal": 55}],
+                [{"alimento": "Sopa de verduras con pollo deshebrado", "quantidade_g": 300, "kcal": 220}],
+                [{"alimento": "Ensalada de garbanzo, espinaca y aceite de oliva", "quantidade_g": 250, "kcal": 300}],
+            ],
+        },
+    ),
+    dict(
+        nombre="Plan para el embarazo",
+        categoria="Embarazo",
+        kcal_objetivo=2200,
+        imagen_url="https://images.unsplash.com/photo-1574093274766-f9843b59debd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
+        descripcion="Aporte extra de folato, hierro y calcio para el segundo/tercer trimestre, con proteína suficiente para el crecimiento fetal — siempre validado por el equipo obstétrico.",
+        split={"p": 20, "f": 30, "c": 50},
+        tiempos={
+            "Desayuno": [
+                [{"alimento": "Avena con leche de almendra y plátano", "quantidade_g": 280, "kcal": 380}],
+                [{"alimento": "Yogur griego con nuez y miel", "quantidade_g": 220, "kcal": 300}, {"alimento": "Naranja", "quantidade_g": 150, "kcal": 70}],
+                [{"alimento": "Huevo cocido con aguacate y aceitunas", "quantidade_g": 200, "kcal": 300}, {"alimento": "Pan integral", "quantidade_g": 30, "kcal": 75}],
+            ],
+            "Colación AM": [
+                [{"alimento": "Plátano", "quantidade_g": 120, "kcal": 105}],
+                [{"alimento": "Almendras", "quantidade_g": 20, "kcal": 116}],
+                [{"alimento": "Queso panela", "quantidade_g": 40, "kcal": 95}],
+            ],
+            "Comida": [
+                [{"alimento": "Salmón con camote y espárragos", "quantidade_g": 300, "kcal": 480}],
+                [{"alimento": "Pechuga de pollo al horno con hierbas", "quantidade_g": 200, "kcal": 300}, {"alimento": "Quinoa", "quantidade_g": 100, "kcal": 120}, {"alimento": "Verduras al vapor", "quantidade_g": 100, "kcal": 30}],
+                [{"alimento": "Lentejas guisadas con verduras", "quantidade_g": 320, "kcal": 400}, {"alimento": "Arroz integral", "quantidade_g": 80, "kcal": 90}],
+            ],
+            "Colación PM": [
+                [{"alimento": "Yogur griego natural", "quantidade_g": 200, "kcal": 130}, {"alimento": "Fresas", "quantidade_g": 100, "kcal": 35}],
+                [{"alimento": "Hummus con zanahoria", "quantidade_g": 150, "kcal": 160}],
+                [{"alimento": "Nueces", "quantidade_g": 20, "kcal": 130}],
+            ],
+            "Cena": [
+                [{"alimento": "Crema de calabaza con semillas", "quantidade_g": 300, "kcal": 260}, {"alimento": "Queso panela", "quantidade_g": 40, "kcal": 95}],
+                [{"alimento": "Tortilla de claras con champiñones y queso panela", "quantidade_g": 250, "kcal": 260}],
+                [{"alimento": "Sopa de lentejas al estilo mediterráneo", "quantidade_g": 300, "kcal": 280}],
+            ],
+        },
+    ),
+    dict(
+        nombre="Manejo de gastritis",
+        categoria="Gastritis",
+        kcal_objetivo=1800,
+        imagen_url="https://images.unsplash.com/photo-1469307517101-0b99d8fb0c33?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
+        descripcion="Preparaciones suaves y bajas en grasa, en tiempos frecuentes y pequeños, evitando irritantes (cítricos, picante, café, carbonatados) según tolerancia individual.",
+        split={"p": 20, "f": 25, "c": 55},
+        tiempos={
+            "Desayuno": [
+                [{"alimento": "Avena integral con canela", "quantidade_g": 200, "kcal": 220}],
+                [{"alimento": "Huevo pochado con espinaca y jitomate", "quantidade_g": 180, "kcal": 200}],
+                [{"alimento": "Yogur natural bajo en grasa", "quantidade_g": 200, "kcal": 100}, {"alimento": "Plátano", "quantidade_g": 100, "kcal": 90}],
+            ],
+            "Colación AM": [
+                [{"alimento": "Papaya con semillas de chía", "quantidade_g": 150, "kcal": 80}],
+                [{"alimento": "Manzana", "quantidade_g": 130, "kcal": 68}],
+                [{"alimento": "Pan integral", "quantidade_g": 30, "kcal": 75}],
+            ],
+            "Comida": [
+                [{"alimento": "Pechuga de pollo hervida con puré de papa", "quantidade_g": 280, "kcal": 380}],
+                [{"alimento": "Caldo de pollo con arroz y zanahoria", "quantidade_g": 320, "kcal": 260}],
+                [{"alimento": "Filete de pescado al vapor", "quantidade_g": 200, "kcal": 230}, {"alimento": "Arroz integral", "quantidade_g": 80, "kcal": 90}],
+            ],
+            "Colación PM": [
+                [{"alimento": "Queso panela", "quantidade_g": 40, "kcal": 95}],
+                [{"alimento": "Yogur natural bajo en grasa", "quantidade_g": 150, "kcal": 75}],
+                [{"alimento": "Plátano", "quantidade_g": 100, "kcal": 90}],
+            ],
+            "Cena": [
+                [{"alimento": "Consomé de verduras colado", "quantidade_g": 300, "kcal": 90}, {"alimento": "Tortilla de claras con champiñones y queso panela", "quantidade_g": 200, "kcal": 200}],
+                [{"alimento": "Sopa de verduras con pechuga deshebrada", "quantidade_g": 300, "kcal": 220}],
+                [{"alimento": "Camote horneado", "quantidade_g": 150, "kcal": 130}, {"alimento": "Pechuga de pollo a la plancha", "quantidade_g": 120, "kcal": 190}],
+            ],
+        },
+    ),
+    dict(
+        nombre="Manejo del síndrome de intestino irritable",
+        categoria="SII",
+        kcal_objetivo=1700,
+        imagen_url="https://images.unsplash.com/photo-1579113800032-c38bd7635818?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
+        descripcion="Inspirado en el enfoque bajo en FODMAP: porciones moderadas, evitando alimentos productores de gas, con introducción gradual de fibra según tolerancia.",
+        split={"p": 20, "f": 30, "c": 50},
+        tiempos={
+            "Desayuno": [
+                [{"alimento": "Avena en hojuelas", "quantidade_g": 180, "kcal": 200}],
+                [{"alimento": "Huevo pochado con espinaca y jitomate", "quantidade_g": 180, "kcal": 200}],
+                [{"alimento": "Yogur natural bajo en grasa", "quantidade_g": 180, "kcal": 90}, {"alimento": "Plátano", "quantidade_g": 100, "kcal": 90}],
+            ],
+            "Colación AM": [
+                [{"alimento": "Naranja", "quantidade_g": 130, "kcal": 60}],
+                [{"alimento": "Almendras", "quantidade_g": 15, "kcal": 87}],
+                [{"alimento": "Zanahoria y pepino con limón", "quantidade_g": 130, "kcal": 35}],
+            ],
+            "Comida": [
+                [{"alimento": "Pechuga de pollo a la plancha", "quantidade_g": 180, "kcal": 280}, {"alimento": "Arroz integral", "quantidade_g": 100, "kcal": 110}, {"alimento": "Zanahoria y pepino con limón", "quantidade_g": 100, "kcal": 30}],
+                [{"alimento": "Filete de pescado con ejotes", "quantidade_g": 250, "kcal": 280}],
+                [{"alimento": "Caldo de pollo con arroz y zanahoria", "quantidade_g": 320, "kcal": 260}],
+            ],
+            "Colación PM": [
+                [{"alimento": "Queso panela", "quantidade_g": 40, "kcal": 95}],
+                [{"alimento": "Uvas", "quantidade_g": 100, "kcal": 69}],
+                [{"alimento": "Requesón con fruta", "quantidade_g": 150, "kcal": 150}],
+            ],
+            "Cena": [
+                [{"alimento": "Sopa de verduras con pollo deshebrado", "quantidade_g": 300, "kcal": 220}],
+                [{"alimento": "Pescado blanco al vapor con verduras", "quantidade_g": 250, "kcal": 230}],
+                [{"alimento": "Tortilla de claras con champiñones y queso panela", "quantidade_g": 220, "kcal": 220}],
+            ],
+        },
+    ),
+    dict(
+        nombre="Manejo del estreñimiento",
+        categoria="Estreñimiento",
+        kcal_objetivo=1800,
+        imagen_url="https://images.unsplash.com/photo-1610832958506-aa56368176cf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
+        descripcion="Alto en fibra soluble e insoluble, con hidratación abundante y alimentos de efecto laxante natural (ciruela pasa, papaya, avena) distribuidos a lo largo del día.",
+        split={"p": 18, "f": 27, "c": 55},
+        tiempos={
+            "Desayuno": [
+                [{"alimento": "Avena con moras azules y linaza", "quantidade_g": 250, "kcal": 300}],
+                [{"alimento": "Papaya con semillas de chía", "quantidade_g": 200, "kcal": 110}, {"alimento": "Pan integral", "quantidade_g": 30, "kcal": 75}],
+                [{"alimento": "Yogur natural con nuez y linaza", "quantidade_g": 200, "kcal": 210}],
+            ],
+            "Colación AM": [
+                [{"alimento": "Ciruelas pasas hidratadas", "quantidade_g": 60, "kcal": 120}],
+                [{"alimento": "Manzana", "quantidade_g": 150, "kcal": 78}],
+                [{"alimento": "Nueces", "quantidade_g": 20, "kcal": 130}],
+            ],
+            "Comida": [
+                [{"alimento": "Lentejas guisadas con verduras", "quantidade_g": 320, "kcal": 400}, {"alimento": "Arroz integral", "quantidade_g": 90, "kcal": 100}],
+                [{"alimento": "Pechuga de pollo con verduras salteadas", "quantidade_g": 280, "kcal": 350}, {"alimento": "Ensalada verde mixta", "quantidade_g": 150, "kcal": 40}],
+                [{"alimento": "Ensalada de garbanzo, pepino y jitomate", "quantidade_g": 300, "kcal": 360}],
+            ],
+            "Colación PM": [
+                [{"alimento": "Ciruela", "quantidade_g": 100, "kcal": 46}],
+                [{"alimento": "Yogur natural con nuez y linaza", "quantidade_g": 150, "kcal": 160}],
+                [{"alimento": "Nueces", "quantidade_g": 20, "kcal": 130}],
+            ],
+            "Cena": [
+                [{"alimento": "Crema de brócoli con jengibre", "quantidade_g": 300, "kcal": 220}, {"alimento": "Pan integral", "quantidade_g": 30, "kcal": 75}],
+                [{"alimento": "Ensalada de garbanzo con vegetales asados", "quantidade_g": 300, "kcal": 320}],
+                [{"alimento": "Sopa de lentejas al estilo mediterráneo", "quantidade_g": 300, "kcal": 280}],
+            ],
+        },
+    ),
+    dict(
+        nombre="Manejo de litiasis biliar",
+        categoria="Litiasis biliar",
+        kcal_objetivo=1500,
+        imagen_url="https://images.unsplash.com/photo-1673166569003-c2ae73ac8550?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
+        descripcion="Muy bajo en grasa para minimizar la estimulación de la vesícula biliar — cocciones al vapor/hervidas, sin frituras, con porciones pequeñas y frecuentes.",
+        split={"p": 20, "f": 20, "c": 60},
+        tiempos={
+            "Desayuno": [
+                [{"alimento": "Avena en hojuelas", "quantidade_g": 180, "kcal": 190}],
+                [{"alimento": "Claras revueltas con espinaca", "quantidade_g": 180, "kcal": 150}, {"alimento": "Pan integral", "quantidade_g": 30, "kcal": 75}],
+                [{"alimento": "Yogur natural bajo en grasa", "quantidade_g": 200, "kcal": 100}, {"alimento": "Plátano", "quantidade_g": 100, "kcal": 90}],
+            ],
+            "Colación AM": [
+                [{"alimento": "Manzana", "quantidade_g": 150, "kcal": 78}],
+                [{"alimento": "Papaya con semillas de chía", "quantidade_g": 150, "kcal": 80}],
+                [{"alimento": "Jícama con limón", "quantidade_g": 150, "kcal": 40}],
+            ],
+            "Comida": [
+                [{"alimento": "Pescado al vapor con puré de zanahoria", "quantidade_g": 280, "kcal": 320}],
+                [{"alimento": "Pechuga de pollo hervida con puré de papa", "quantidade_g": 280, "kcal": 360}],
+                [{"alimento": "Caldo de pollo con arroz y zanahoria", "quantidade_g": 320, "kcal": 260}, {"alimento": "Ensalada verde mixta", "quantidade_g": 120, "kcal": 35}],
+            ],
+            "Colación PM": [
+                [{"alimento": "Ciruela", "quantidade_g": 100, "kcal": 46}],
+                [{"alimento": "Jícama con limón", "quantidade_g": 150, "kcal": 40}],
+                [{"alimento": "Yogur natural bajo en grasa", "quantidade_g": 150, "kcal": 75}],
+            ],
+            "Cena": [
+                [{"alimento": "Consomé de verduras colado", "quantidade_g": 300, "kcal": 90}, {"alimento": "Tortilla de maíz", "quantidade_g": 30, "kcal": 65}],
+                [{"alimento": "Sopa de verduras con pechuga deshebrada", "quantidade_g": 300, "kcal": 220}],
+                [{"alimento": "Pescado blanco al vapor con verduras", "quantidade_g": 250, "kcal": 230}],
+            ],
+        },
+    ),
 ]
 
 
 def seed_pathology_templates():
+    """Inserta cualquier plantilla de TEMPLATES cuyo nombre todavía no exista
+    en la base — así lotes nuevos agregados a esta lista se siembran solos
+    en el próximo arranque, sin duplicar las que ya están."""
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
-    existing = db.query(PathologyTemplate).count()
-    if existing > 0:
-        print(f"Plantillas por patología ya sembradas — {existing} encontradas. Saltando.")
+    existing_names = {n for (n,) in db.query(PathologyTemplate.nombre).all()}
+    to_insert = [t for t in TEMPLATES if t["nombre"] not in existing_names]
+    if not to_insert:
+        print(f"Plantillas por patología ya sembradas — {len(existing_names)} encontradas. Saltando.")
         db.close()
         return
-    for t in TEMPLATES:
+    for t in to_insert:
         weekly_menu = _build_semana(t["kcal_objetivo"], t["split"], t["tiempos"])
         db.add(PathologyTemplate(
             nombre=t["nombre"],
@@ -361,7 +575,7 @@ def seed_pathology_templates():
         ))
     db.commit()
     db.close()
-    print(f"Semilla de plantillas por patología completa — {len(TEMPLATES)} plantillas insertadas.")
+    print(f"Semilla de plantillas por patología: {len(to_insert)} nuevas insertadas ({len(existing_names)} ya existían).")
 
 
 if __name__ == "__main__":
