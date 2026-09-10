@@ -4,17 +4,18 @@ import { Button } from '../components/Button'
 import clsx from 'clsx'
 import { Logo } from '../components/Logo'
 import { Badge } from '../components/Badge'
+import { NavIcon, type NavIconName } from '../components/NavIcon'
 import { OnboardingModal } from '../components/OnboardingModal'
 import { useAuthStore } from '../store/authStore'
 
-const NAV_ITEMS: { to: string; label: string; end: boolean; icon: string }[] = [
-  { to: '/', label: 'Inicio', end: true, icon: '🏠' },
-  { to: '/pacientes', label: 'Pacientes', end: false, icon: '🧑‍🤝‍🧑' },
-  { to: '/agenda', label: 'Agenda', end: false, icon: '📅' },
-  { to: '/plantillas', label: 'Plantillas', end: false, icon: '📋' },
-  { to: '/recetas', label: 'Recetas', end: false, icon: '🍲' },
-  { to: '/referencia', label: 'Referencia', end: false, icon: '📚' },
-  { to: '/salon', label: 'Salón de clase', end: false, icon: '🎓' },
+const NAV_ITEMS: { to: string; label: string; end: boolean; icon: NavIconName }[] = [
+  { to: '/', label: 'Inicio', end: true, icon: 'home' },
+  { to: '/pacientes', label: 'Pacientes', end: false, icon: 'users' },
+  { to: '/agenda', label: 'Agenda', end: false, icon: 'calendar' },
+  { to: '/plantillas', label: 'Plantillas', end: false, icon: 'clipboard' },
+  { to: '/recetas', label: 'Recetas', end: false, icon: 'cooking' },
+  { to: '/referencia', label: 'Referencia', end: false, icon: 'book' },
+  { to: '/salon', label: 'Salón de clase', end: false, icon: 'graduation' },
 ]
 
 export function AppShell() {
@@ -38,7 +39,10 @@ export function AppShell() {
         </div>
         <div className="px-3 pt-3">
           <NavLink to="/plan/nuevo" className="block">
-            <Button variant="ai" className="w-full justify-center">✨ Nuevo plan</Button>
+            <Button variant="ai" className="w-full justify-center gap-1.5">
+              <NavIcon name="sparkles" size={15} />
+              Nuevo plan
+            </Button>
           </NavLink>
         </div>
         <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto p-3">
@@ -54,7 +58,7 @@ export function AppShell() {
                 )
               }
             >
-              <span className="text-[15px] leading-none">{item.icon}</span>
+              <NavIcon name={item.icon} />
               {item.label}
             </NavLink>
           ))}
@@ -130,12 +134,13 @@ export function AppShell() {
             to="/plan/nuevo"
             className={({ isActive }) =>
               clsx(
-                'shrink-0 rounded-md px-3 py-1.5 text-xs font-semibold',
+                'flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold',
                 isActive ? 'bg-accent text-white' : 'bg-accent-light text-accent'
               )
             }
           >
-            ✨ Nuevo plan
+            <NavIcon name="sparkles" size={14} />
+            Nuevo plan
           </NavLink>
           {NAV_ITEMS.map((item) => (
             <NavLink
@@ -144,12 +149,13 @@ export function AppShell() {
               end={item.end}
               className={({ isActive }) =>
                 clsx(
-                  'shrink-0 rounded-md px-3 py-1.5 text-xs font-medium',
+                  'flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium',
                   isActive ? 'bg-accent-light text-accent' : 'text-text-2'
                 )
               }
             >
-              {item.icon} {item.label}
+              <NavIcon name={item.icon} size={14} />
+              {item.label}
             </NavLink>
           ))}
         </nav>
