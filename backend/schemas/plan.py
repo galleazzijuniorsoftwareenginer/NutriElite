@@ -19,6 +19,20 @@ class MealDistributionRequest(BaseModel):
         return self
 
 
+class PlanConfigRequest(BaseModel):
+    """Configuración del plan (idioma/región del menú IA + ingredientes que
+    el paciente no puede/quiere comer) — aplicada tanto al generador con IA
+    como a la selección del acervo de recetas."""
+    idioma: Literal["es", "en", "pt"] = "es"
+    region: str = "México"
+    restricted_ingredients: list[str] = []
+
+    @field_validator("restricted_ingredients")
+    @classmethod
+    def strip_empty(cls, v: list[str]) -> list[str]:
+        return [s.strip() for s in v if s and s.strip()]
+
+
 class MenuItemManual(BaseModel):
     alimento: str
     quantidade_g: float

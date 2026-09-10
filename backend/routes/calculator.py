@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from backend.database import SessionLocal
 from backend.models import Plan, User
-from backend.schemas.plan import PlanRequest, MealDistributionRequest, MenuDayManual
+from backend.schemas.plan import PlanRequest, MealDistributionRequest, MenuDayManual, PlanConfigRequest
 
 from backend.routes.auth import verify_token, verify_token_str
 
@@ -227,6 +227,50 @@ def save_meal_distribution(
     return {"items": plan.meal_distribution}
 
 
+# ---------- CONFIGURACIÓN DEL PLAN (idioma/región/ingredientes restringidos) ----------
+@router.get("/plans/{plan_id}/config")
+def get_plan_config(
+    plan_id: int,
+    db: Session = Depends(get_db),
+    token: dict = Depends(verify_token)
+):
+    username = token["sub"]
+    db_user = db.query(User).filter(User.username == username).first()
+    plan = db.query(Plan).filter(Plan.id == plan_id, Plan.user_id == db_user.id).first()
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plano não encontrado")
+
+    return {
+        "idioma": plan.menu_idioma or "es",
+        "region": plan.menu_region or "México",
+        "restricted_ingredients": plan.restricted_ingredients or [],
+    }
+
+
+@router.put("/plans/{plan_id}/config")
+def save_plan_config(
+    plan_id: int,
+    data: PlanConfigRequest,
+    db: Session = Depends(get_db),
+    token: dict = Depends(verify_token)
+):
+    username = token["sub"]
+    db_user = db.query(User).filter(User.username == username).first()
+    plan = db.query(Plan).filter(Plan.id == plan_id, Plan.user_id == db_user.id).first()
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plano não encontrado")
+
+    plan.menu_idioma = data.idioma
+    plan.menu_region = data.region
+    plan.restricted_ingredients = data.restricted_ingredients
+    db.commit()
+    return {
+        "idioma": plan.menu_idioma,
+        "region": plan.menu_region,
+        "restricted_ingredients": plan.restricted_ingredients,
+    }
+
+
 # ---------- EDICIÓN MANUAL DE UN DÍA DEL MENÚ ----------
 @router.put("/plans/{plan_id}/menu/day/{dia}")
 def update_menu_day_manual(
@@ -282,6 +326,9 @@ def generate_ai_menu_endpoint(
         "weight": plan.weight,
         "get": plan.get,
         "meal_distribution": plan.meal_distribution,
+        "idioma": plan.menu_idioma,
+        "region": plan.menu_region,
+        "restricted_ingredients": plan.restricted_ingredients,
     }
 
     try:
@@ -320,6 +367,7 @@ def generate_acervo_menu_endpoint(
         "weight": plan.weight,
         "get": plan.get,
         "meal_distribution": plan.meal_distribution,
+        "restricted_ingredients": plan.restricted_ingredients,
     }
 
     try:
@@ -354,7 +402,15 @@ def regenerate_ai_menu_day(
         raise HTTPException(status_code=404, detail="Plano não encontrado")
 
     audit = SMAECalculationService.calculate(plan_id, db)
-    plan_data = {"goal": plan.goal, "weight": plan.weight, "get": plan.get, "meal_distribution": plan.meal_distribution}
+    plan_data = {
+        "goal": plan.goal,
+        "weight": plan.weight,
+        "get": plan.get,
+        "meal_distribution": plan.meal_distribution,
+        "idioma": plan.menu_idioma,
+        "region": plan.menu_region,
+        "restricted_ingredients": plan.restricted_ingredients,
+    }
 
     avoid_dishes = []
     if plan.weekly_menu:
@@ -406,7 +462,15 @@ def generate_ai_menu_stream_endpoint(
         raise HTTPException(status_code=404, detail="Plano não encontrado")
 
     audit = SMAECalculationService.calculate(plan_id, db)
-    plan_data = {"goal": plan.goal, "weight": plan.weight, "get": plan.get, "meal_distribution": plan.meal_distribution}
+    plan_data = {
+        "goal": plan.goal,
+        "weight": plan.weight,
+        "get": plan.get,
+        "meal_distribution": plan.meal_distribution,
+        "idioma": plan.menu_idioma,
+        "region": plan.menu_region,
+        "restricted_ingredients": plan.restricted_ingredients,
+    }
 
     def event_source():
         collected: dict[int, dict] = {}

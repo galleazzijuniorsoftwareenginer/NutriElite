@@ -231,6 +231,9 @@ def _validate_day_json(parsed: dict) -> None:
                 raise ValueError("Alimento sin nombre")
 
 
+IDIOMA_NOMBRES = {"es": "español", "en": "inglés (English)", "pt": "portugués (Português)"}
+
+
 def generate_day(dia: str, day_index: int, goal_es: str, weight: float, get: float,
                  protein_g: float, carbs_g: float, fats_g: float,
                  food_context: str, api_key: str,
@@ -238,11 +241,24 @@ def generate_day(dia: str, day_index: int, goal_es: str, weight: float, get: flo
                  platillo_comida: str | None = None,
                  platillo_cena: str | None = None,
                  avoid_dishes: list | None = None,
-                 meal_distribution: list | None = None) -> dict:
+                 meal_distribution: list | None = None,
+                 region: str | None = None,
+                 idioma: str | None = None,
+                 restricted_ingredients: list | None = None) -> dict:
 
     avoid_txt = ""
     if avoid_dishes:
         avoid_txt = f"\nEVITA repetir estos platillos que ya se usaron otros días de esta misma semana: {', '.join(avoid_dishes)}."
+
+    if restricted_ingredients:
+        avoid_txt += (
+            f"\nRESTRICCIÓN OBLIGATORIA: el paciente NO puede consumir estos ingredientes bajo ninguna "
+            f"circunstancia (alergia/intolerancia/preferencia) — no los uses ni como parte de otro platillo: "
+            f"{', '.join(restricted_ingredients)}."
+        )
+
+    region_txt = region or "México"
+    idioma_txt = IDIOMA_NOMBRES.get(idioma or "es", "español")
 
     distribution = meal_distribution or DEFAULT_MEAL_DISTRIBUTION
     ejemplo_kcal = {"Desayuno": 200, "Comida": 200, "Cena": 150}
@@ -251,7 +267,7 @@ def generate_day(dia: str, day_index: int, goal_es: str, weight: float, get: flo
         for slot in distribution
     )
 
-    prompt = f"""Eres nutricionista clínico mexicano experto en gastronomía regional. Genera el plan alimenticio del {dia}.
+    prompt = f"""Eres nutricionista clínico experto en la gastronomía de {region_txt}. Genera el plan alimenticio del {dia}.
 
 DATOS:
 - Objetivo: {goal_es} | Peso: {weight}kg | Meta: {get:.0f} kcal
@@ -261,17 +277,18 @@ ALIMENTOS BASE (usa como referencia de porciones):
 {food_context}
 
 PLATILLO PRINCIPAL OBLIGATORIO para el {dia} (puedes ajustar guarniciones/acompañantes, pero la preparación base de cada tiempo fuerte DEBE ser esta, exactamente como está escrita, para garantizar variedad real en la semana):
-- Desayuno: {platillo_desayuno or "libre — usa un platillo mexicano típico distinto a chilaquiles"}
-- Comida: {platillo_comida or "libre — usa un platillo mexicano típico"}
-- Cena: {platillo_cena or "libre — usa un platillo mexicano típico"}
+- Desayuno: {platillo_desayuno or f"libre — usa un platillo típico de {region_txt} distinto a chilaquiles"}
+- Comida: {platillo_comida or f"libre — usa un platillo típico de {region_txt}"}
+- Cena: {platillo_cena or f"libre — usa un platillo típico de {region_txt}"}
 {avoid_txt}
 
 REGLAS:
-1. Usa alimentos y platillos mexicanos auténticos, reales y variados — nunca inventes combinaciones que no existan en la gastronomía mexicana
+1. Usa alimentos y platillos auténticos y reales de la gastronomía de {region_txt}, variados — nunca inventes combinaciones que no existan en esa cocina
 2. El platillo principal de Desayuno, Comida y Cena DEBE ser el indicado arriba, tal cual — no lo cambies ni lo sustituyas por otro
 3. Las colaciones (matutina/vespertina/nocturna) deben variar entre frutas, lácteos y frutos secos — evita repetir el mismo alimento de colación más de una vez en el día
 4. Cada tiempo debe tener 3-6 alimentos específicos con gramos, realistas para la preparación
 5. Los gramos y kcal deben ser nutricionalmente coherentes con el platillo real
+6. Escribe el nombre de cada "alimento" en {idioma_txt} (el resto del JSON — claves y valores de "dia"/"tiempo" — no se traduce, se deja tal cual)
 
 Responde SOLO con JSON:
 {{"dia":"{dia}","comidas":[
@@ -313,10 +330,15 @@ def _prepare_context(plan_data: dict, audit_data: dict, db=None):
         for tiempo in ("Desayuno", "Comida", "Cena")
     }
     meal_distribution = plan_data.get("meal_distribution") or DEFAULT_MEAL_DISTRIBUTION
-    return api_key, goal_es, weight, get, protein_g, carbs_g, fats_g, food_context, assigned, meal_distribution
+    region = plan_data.get("region") or "México"
+    idioma = plan_data.get("idioma") or "es"
+    restricted_ingredients = plan_data.get("restricted_ingredients") or []
+    return (api_key, goal_es, weight, get, protein_g, carbs_g, fats_g, food_context, assigned,
+            meal_distribution, region, idioma, restricted_ingredients)
 
 
-def _run_day(idx: int, dia: str, goal_es, weight, get, protein_g, carbs_g, fats_g, food_context, api_key, assigned, meal_distribution) -> dict:
+def _run_day(idx: int, dia: str, goal_es, weight, get, protein_g, carbs_g, fats_g, food_context, api_key,
+             assigned, meal_distribution, region=None, idioma=None, restricted_ingredients=None) -> dict:
     try:
         return generate_day(
             dia, idx, goal_es, weight, get, protein_g, carbs_g, fats_g, food_context, api_key,
@@ -324,6 +346,9 @@ def _run_day(idx: int, dia: str, goal_es, weight, get, protein_g, carbs_g, fats_
             platillo_comida=assigned["Comida"][idx],
             platillo_cena=assigned["Cena"][idx],
             meal_distribution=meal_distribution,
+            region=region,
+            idioma=idioma,
+            restricted_ingredients=restricted_ingredients,
         )
     except Exception as e:
         print(f"ERRO dia {dia}: {e}")
@@ -331,13 +356,15 @@ def _run_day(idx: int, dia: str, goal_es, weight, get, protein_g, carbs_g, fats_
 
 
 def generate_ai_menu(plan_data: dict, audit_data: dict, db=None) -> dict:
-    api_key, goal_es, weight, get, protein_g, carbs_g, fats_g, food_context, assigned, meal_distribution = _prepare_context(plan_data, audit_data, db)
+    (api_key, goal_es, weight, get, protein_g, carbs_g, fats_g, food_context, assigned,
+     meal_distribution, region, idioma, restricted_ingredients) = _prepare_context(plan_data, audit_data, db)
 
     from concurrent.futures import ThreadPoolExecutor
 
     def run(idx_dia):
         idx, dia = idx_dia
-        return _run_day(idx, dia, goal_es, weight, get, protein_g, carbs_g, fats_g, food_context, api_key, assigned, meal_distribution)
+        return _run_day(idx, dia, goal_es, weight, get, protein_g, carbs_g, fats_g, food_context, api_key,
+                         assigned, meal_distribution, region, idioma, restricted_ingredients)
 
     with ThreadPoolExecutor(max_workers=len(DIAS_SEMANA)) as executor:
         semana = list(executor.map(run, enumerate(DIAS_SEMANA)))
@@ -348,13 +375,15 @@ def generate_ai_menu(plan_data: dict, audit_data: dict, db=None) -> dict:
 def generate_ai_menu_stream(plan_data: dict, audit_data: dict, db=None):
     """Gera os 7 dias em paralelo e cede (yield) cada um assim que fica pronto,
     para alimentar um endpoint SSE com progresso ao vivo no front."""
-    api_key, goal_es, weight, get, protein_g, carbs_g, fats_g, food_context, assigned, meal_distribution = _prepare_context(plan_data, audit_data, db)
+    (api_key, goal_es, weight, get, protein_g, carbs_g, fats_g, food_context, assigned,
+     meal_distribution, region, idioma, restricted_ingredients) = _prepare_context(plan_data, audit_data, db)
 
     from concurrent.futures import ThreadPoolExecutor, as_completed
 
     with ThreadPoolExecutor(max_workers=len(DIAS_SEMANA)) as executor:
         futures = {
-            executor.submit(_run_day, idx, dia, goal_es, weight, get, protein_g, carbs_g, fats_g, food_context, api_key, assigned, meal_distribution): idx
+            executor.submit(_run_day, idx, dia, goal_es, weight, get, protein_g, carbs_g, fats_g, food_context,
+                            api_key, assigned, meal_distribution, region, idioma, restricted_ingredients): idx
             for idx, dia in enumerate(DIAS_SEMANA)
         }
         for future in as_completed(futures):
@@ -379,6 +408,9 @@ def regenerate_single_day(dia: str, plan_data: dict, audit_data: dict, db=None, 
     food_context = build_food_context(audit_data["smae_table"], goal)
     goal_es = {"cut": "pérdida de peso", "bulk": "ganancia muscular", "maintenance": "mantenimiento"}.get(goal, goal)
     meal_distribution = plan_data.get("meal_distribution") or DEFAULT_MEAL_DISTRIBUTION
+    region = plan_data.get("region") or "México"
+    idioma = plan_data.get("idioma") or "es"
+    restricted_ingredients = plan_data.get("restricted_ingredients") or []
 
     dish_pools = _build_dish_pools(db)
     avoid_set = set(avoid_dishes or [])
@@ -398,6 +430,9 @@ def regenerate_single_day(dia: str, plan_data: dict, audit_data: dict, db=None, 
             platillo_cena=pick_fresh("Cena"),
             avoid_dishes=list(avoid_set) if avoid_set else None,
             meal_distribution=meal_distribution,
+            region=region,
+            idioma=idioma,
+            restricted_ingredients=restricted_ingredients,
         )
     except Exception as e:
         return _fallback_day(dia, protein_g, carbs_g, fats_g, get, str(e))

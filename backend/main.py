@@ -84,6 +84,9 @@ if engine.dialect.name == "postgresql":
         conn.execute(text("ALTER TABLE patients ADD COLUMN IF NOT EXISTS education_level VARCHAR"))
         conn.execute(text("ALTER TABLE patients ADD COLUMN IF NOT EXISTS marital_status VARCHAR"))
         conn.execute(text("ALTER TABLE patients ADD COLUMN IF NOT EXISTS children_count INTEGER"))
+        conn.execute(text("ALTER TABLE plans ADD COLUMN IF NOT EXISTS menu_idioma VARCHAR DEFAULT 'es'"))
+        conn.execute(text("ALTER TABLE plans ADD COLUMN IF NOT EXISTS menu_region VARCHAR DEFAULT 'México'"))
+        conn.execute(text("ALTER TABLE plans ADD COLUMN IF NOT EXISTS restricted_ingredients JSON"))
         conn.commit()
 
 # Corrige um erro de digitação nos dados de seed (Azucares/Con grasa tinha

@@ -27,9 +27,18 @@ def _normalize_tiempo(slot_tiempo: str) -> str:
     return "Colación"
 
 
-def _fetch_recipe_pool(db, user_id: int | None) -> dict:
+def _contains_restricted(recipe: Recipe, restricted_lower: list[str]) -> bool:
+    if not restricted_lower:
+        return False
+    nombres = [ing.get("alimento", "").lower() for ing in (recipe.ingredientes or [])]
+    return any(r in nombre for nombre in nombres for r in restricted_lower)
+
+
+def _fetch_recipe_pool(db, user_id: int | None, restricted_ingredients: list[str] | None = None) -> dict:
     """Recetas del banco del sistema (created_by=null) más las privadas del
-    nutricionista actual, agrupadas por tiempo_comida."""
+    nutricionista actual, agrupadas por tiempo_comida — excluye las que
+    contienen algún ingrediente restringido (alergia/intolerancia/preferencia
+    del paciente configurada en el paso Distribuye)."""
     pool: dict[str, list[Recipe]] = {t: [] for t in RECIPE_TIEMPOS}
     query = db.query(Recipe)
     if user_id is not None:
@@ -37,8 +46,9 @@ def _fetch_recipe_pool(db, user_id: int | None) -> dict:
         query = query.filter(or_(Recipe.created_by.is_(None), Recipe.created_by == user_id))
     else:
         query = query.filter(Recipe.created_by.is_(None))
+    restricted_lower = [r.lower().strip() for r in (restricted_ingredients or []) if r.strip()]
     for recipe in query.all():
-        if recipe.tiempo_comida in pool:
+        if recipe.tiempo_comida in pool and not _contains_restricted(recipe, restricted_lower):
             pool[recipe.tiempo_comida].append(recipe)
     return pool
 
@@ -94,7 +104,7 @@ def generate_acervo_menu(plan_data: dict, audit_data: dict, db, user_id: int | N
     carbs_target = audit_data["totals"]["carbs_g"]
     fats_target = audit_data["totals"]["fats_g"]
 
-    pool = _fetch_recipe_pool(db, user_id)
+    pool = _fetch_recipe_pool(db, user_id, plan_data.get("restricted_ingredients"))
     used_ids: set[int] = set()
     semana = []
 

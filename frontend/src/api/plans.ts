@@ -73,6 +73,22 @@ export async function deleteTemplate(planId: number) {
   return data
 }
 
+export interface PlanConfig {
+  idioma: 'es' | 'en' | 'pt'
+  region: string
+  restricted_ingredients: string[]
+}
+
+export async function getPlanConfig(planId: number) {
+  const { data } = await api.get<PlanConfig>(`/plans/${planId}/config`)
+  return data
+}
+
+export async function savePlanConfig(planId: number, config: PlanConfig) {
+  const { data } = await api.put<PlanConfig>(`/plans/${planId}/config`, config)
+  return data
+}
+
 export async function getMealDistribution(planId: number) {
   const { data } = await api.get<{ items: MealSlot[] }>(`/plans/${planId}/meal-distribution`)
   return data.items

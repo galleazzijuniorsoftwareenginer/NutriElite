@@ -88,6 +88,11 @@ class Plan(Base):
     meal_distribution = Column(JSON, nullable=True)
     public_token = Column(String, unique=True, nullable=True, index=True)
     portal_last_accessed_at = Column(DateTime(timezone=True), nullable=True)  # última vez que el paciente abrió su portal
+
+    # Configuración del generador de menú (paso "Distribuye" del wizard)
+    menu_idioma = Column(String, default="es")
+    menu_region = Column(String, default="México")
+    restricted_ingredients = Column(JSON, nullable=True)
 from sqlalchemy import Column, Integer, String, Float
 from backend.database import Base
 
