@@ -5,6 +5,7 @@ RECIPES = [
     # ---------- DESAYUNO ----------
     {
         "nombre": "Huevos a la mexicana con tortilla de maíz",
+        "imagen_url": "https://images.unsplash.com/photo-1583552336796-531290f1fe2a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
         "tiempo_comida": "Desayuno",
         "goal_tags": ["bulk", "maintenance"],
         "categoria_tags": ["Alto en proteína"],
@@ -20,6 +21,7 @@ RECIPES = [
     },
     {
         "nombre": "Claras revueltas con espinaca y avena",
+        "imagen_url": "https://images.unsplash.com/photo-1787761460248-672823a370dc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
         "tiempo_comida": "Desayuno",
         "goal_tags": ["cut"],
         "categoria_tags": ["Bajo en grasa", "Alto en proteína"],
@@ -34,6 +36,7 @@ RECIPES = [
     },
     {
         "nombre": "Chilaquiles verdes con pollo deshebrado",
+        "imagen_url": "https://images.unsplash.com/photo-1633372363856-f2fe2669a26e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
         "tiempo_comida": "Desayuno",
         "goal_tags": ["maintenance", "bulk"],
         "ingredientes": [
@@ -48,6 +51,7 @@ RECIPES = [
     },
     {
         "nombre": "Licuado de avena, plátano y proteína",
+        "imagen_url": "https://images.unsplash.com/photo-1712056407284-c1eda76e7bcd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
         "tiempo_comida": "Desayuno",
         "goal_tags": ["bulk"],
         "ingredientes": [
@@ -62,6 +66,7 @@ RECIPES = [
     # ---------- COLACIÓN ----------
     {
         "nombre": "Yogur griego con fresas y nuez",
+        "imagen_url": "https://images.unsplash.com/photo-1641494587136-eec74f1944ae?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
         "tiempo_comida": "Colación",
         "goal_tags": ["cut", "maintenance"],
         "ingredientes": [
@@ -74,6 +79,7 @@ RECIPES = [
     },
     {
         "nombre": "Jícama y pepino con limón y chile piquín",
+        "imagen_url": "https://images.unsplash.com/photo-1579636859960-06732cdccdf3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
         "tiempo_comida": "Colación",
         "goal_tags": ["cut"],
         "ingredientes": [
@@ -87,6 +93,7 @@ RECIPES = [
     },
     {
         "nombre": "Malteada de proteína con almendras",
+        "imagen_url": "https://images.unsplash.com/photo-1508061253366-f7da158b6d46?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
         "tiempo_comida": "Colación",
         "goal_tags": ["bulk"],
         "categoria_tags": ["Alto en proteína", "Nuevas"],
@@ -101,6 +108,7 @@ RECIPES = [
     # ---------- COMIDA ----------
     {
         "nombre": "Pechuga a la plancha con arroz integral y verduras al vapor",
+        "imagen_url": "https://images.unsplash.com/photo-1532550907401-a500c9a57435?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
         "tiempo_comida": "Comida",
         "goal_tags": ["cut", "maintenance"],
         "categoria_tags": ["Bajo en grasa", "Alto en proteína"],
@@ -116,6 +124,7 @@ RECIPES = [
     },
     {
         "nombre": "Caldo de res con verduras y elote",
+        "imagen_url": "https://images.unsplash.com/photo-1665593998976-d957f2827fe7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
         "tiempo_comida": "Comida",
         "goal_tags": ["maintenance"],
         "ingredientes": [
@@ -130,6 +139,7 @@ RECIPES = [
     },
     {
         "nombre": "Bistec de res con papa al horno y ensalada",
+        "imagen_url": "https://images.unsplash.com/photo-1785695691259-3f09db710535?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
         "tiempo_comida": "Comida",
         "goal_tags": ["bulk"],
         "ingredientes": [
@@ -144,6 +154,7 @@ RECIPES = [
     },
     {
         "nombre": "Pescado a la veracruzana con arroz blanco",
+        "imagen_url": "https://images.unsplash.com/photo-1665332195309-9d75071138f0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
         "tiempo_comida": "Comida",
         "goal_tags": ["cut", "maintenance"],
         "ingredientes": [
@@ -158,6 +169,7 @@ RECIPES = [
     },
     {
         "nombre": "Frijoles de la olla con queso y tortilla",
+        "imagen_url": "https://images.unsplash.com/photo-1617990590988-895fe6cbabda?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
         "tiempo_comida": "Comida",
         "goal_tags": ["maintenance", "bulk"],
         "ingredientes": [
@@ -172,6 +184,7 @@ RECIPES = [
     # ---------- CENA ----------
     {
         "nombre": "Ensalada de atún con verduras frescas",
+        "imagen_url": "https://images.unsplash.com/photo-1578687388049-079580e6eb2d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
         "tiempo_comida": "Cena",
         "goal_tags": ["cut"],
         "categoria_tags": ["Bajo en grasa", "Ensaladas"],
@@ -187,6 +200,7 @@ RECIPES = [
     },
     {
         "nombre": "Quesadillas de flor de calabaza",
+        "imagen_url": "https://images.unsplash.com/photo-1618040996337-56904b7850b9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
         "tiempo_comida": "Cena",
         "goal_tags": ["maintenance"],
         "ingredientes": [
@@ -200,6 +214,7 @@ RECIPES = [
     },
     {
         "nombre": "Sopa de fideo con pechuga desmenuzada",
+        "imagen_url": "https://images.unsplash.com/photo-1695088223408-cd5ae3b2b7fa?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
         "tiempo_comida": "Cena",
         "goal_tags": ["bulk", "maintenance"],
         "ingredientes": [
@@ -213,6 +228,7 @@ RECIPES = [
     },
     {
         "nombre": "Tacos de nopal con queso panela",
+        "imagen_url": "https://images.unsplash.com/photo-1564767655658-4e6b365884ff?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
         "tiempo_comida": "Cena",
         "goal_tags": ["cut"],
         "ingredientes": [
@@ -227,6 +243,7 @@ RECIPES = [
     # ---------- ENSALADAS ----------
     {
         "nombre": "Ensalada mediterránea con queso feta",
+        "imagen_url": "https://images.unsplash.com/photo-1670237735381-ac5c7fa72c51?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
         "tiempo_comida": "Comida",
         "goal_tags": ["cut", "maintenance"],
         "categoria_tags": ["Ensaladas", "Bajo en grasa"],
@@ -243,6 +260,7 @@ RECIPES = [
     },
     {
         "nombre": "Ensalada de nopales con queso panela",
+        "imagen_url": "https://images.unsplash.com/photo-1628961915037-a829e926e26e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
         "tiempo_comida": "Comida",
         "goal_tags": ["cut"],
         "categoria_tags": ["Ensaladas", "Bajo en grasa"],
@@ -258,6 +276,7 @@ RECIPES = [
     },
     {
         "nombre": "Ensalada de quinoa con pollo y aguacate",
+        "imagen_url": "https://images.unsplash.com/photo-1712594534008-b1f94349f969?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
         "tiempo_comida": "Comida",
         "goal_tags": ["maintenance", "bulk"],
         "categoria_tags": ["Ensaladas", "Alto en proteína"],
@@ -272,6 +291,7 @@ RECIPES = [
     },
     {
         "nombre": "Ensalada César ligera con pollo",
+        "imagen_url": "https://images.unsplash.com/photo-1550304943-4f24f54ddde9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
         "tiempo_comida": "Comida",
         "goal_tags": ["cut", "maintenance"],
         "categoria_tags": ["Ensaladas"],
@@ -288,6 +308,7 @@ RECIPES = [
     # ---------- KETO ----------
     {
         "nombre": "Aguacate relleno de atún con mayonesa",
+        "imagen_url": "https://images.unsplash.com/photo-1715611935696-a59ebf388252?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
         "tiempo_comida": "Comida",
         "goal_tags": ["cut"],
         "categoria_tags": ["Keto", "Bajo en grasa"],
@@ -303,6 +324,7 @@ RECIPES = [
     # ---------- NAVIDAD ----------
     {
         "nombre": "Pavo navideño con vegetales asados",
+        "imagen_url": "https://images.unsplash.com/photo-1574672281194-db420378032d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
         "tiempo_comida": "Cena",
         "goal_tags": ["maintenance", "bulk"],
         "categoria_tags": ["Navidad", "Alto en proteína"],
@@ -317,6 +339,7 @@ RECIPES = [
     },
     {
         "nombre": "Ponche de frutas sin azúcar añadida",
+        "imagen_url": "https://images.unsplash.com/photo-1669632851802-9d4672f4c55d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
         "tiempo_comida": "Colación",
         "goal_tags": ["cut", "maintenance"],
         "categoria_tags": ["Navidad", "Bajo en grasa"],

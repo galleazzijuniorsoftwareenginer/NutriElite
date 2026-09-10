@@ -41,7 +41,7 @@ function RecipeCard({ recipe }: { recipe: Recipe }) {
   })
   const tag = recipe.categoria_tags?.[0]
   const gradient = (tag && CATEGORY_GRADIENT[tag]) || DEFAULT_GRADIENT
-  const image = tag && CATEGORY_IMAGE[tag]
+  const image = recipe.imagen_url || (tag && CATEGORY_IMAGE[tag])
   const icon = tag ? CATEGORY_ICON[tag] ?? '🍽' : '🍽'
 
   return (
