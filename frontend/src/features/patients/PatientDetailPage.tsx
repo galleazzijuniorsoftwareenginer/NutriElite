@@ -20,7 +20,14 @@ type Tab = (typeof TABS)[number]
 
 interface PatientPlansResponse {
   patient: { id: number; name: string; email: string; phone: string }
-  plans: { id: number; created_at: string; goal: string; weight: number; get: number; tmb: number }[]
+  plans: { id: number; created_at: string; goal: string; weight: number; height: number | null; get: number; tmb: number }[]
+}
+
+function imcClass(imc: number): { label: string; tone: string } {
+  if (imc < 18.5) return { label: 'Bajo peso', tone: 'text-warn' }
+  if (imc < 25) return { label: 'Normal', tone: 'text-accent-2' }
+  if (imc < 30) return { label: 'Sobrepeso', tone: 'text-warn' }
+  return { label: 'Obesidad', tone: 'text-danger' }
 }
 
 export function PatientDetailPage() {
@@ -43,6 +50,7 @@ export function PatientDetailPage() {
   const firstPlan = sortedPlans[sortedPlans.length - 1]
   const weightDelta = latestPlan && firstPlan && latestPlan.id !== firstPlan.id ? latestPlan.weight - firstPlan.weight : null
   const daysSinceLast = latestPlan ? Math.floor((Date.now() - new Date(latestPlan.created_at).getTime()) / 86400000) : null
+  const imc = latestPlan?.height ? latestPlan.weight / (latestPlan.height / 100) ** 2 : null
 
   return (
     <div className="flex flex-col gap-5">
@@ -70,7 +78,7 @@ export function PatientDetailPage() {
       </div>
 
       {latestPlan && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           <Card className="flex flex-col gap-0.5 py-3">
             <span className="text-[11px] font-medium text-text-2">Último peso</span>
             <span className="font-display text-xl font-semibold text-accent">{latestPlan.weight} kg</span>
@@ -79,6 +87,13 @@ export function PatientDetailPage() {
             <span className="text-[11px] font-medium text-text-2">Variación</span>
             <span className={clsx('font-display text-xl font-semibold', weightDelta === null ? 'text-text-3' : weightDelta > 0 ? 'text-warn' : weightDelta < 0 ? 'text-accent-2' : 'text-text-3')}>
               {weightDelta === null ? '—' : `${weightDelta > 0 ? '+' : ''}${weightDelta.toFixed(1)} kg`}
+            </span>
+          </Card>
+          <Card className="flex flex-col gap-0.5 py-3">
+            <span className="text-[11px] font-medium text-text-2">IMC</span>
+            <span className={clsx('font-display text-xl font-semibold', imc ? imcClass(imc).tone : 'text-text-3')}>
+              {imc ? imc.toFixed(1) : '—'}
+              {imc && <span className="ml-1 text-xs font-medium">{imcClass(imc).label}</span>}
             </span>
           </Card>
           <Card className="flex flex-col gap-0.5 py-3">

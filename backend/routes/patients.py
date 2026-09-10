@@ -101,7 +101,7 @@ def patient_plans(patient_id: int, db: Session = Depends(get_db), token: dict = 
             "status": patient.status,
             "notas_generales": patient.notas_generales,
         },
-        "plans": [{"id": p.id, "created_at": str(p.created_at), "goal": p.goal, "weight": p.weight, "get": p.get, "tmb": p.tmb} for p in plans]
+        "plans": [{"id": p.id, "created_at": str(p.created_at), "goal": p.goal, "weight": p.weight, "height": p.height, "get": p.get, "tmb": p.tmb} for p in plans]
     }
 
 @router.put("/patients/{patient_id}")
