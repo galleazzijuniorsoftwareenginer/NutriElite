@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import {
@@ -96,10 +96,12 @@ function VisitBadge({ previousConsultations }: { previousConsultations: Consulta
 function NewConsultationForm({
   patientId,
   previousConsultations,
+  dirtyRef,
   onSaved,
 }: {
   patientId: number
   previousConsultations: Consultation[]
+  dirtyRef: React.MutableRefObject<boolean>
   onSaved: () => void
 }) {
   const [motivo, setMotivo] = useState('')
@@ -121,6 +123,16 @@ function NewConsultationForm({
   const [pliegueSuprailiaco, setPliegueSuprailiaco] = useState('')
   const [pliegueMuslo, setPliegueMuslo] = useState('')
 
+  const [saveError, setSaveError] = useState('')
+
+  useEffect(() => {
+    dirtyRef.current = Boolean(
+      motivo || peso || talla || diagnostico || evolucion || labs.length > 0 ||
+      pliegueMetodo !== 'ninguno' || grasaManual || pliegueEdad ||
+      pliequePecho || pliegueAbdominal || pliegueTriceps || pliegueSuprailiaco || pliegueMuslo
+    )
+  }, [motivo, peso, talla, diagnostico, evolucion, labs, pliegueMetodo, grasaManual, pliegueEdad, pliequePecho, pliegueAbdominal, pliegueTriceps, pliegueSuprailiaco, pliegueMuslo, dirtyRef])
+
   const saveMut = useMutation({
     mutationFn: () =>
       createConsultation(patientId, {
@@ -140,7 +152,19 @@ function NewConsultationForm({
         edad_medicion: pliegueMetodo === 'pliegues_jp3' && pliegueEdad ? parseInt(pliegueEdad, 10) : null,
         sexo_medicion: pliegueMetodo === 'pliegues_jp3' ? pliegueSexo : null,
       }),
-    onSuccess: onSaved,
+    onSuccess: () => {
+      dirtyRef.current = false
+      setSaveError('')
+      onSaved()
+    },
+    onError: (err: unknown) => {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+      setSaveError(
+        typeof detail === 'string'
+          ? detail
+          : 'No se pudo guardar la consulta. Revisa tu conexión o vuelve a iniciar sesión e intenta de nuevo — tus datos siguen en este formulario.'
+      )
+    },
   })
 
   async function handlePhoto(e: React.ChangeEvent<HTMLInputElement>) {
@@ -272,6 +296,7 @@ function NewConsultationForm({
         <Input value={evolucion} onChange={(e) => setEvolucion(e.target.value)} />
       </FieldWrap>
 
+      {saveError && <p className="rounded-md bg-danger-light px-3 py-2 text-xs text-danger">⚠ {saveError}</p>}
       <Button onClick={() => saveMut.mutate()} loading={saveMut.isPending} className="w-full">
         Guardar consulta
       </Button>
@@ -288,6 +313,21 @@ export function ConsultationsTab({ patientId }: { patientId: number }) {
   const [modalOpen, setModalOpen] = useState(false)
   const [scheduleOpen, setScheduleOpen] = useState(false)
   const [scheduled, setScheduled] = useState(false)
+  const consultaDirtyRef = useRef(false)
+
+  async function handleCloseConsultaModal() {
+    if (consultaDirtyRef.current) {
+      const discard = await confirmAction({
+        title: 'Descartar consulta',
+        message: 'Tienes datos sin guardar en esta consulta. Si cierras ahora, se perderán y no quedarán registrados en el historial.',
+        confirmLabel: 'Sí, descartar',
+        cancelLabel: 'Seguir editando',
+      })
+      if (!discard) return
+      consultaDirtyRef.current = false
+    }
+    setModalOpen(false)
+  }
 
   const deleteMut = useMutation({
     mutationFn: deleteConsultation,
@@ -365,10 +405,11 @@ export function ConsultationsTab({ patientId }: { patientId: number }) {
         )}
       </Card>
 
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Nueva consulta" width={560}>
+      <Modal open={modalOpen} onClose={handleCloseConsultaModal} title="Nueva consulta" width={560}>
         <NewConsultationForm
           patientId={patientId}
           previousConsultations={consultations ?? []}
+          dirtyRef={consultaDirtyRef}
           onSaved={() => {
             queryClient.invalidateQueries({ queryKey: ['consultations', patientId] })
             setModalOpen(false)
