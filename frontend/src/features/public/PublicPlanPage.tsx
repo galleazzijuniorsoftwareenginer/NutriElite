@@ -9,8 +9,8 @@ import { Button } from '../../components/Button'
 
 const SLOT_START_HOUR = 8
 const SLOT_END_HOUR = 20
-const SLOT_MINUTES = 30
-const BOOKING_DURATION_MINUTES = 30
+const SLOT_MINUTES = 60
+const BOOKING_DURATION_MINUTES = 60
 
 function toDateInputValue(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`

@@ -9,9 +9,17 @@ from backend.services.email_service import send_email, render_branded_email
 
 router = APIRouter(prefix="/public")
 
+
+def _naive(dt: datetime) -> datetime:
+    """Postgres devuelve datetime timezone-aware (DateTime(timezone=True) se
+    respeta), mientras que SQLite en dev local lo guarda naive — comparar
+    directamente entre sí lanza TypeError en producción. Todo se normaliza a
+    naive-UTC antes de comparar."""
+    return dt.replace(tzinfo=None) if dt.tzinfo is not None else dt
+
 GOAL_LABEL = {"cut": "Pérdida de peso", "bulk": "Ganancia de masa", "maintenance": "Mantenimiento"}
 
-BOOKING_DURATION_MINUTES = 30
+BOOKING_DURATION_MINUTES = 60
 BOOKING_WINDOW_DAYS = 60
 
 
@@ -84,9 +92,7 @@ def book_appointment(public_token: str, data: PublicBookingRequest, db: Session 
         raise HTTPException(status_code=400, detail="Este plan no está vinculado a un paciente registrado")
 
     now = datetime.utcnow()
-    scheduled_at = data.scheduled_at
-    if scheduled_at.tzinfo is not None:
-        scheduled_at = scheduled_at.replace(tzinfo=None)
+    scheduled_at = _naive(data.scheduled_at)
     if scheduled_at <= now:
         raise HTTPException(status_code=400, detail="Elige una fecha y hora futura")
     if scheduled_at > now + timedelta(days=BOOKING_WINDOW_DAYS):
@@ -100,7 +106,7 @@ def book_appointment(public_token: str, data: PublicBookingRequest, db: Session 
         .all()
     )
     for appt in existing:
-        existing_start = appt.scheduled_at
+        existing_start = _naive(appt.scheduled_at)
         existing_end = existing_start + timedelta(minutes=appt.duration_minutes)
         if new_start < existing_end and existing_start < new_end:
             raise HTTPException(status_code=409, detail="Ese horario ya no está disponible, elige otro")

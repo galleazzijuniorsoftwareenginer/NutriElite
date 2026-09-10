@@ -101,10 +101,24 @@ function WeekGrid({ appointments }: { appointments: Appointment[] }) {
     return d
   }), [weekStart])
   const hours = useMemo(() => {
+    // Siempre cubre el horario laboral 8-17, pero si hay citas fuera de ese
+    // rango en la semana mostrada, se extiende para que nunca queden citas
+    // ocultas fuera de la grilla.
+    let start = GRID_START_HOUR
+    let end = GRID_END_HOUR
+    const weekEnd = new Date(weekStart)
+    weekEnd.setDate(weekEnd.getDate() + 7)
+    appointments.forEach((a) => {
+      const d = new Date(a.scheduled_at)
+      if (d >= weekStart && d < weekEnd) {
+        start = Math.min(start, d.getHours())
+        end = Math.max(end, d.getHours())
+      }
+    })
     const arr: number[] = []
-    for (let h = GRID_START_HOUR; h <= GRID_END_HOUR; h++) arr.push(h)
+    for (let h = start; h <= end; h++) arr.push(h)
     return arr
-  }, [])
+  }, [weekStart, appointments])
 
   function apptsAt(day: Date, hour: number) {
     return appointments.filter((a) => {
@@ -115,13 +129,27 @@ function WeekGrid({ appointments }: { appointments: Appointment[] }) {
 
   return (
     <Card className="overflow-x-auto p-0">
-      <div className="flex items-center justify-between border-b border-border px-4 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3">
         <button onClick={() => setWeekStart((w) => { const d = new Date(w); d.setDate(d.getDate() - 7); return d })} className="rounded-md px-2 py-1 text-xs text-text-2 hover:bg-bg">
           ← Semana anterior
         </button>
-        <span className="text-xs font-semibold capitalize text-text">
-          {days[0].toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })} – {days[6].toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })}
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-semibold capitalize text-text">
+            {days[0].toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })} – {days[6].toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })}
+          </span>
+          <button
+            onClick={() => {
+              const now = new Date()
+              const next = appointments
+                .filter((a) => new Date(a.scheduled_at) >= now)
+                .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime())[0]
+              setWeekStart(startOfWeek(next ? new Date(next.scheduled_at) : now))
+            }}
+            className="rounded-full bg-accent-light px-2.5 py-1 text-[11px] font-semibold text-accent hover:brightness-95"
+          >
+            Ir a próxima cita
+          </button>
+        </div>
         <button onClick={() => setWeekStart((w) => { const d = new Date(w); d.setDate(d.getDate() + 7); return d })} className="rounded-md px-2 py-1 text-xs text-text-2 hover:bg-bg">
           Semana siguiente →
         </button>

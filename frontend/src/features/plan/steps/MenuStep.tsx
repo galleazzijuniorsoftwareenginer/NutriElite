@@ -127,38 +127,37 @@ export function MenuStep({ plan, weeklyMenu, onMenuReady, onContinue }: Props) {
                 />
               </div>
             </div>
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex flex-1 flex-wrap gap-2">
-                {DIAS_SEMANA.map((dia, i) => (
-                  <button
-                    key={dia}
-                    onClick={() => statuses[i] !== 'pending' && setActiveDay(i)}
-                    disabled={statuses[i] === 'pending'}
-                    className={clsx(
-                      'flex flex-1 basis-[130px] items-center justify-center gap-1.5 rounded-full border px-4 py-2.5 text-sm font-semibold transition-colors',
-                      activeDay === i ? 'border-accent bg-accent-light text-accent' : 'border-border text-text-2',
-                      statuses[i] === 'pending' && 'opacity-40'
-                    )}
-                  >
-                    {statuses[i] === 'loading' && <Spinner className="h-3.5 w-3.5 border" />}
-                    {statuses[i] === 'done' && <span className="text-accent">✓</span>}
-                    {statuses[i] === 'error' && <span className="text-danger">✗</span>}
-                    {dia}
-                  </button>
-                ))}
-              </div>
-              {activeMenuDay && (
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+              {DIAS_SEMANA.map((dia, i) => (
+                <button
+                  key={dia}
+                  onClick={() => statuses[i] !== 'pending' && setActiveDay(i)}
+                  disabled={statuses[i] === 'pending'}
+                  className={clsx(
+                    'flex items-center justify-center gap-1.5 rounded-full border px-3 py-2.5 text-sm font-semibold transition-colors',
+                    activeDay === i ? 'border-accent bg-accent-light text-accent' : 'border-border text-text-2',
+                    statuses[i] === 'pending' && 'opacity-40'
+                  )}
+                >
+                  {statuses[i] === 'loading' && <Spinner className="h-3.5 w-3.5 border" />}
+                  {statuses[i] === 'done' && <span className="text-accent">✓</span>}
+                  {statuses[i] === 'error' && <span className="text-danger">✗</span>}
+                  {dia}
+                </button>
+              ))}
+            </div>
+            {activeMenuDay && (
+              <div className="mt-3 flex justify-center">
                 <Button
                   size="sm"
                   variant="ai"
                   loading={regenMut.isPending && regenMut.variables === activeMenuDay.dia}
                   onClick={() => regenMut.mutate(activeMenuDay.dia)}
-                  className="shrink-0"
                 >
                   ↺ Regenerar este día
                 </Button>
-              )}
-            </div>
+              </div>
+            )}
           </Card>
 
           {streamError && <p className="text-xs text-danger">{streamError}</p>}
