@@ -27,7 +27,7 @@ function StatCard({ label, value, tone }: { label: string; value: string | numbe
 export function DashboardPage() {
   const username = useAuthStore((s) => s.username)
   const queryClient = useQueryClient()
-  const { data: patients } = useQuery({ queryKey: ['patients'], queryFn: listPatients })
+  const { data: patients } = useQuery({ queryKey: ['patients'], queryFn: () => listPatients() })
   const { data: plans } = useQuery({ queryKey: ['plans'], queryFn: () => listPlans() })
   const { data: appointments } = useQuery({ queryKey: ['appointments', true], queryFn: () => listAppointments(true) })
   const reminderMut = useMutation({

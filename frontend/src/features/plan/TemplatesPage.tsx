@@ -29,7 +29,7 @@ const CATEGORY_STYLE: Record<string, { gradient: string; icon: string }> = {
 const DEFAULT_STYLE = { gradient: 'linear-gradient(135deg,#6d5bff,#4a37d1)', icon: '🍽' }
 
 function AssignForm({ template, onAssigned }: { template: PathologyTemplateSummary; onAssigned: () => void }) {
-  const { data: patients } = useQuery({ queryKey: ['patients'], queryFn: listPatients })
+  const { data: patients } = useQuery({ queryKey: ['patients'], queryFn: () => listPatients() })
   const [patientId, setPatientId] = useState('')
   const mut = useMutation({
     mutationFn: () => assignPathologyTemplate(template.id, Number(patientId)),

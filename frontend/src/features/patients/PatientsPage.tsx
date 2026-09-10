@@ -2,11 +2,23 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { createPatient, deletePatient, listPatients, updatePatient, type PatientPayload } from '../../api/patients'
-import type { Patient } from '../../types'
+import type { Patient, PatientStatus } from '../../types'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
-import { FieldWrap, Input } from '../../components/Field'
+import { Badge } from '../../components/Badge'
+import { FieldWrap, Input, Select } from '../../components/Field'
 import { Modal } from '../../components/Modal'
+
+const STATUS_LABEL: Record<PatientStatus, string> = {
+  activo: 'Activo',
+  inactivo: 'Inactivo',
+  pausado: 'En pausa',
+}
+const STATUS_TONE: Record<PatientStatus, 'accent' | 'neutral' | 'warn'> = {
+  activo: 'accent',
+  inactivo: 'neutral',
+  pausado: 'warn',
+}
 
 function PatientForm({
   initial,
@@ -22,12 +34,14 @@ function PatientForm({
   const [name, setName] = useState(initial?.name ?? '')
   const [email, setEmail] = useState(initial?.email ?? '')
   const [phone, setPhone] = useState(initial?.phone ?? '')
+  const [status, setStatus] = useState<PatientStatus>(initial?.status ?? 'activo')
+  const [notas, setNotas] = useState(initial?.notas_generales ?? '')
 
   return (
     <form
       onSubmit={(e) => {
         e.preventDefault()
-        onSubmit({ name, email, phone })
+        onSubmit({ name, email, phone, status, notas_generales: notas })
       }}
       className="flex flex-col gap-4"
     >
@@ -39,6 +53,23 @@ function PatientForm({
       </FieldWrap>
       <FieldWrap label="Teléfono">
         <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+      </FieldWrap>
+      {initial && (
+        <FieldWrap label="Estado">
+          <Select value={status} onChange={(e) => setStatus(e.target.value as PatientStatus)}>
+            <option value="activo">Activo</option>
+            <option value="pausado">En pausa</option>
+            <option value="inactivo">Inactivo</option>
+          </Select>
+        </FieldWrap>
+      )}
+      <FieldWrap label="Notas generales" hint="Solo visible para ti, no aparece en el PDF.">
+        <textarea
+          value={notas}
+          onChange={(e) => setNotas(e.target.value)}
+          rows={3}
+          className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-3 outline-none transition-colors focus:border-accent"
+        />
       </FieldWrap>
       <div className="flex justify-end gap-2 pt-2">
         <Button type="button" variant="secondary" onClick={onCancel}>
@@ -54,7 +85,12 @@ function PatientForm({
 
 export function PatientsPage() {
   const queryClient = useQueryClient()
-  const { data: patients, isLoading } = useQuery({ queryKey: ['patients'], queryFn: listPatients })
+  const [statusFilter, setStatusFilter] = useState<PatientStatus | 'todos'>('todos')
+  const [sort, setSort] = useState<'recent' | 'name' | 'oldest' | 'last_plan'>('recent')
+  const { data: patients, isLoading } = useQuery({
+    queryKey: ['patients', statusFilter, sort],
+    queryFn: () => listPatients({ status: statusFilter === 'todos' ? undefined : statusFilter, sort }),
+  })
   const [search, setSearch] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Patient | undefined>(undefined)
@@ -110,12 +146,41 @@ export function PatientsPage() {
         <Button onClick={openNew}>+ Nuevo paciente</Button>
       </div>
 
-      <Input
-        placeholder="Buscar por nombre o email…"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="max-w-xs"
-      />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="inline-flex gap-0.5 rounded-full border border-border bg-bg p-1">
+          {([
+            ['todos', 'Todos'],
+            ['activo', 'Activos'],
+            ['pausado', 'En pausa'],
+            ['inactivo', 'Inactivos'],
+          ] as const).map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setStatusFilter(key)}
+              className={`rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
+                statusFilter === key ? 'bg-surface text-accent shadow-card' : 'text-text-2'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Input
+            placeholder="Buscar por nombre o email…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="max-w-xs"
+          />
+          <Select value={sort} onChange={(e) => setSort(e.target.value as typeof sort)} className="w-auto">
+            <option value="recent">Más recientes</option>
+            <option value="oldest">Más antiguos</option>
+            <option value="name">Nombre A-Z</option>
+            <option value="last_plan">Último plan</option>
+          </Select>
+        </div>
+      </div>
 
       <Card className="p-0 overflow-hidden">
         {isLoading ? (
@@ -131,7 +196,10 @@ export function PatientsPage() {
                     {p.name.slice(0, 1).toUpperCase()}
                   </span>
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-text">{p.name}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="truncate text-sm font-medium text-text">{p.name}</p>
+                      <Badge tone={STATUS_TONE[p.status ?? 'activo']}>{STATUS_LABEL[p.status ?? 'activo']}</Badge>
+                    </div>
                     <p className="truncate text-xs text-text-3">{p.email || 'Sin email'} {p.phone && `· ${p.phone}`}</p>
                   </div>
                 </div>

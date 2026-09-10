@@ -25,6 +25,8 @@ class Patient(Base):
     name = Column(String, index=True)
     email = Column(String)
     phone = Column(String)
+    status = Column(String, default="activo")  # activo|inactivo|pausado
+    notas_generales = Column(Text, nullable=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 

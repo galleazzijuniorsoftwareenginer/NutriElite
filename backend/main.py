@@ -56,6 +56,8 @@ if engine.dialect.name == "postgresql":
         conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR DEFAULT 'professional'"))
         conn.execute(text("ALTER TABLE recipes ADD COLUMN IF NOT EXISTS categoria_tags JSON"))
         conn.execute(text("ALTER TABLE recipes ADD COLUMN IF NOT EXISTS imagen_url VARCHAR"))
+        conn.execute(text("ALTER TABLE patients ADD COLUMN IF NOT EXISTS status VARCHAR DEFAULT 'activo'"))
+        conn.execute(text("ALTER TABLE patients ADD COLUMN IF NOT EXISTS notas_generales TEXT"))
         conn.commit()
 
 seed()

@@ -38,11 +38,15 @@ export interface PlanSummary {
   created_at: string
 }
 
+export type PatientStatus = 'activo' | 'inactivo' | 'pausado'
+
 export interface Patient {
   id: number
   name: string
   email: string
   phone: string
+  status: PatientStatus
+  notas_generales: string | null
   created_at: string
   total_plans: number
   last_plan: string | null
