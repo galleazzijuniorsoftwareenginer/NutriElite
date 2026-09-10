@@ -38,6 +38,12 @@ export function PatientDetailPage() {
 
   const patientId = data.patient.id
 
+  const sortedPlans = [...data.plans].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+  const latestPlan = sortedPlans[0]
+  const firstPlan = sortedPlans[sortedPlans.length - 1]
+  const weightDelta = latestPlan && firstPlan && latestPlan.id !== firstPlan.id ? latestPlan.weight - firstPlan.weight : null
+  const daysSinceLast = latestPlan ? Math.floor((Date.now() - new Date(latestPlan.created_at).getTime()) / 86400000) : null
+
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -62,6 +68,31 @@ export function PatientDetailPage() {
           + Nuevo plan para {data.patient.name.split(' ')[0]}
         </Button>
       </div>
+
+      {latestPlan && (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <Card className="flex flex-col gap-0.5 py-3">
+            <span className="text-[11px] font-medium text-text-2">Último peso</span>
+            <span className="font-display text-xl font-semibold text-accent">{latestPlan.weight} kg</span>
+          </Card>
+          <Card className="flex flex-col gap-0.5 py-3">
+            <span className="text-[11px] font-medium text-text-2">Variación</span>
+            <span className={clsx('font-display text-xl font-semibold', weightDelta === null ? 'text-text-3' : weightDelta > 0 ? 'text-warn' : weightDelta < 0 ? 'text-accent-2' : 'text-text-3')}>
+              {weightDelta === null ? '—' : `${weightDelta > 0 ? '+' : ''}${weightDelta.toFixed(1)} kg`}
+            </span>
+          </Card>
+          <Card className="flex flex-col gap-0.5 py-3">
+            <span className="text-[11px] font-medium text-text-2">TMB actual</span>
+            <span className="font-display text-xl font-semibold text-accent-2">{Math.round(latestPlan.tmb)} kcal</span>
+          </Card>
+          <Card className="flex flex-col gap-0.5 py-3">
+            <span className="text-[11px] font-medium text-text-2">Última actividad</span>
+            <span className="font-display text-xl font-semibold text-accent">
+              {daysSinceLast === 0 ? 'Hoy' : `${daysSinceLast}d`}
+            </span>
+          </Card>
+        </div>
+      )}
 
       <div className="flex items-center gap-1 overflow-x-auto rounded-lg border border-border bg-surface p-1.5">
         {TABS.map((t) => (
