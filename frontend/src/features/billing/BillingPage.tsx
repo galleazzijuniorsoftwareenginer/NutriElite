@@ -14,7 +14,7 @@ const PRO_FEATURES = [
   'Soporte prioritario',
 ]
 
-export function BillingPage() {
+export function BillingContent() {
   const isPro = useAuthStore((s) => s.isPro)
   const [loading, setLoading] = useState(false)
 
@@ -77,4 +77,8 @@ export function BillingPage() {
       </div>
     </div>
   )
+}
+
+export function BillingPage() {
+  return <BillingContent />
 }

@@ -287,6 +287,27 @@ class RecipeFavorite(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 
+class PlanPreferences(Base):
+    """Preferencias por defecto que el nutricionista puede ajustar en
+    Configuración > Plan nutricional — se aplican al abrir un Nuevo plan,
+    pero siguen siendo editables por plan en el wizard."""
+    __tablename__ = "plan_preferences"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False)
+
+    default_formula = Column(String, default="mifflin")  # mifflin|harris|schofield
+    default_activity_level = Column(Float, default=1.55)
+    default_goal = Column(String, default="cut")  # cut|maintenance|bulk
+    protein_pct = Column(Float, default=25)
+    fat_pct = Column(Float, default=20)
+    carb_pct = Column(Float, default=55)
+    kcal_adjustment_cut = Column(Float, default=-300)
+    kcal_adjustment_bulk = Column(Float, default=300)
+
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
 class NutritionistProfile(Base):
     __tablename__ = "nutritionist_profiles"
     id = Column(Integer, primary_key=True, index=True)

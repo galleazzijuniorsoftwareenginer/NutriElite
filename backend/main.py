@@ -14,6 +14,7 @@ from backend.routes.public import router as public_router
 from backend.routes.reference import router as reference_router
 from backend.routes.classroom import router as classroom_router
 from backend.routes.pathology_templates import router as pathology_templates_router
+from backend.routes.preferences import router as preferences_router
 from backend.scripts.seed_pathology_templates import seed_pathology_templates
 from backend.scripts.seed_recipes import seed_recipes
 from backend.routes import smae
@@ -77,6 +78,7 @@ app.include_router(public_router)
 app.include_router(reference_router)
 app.include_router(classroom_router)
 app.include_router(pathology_templates_router)
+app.include_router(preferences_router)
 
 @app.get("/app")
 @app.get("/app/")

@@ -161,14 +161,21 @@ export function AppShell() {
               <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
               <div className="absolute right-0 top-11 z-20 w-48 rounded-lg border border-border bg-surface py-1 shadow-float">
                 <NavLink
-                  to="/perfil"
+                  to="/configuracion?tab=perfil"
                   onClick={() => setMenuOpen(false)}
                   className="block px-3.5 py-2 text-[13px] text-text hover:bg-bg"
                 >
                   Perfil
                 </NavLink>
                 <NavLink
-                  to="/plan-pro"
+                  to="/configuracion?tab=preferencias"
+                  onClick={() => setMenuOpen(false)}
+                  className="block px-3.5 py-2 text-[13px] text-text hover:bg-bg"
+                >
+                  Configuración
+                </NavLink>
+                <NavLink
+                  to="/configuracion?tab=suscripcion"
                   onClick={() => setMenuOpen(false)}
                   className="block px-3.5 py-2 text-[13px] text-text hover:bg-bg"
                 >
