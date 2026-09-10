@@ -353,22 +353,398 @@ RECIPES = [
         "instrucciones": "Hierve todas las frutas con la canela por 20 minutos. Sirve caliente sin azúcar añadida.",
         "kcal_aprox": 120,
     },
+    # ---------- LOTE 1 (Mis catálogos) ----------
+    # Desayuno
+    {
+        "nombre": "Omelette de queso panela y champiñones",
+        "imagen_url": "https://images.unsplash.com/photo-1618173726624-99dd7db65b40?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
+        "tiempo_comida": "Desayuno",
+        "goal_tags": ["cut", "maintenance"],
+        "categoria_tags": ["Alto en proteína", "Nuevas"],
+        "ingredientes": [
+            {"alimento": "Huevo entero", "cantidad_g": 100},
+            {"alimento": "Champiñón fileteado", "cantidad_g": 70},
+            {"alimento": "Queso panela", "cantidad_g": 40},
+            {"alimento": "Cebolla picada", "cantidad_g": 15},
+        ],
+        "instrucciones": "Saltea champiñones y cebolla hasta suavizar. Bate el huevo, agrégalo a la sartén y espolvorea el queso panela antes de doblar el omelette.",
+        "kcal_aprox": 290,
+    },
+    {
+        "nombre": "Hot cakes de avena y plátano sin harina",
+        "imagen_url": "https://images.unsplash.com/photo-1598259298632-e785684cfa90?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
+        "tiempo_comida": "Desayuno",
+        "goal_tags": ["maintenance", "bulk"],
+        "categoria_tags": ["Nuevas"],
+        "ingredientes": [
+            {"alimento": "Avena en hojuelas", "cantidad_g": 60},
+            {"alimento": "Plátano", "cantidad_g": 100},
+            {"alimento": "Huevo entero", "cantidad_g": 50},
+            {"alimento": "Canela en polvo", "cantidad_g": 2},
+        ],
+        "instrucciones": "Licúa todos los ingredientes hasta obtener una masa homogénea. Cocina pequeñas porciones en sartén antiadherente por ambos lados.",
+        "kcal_aprox": 340,
+    },
+    {
+        "nombre": "Yogur con granola casera y moras azules",
+        "imagen_url": "https://images.unsplash.com/photo-1641536885341-301aeb52f1c0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
+        "tiempo_comida": "Desayuno",
+        "goal_tags": ["cut", "maintenance"],
+        "categoria_tags": ["Alto en proteína"],
+        "ingredientes": [
+            {"alimento": "Yogur griego descremado", "cantidad_g": 180},
+            {"alimento": "Granola casera sin azúcar", "cantidad_g": 30},
+            {"alimento": "Moras azules", "cantidad_g": 60},
+            {"alimento": "Miel de abeja", "cantidad_g": 10},
+        ],
+        "instrucciones": "Sirve el yogur en un tazón, agrega la granola y las moras encima, y termina con un hilo de miel.",
+        "kcal_aprox": 260,
+    },
+    {
+        "nombre": "Huevos al horno con jitomate y espinaca",
+        "imagen_url": "https://images.unsplash.com/photo-1624355311781-49422b771021?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
+        "tiempo_comida": "Desayuno",
+        "goal_tags": ["cut"],
+        "categoria_tags": ["Bajo en grasa", "Alto en proteína"],
+        "ingredientes": [
+            {"alimento": "Huevo entero", "cantidad_g": 100},
+            {"alimento": "Jitomate en rodajas", "cantidad_g": 80},
+            {"alimento": "Espinaca fresca", "cantidad_g": 50},
+            {"alimento": "Aceite de oliva", "cantidad_g": 5},
+        ],
+        "instrucciones": "Coloca espinaca y jitomate en un refractario, casca los huevos encima y hornea a 180°C por 12-15 minutos hasta que cuaje la clara.",
+        "kcal_aprox": 240,
+    },
+    {
+        "nombre": "Papaya con yogur y semillas de chía",
+        "imagen_url": "https://images.unsplash.com/photo-1666181941657-eade2d78f3fd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
+        "tiempo_comida": "Desayuno",
+        "goal_tags": ["cut", "maintenance"],
+        "categoria_tags": ["Bajo en grasa"],
+        "ingredientes": [
+            {"alimento": "Papaya picada", "cantidad_g": 200},
+            {"alimento": "Yogur natural bajo en grasa", "cantidad_g": 120},
+            {"alimento": "Semillas de chía", "cantidad_g": 10},
+        ],
+        "instrucciones": "Sirve la papaya en un tazón, cubre con el yogur y espolvorea las semillas de chía. Deja reposar 5 minutos antes de comer.",
+        "kcal_aprox": 180,
+    },
+    {
+        "nombre": "Smoothie verde de espinaca, piña y chía",
+        "imagen_url": "https://images.unsplash.com/photo-1610622929746-ab2606cfd2b7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
+        "tiempo_comida": "Desayuno",
+        "goal_tags": ["cut", "maintenance"],
+        "categoria_tags": ["Bajo en grasa", "Nuevas"],
+        "ingredientes": [
+            {"alimento": "Espinaca fresca", "cantidad_g": 40},
+            {"alimento": "Piña picada", "cantidad_g": 100},
+            {"alimento": "Plátano", "cantidad_g": 60},
+            {"alimento": "Semillas de chía", "cantidad_g": 8},
+            {"alimento": "Agua", "cantidad_g": 200},
+        ],
+        "instrucciones": "Licúa todos los ingredientes hasta obtener una mezcla homogénea. Sirve de inmediato.",
+        "kcal_aprox": 190,
+    },
+    # Colación
+    {
+        "nombre": "Manzana con crema de almendra",
+        "imagen_url": "https://images.unsplash.com/photo-1642339800118-eb551cfa1434?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
+        "tiempo_comida": "Colación",
+        "goal_tags": ["cut", "maintenance"],
+        "categoria_tags": ["Bajo en grasa"],
+        "ingredientes": [
+            {"alimento": "Manzana", "cantidad_g": 150},
+            {"alimento": "Crema de almendra natural", "cantidad_g": 15},
+        ],
+        "instrucciones": "Corta la manzana en rebanadas y sirve con la crema de almendra para untar.",
+        "kcal_aprox": 150,
+    },
+    {
+        "nombre": "Mix de nueces y arándanos deshidratados",
+        "imagen_url": "https://images.unsplash.com/photo-1543158181-1274e5362710?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
+        "tiempo_comida": "Colación",
+        "goal_tags": ["maintenance", "bulk"],
+        "categoria_tags": [],
+        "ingredientes": [
+            {"alimento": "Nuez", "cantidad_g": 15},
+            {"alimento": "Almendra", "cantidad_g": 10},
+            {"alimento": "Arándano deshidratado", "cantidad_g": 15},
+        ],
+        "instrucciones": "Mezcla todos los ingredientes en un contenedor pequeño. Ideal para llevar como colación entre comidas.",
+        "kcal_aprox": 190,
+    },
+    {
+        "nombre": "Palitos de jícama con limón y chile",
+        "imagen_url": "https://images.unsplash.com/photo-1695088224158-f07345e58940?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
+        "tiempo_comida": "Colación",
+        "goal_tags": ["cut"],
+        "categoria_tags": ["Bajo en grasa"],
+        "ingredientes": [
+            {"alimento": "Jícama en palitos", "cantidad_g": 200},
+            {"alimento": "Limón", "cantidad_g": 15},
+            {"alimento": "Chile piquín en polvo", "cantidad_g": 2},
+        ],
+        "instrucciones": "Corta la jícama en palitos, rocía con jugo de limón y espolvorea el chile piquín.",
+        "kcal_aprox": 55,
+    },
+    {
+        "nombre": "Queso panela con guayaba",
+        "imagen_url": "https://images.unsplash.com/photo-1615865417491-9941019fbc00?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
+        "tiempo_comida": "Colación",
+        "goal_tags": ["cut", "maintenance"],
+        "categoria_tags": ["Alto en proteína"],
+        "ingredientes": [
+            {"alimento": "Queso panela", "cantidad_g": 50},
+            {"alimento": "Guayaba", "cantidad_g": 100},
+        ],
+        "instrucciones": "Corta el queso panela en cubos y sirve junto con la guayaba en rebanadas.",
+        "kcal_aprox": 160,
+    },
+    {
+        "nombre": "Edamame al vapor con sal de mar",
+        "imagen_url": "https://images.unsplash.com/photo-1611810174991-5cdd99a2c6b2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
+        "tiempo_comida": "Colación",
+        "goal_tags": ["cut", "maintenance"],
+        "categoria_tags": ["Alto en proteína", "Bajo en grasa"],
+        "ingredientes": [
+            {"alimento": "Edamame con vaina", "cantidad_g": 150},
+            {"alimento": "Sal de mar", "cantidad_g": 2},
+        ],
+        "instrucciones": "Cuece el edamame al vapor por 5 minutos, escurre y espolvorea sal de mar antes de servir.",
+        "kcal_aprox": 130,
+    },
+    # Comida
+    {
+        "nombre": "Pechuga rellena de espinaca y queso panela",
+        "imagen_url": "https://images.unsplash.com/photo-1641898378548-ac93da99786a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
+        "tiempo_comida": "Comida",
+        "goal_tags": ["cut", "maintenance"],
+        "categoria_tags": ["Alto en proteína", "Bajo en grasa"],
+        "ingredientes": [
+            {"alimento": "Pechuga de pollo", "cantidad_g": 200},
+            {"alimento": "Espinaca fresca", "cantidad_g": 50},
+            {"alimento": "Queso panela", "cantidad_g": 30},
+            {"alimento": "Arroz integral cocido", "cantidad_g": 100},
+        ],
+        "instrucciones": "Abre la pechuga en mariposa, rellena con espinaca y queso, cierra con palillos y hornea 25 minutos a 180°C. Sirve con arroz integral.",
+        "kcal_aprox": 420,
+    },
+    {
+        "nombre": "Salmón al horno con espárragos y limón",
+        "imagen_url": "https://images.unsplash.com/photo-1676300185165-3f543c1fcb72?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
+        "tiempo_comida": "Comida",
+        "goal_tags": ["maintenance", "bulk"],
+        "categoria_tags": ["Alto en proteína"],
+        "ingredientes": [
+            {"alimento": "Filete de salmón", "cantidad_g": 180},
+            {"alimento": "Espárragos", "cantidad_g": 120},
+            {"alimento": "Limón", "cantidad_g": 20},
+            {"alimento": "Aceite de oliva", "cantidad_g": 8},
+        ],
+        "instrucciones": "Coloca el salmón y los espárragos en una charola, rocía con aceite y jugo de limón, y hornea a 200°C por 15 minutos.",
+        "kcal_aprox": 380,
+    },
+    {
+        "nombre": "Tinga de pollo con tostadas horneadas",
+        "imagen_url": "https://images.unsplash.com/photo-1788576999396-f73418a7f763?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
+        "tiempo_comida": "Comida",
+        "goal_tags": ["maintenance", "bulk"],
+        "categoria_tags": [],
+        "ingredientes": [
+            {"alimento": "Pechuga de pollo deshebrada", "cantidad_g": 150},
+            {"alimento": "Jitomate", "cantidad_g": 100},
+            {"alimento": "Cebolla", "cantidad_g": 40},
+            {"alimento": "Chipotle adobado", "cantidad_g": 15},
+            {"alimento": "Tostada horneada", "cantidad_g": 60},
+        ],
+        "instrucciones": "Sofríe cebolla y jitomate, agrega el chipotle y el pollo deshebrado. Cocina 10 minutos y sirve sobre tostadas horneadas.",
+        "kcal_aprox": 390,
+    },
+    {
+        "nombre": "Milanesa de pollo empanizada al horno",
+        "imagen_url": "https://images.unsplash.com/photo-1775889325293-fd23980169bf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
+        "tiempo_comida": "Comida",
+        "goal_tags": ["maintenance", "bulk"],
+        "categoria_tags": ["Alto en proteína"],
+        "ingredientes": [
+            {"alimento": "Pechuga de pollo", "cantidad_g": 180},
+            {"alimento": "Pan molido integral", "cantidad_g": 30},
+            {"alimento": "Huevo entero", "cantidad_g": 50},
+            {"alimento": "Ensalada verde mixta", "cantidad_g": 100},
+        ],
+        "instrucciones": "Aplana la pechuga, pasa por huevo y pan molido, y hornea a 200°C por 20 minutos volteando a la mitad. Sirve con ensalada.",
+        "kcal_aprox": 410,
+    },
+    {
+        "nombre": "Arrachera con nopales asados",
+        "imagen_url": "https://images.unsplash.com/photo-1598511756475-c722aeaf9ad5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
+        "tiempo_comida": "Comida",
+        "goal_tags": ["bulk", "maintenance"],
+        "categoria_tags": ["Alto en proteína"],
+        "ingredientes": [
+            {"alimento": "Arrachera de res", "cantidad_g": 180},
+            {"alimento": "Nopal asado", "cantidad_g": 150},
+            {"alimento": "Cebolla asada", "cantidad_g": 40},
+        ],
+        "instrucciones": "Asa la arrachera a término medio y córtala en tiras. Sirve con nopales y cebolla asados.",
+        "kcal_aprox": 440,
+    },
+    {
+        "nombre": "Lentejas con plátano macho y verduras",
+        "imagen_url": "https://images.unsplash.com/photo-1664339031004-9cfdf88b8017?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
+        "tiempo_comida": "Comida",
+        "goal_tags": ["cut", "maintenance"],
+        "categoria_tags": ["Bajo en grasa"],
+        "ingredientes": [
+            {"alimento": "Lenteja cocida", "cantidad_g": 200},
+            {"alimento": "Plátano macho", "cantidad_g": 80},
+            {"alimento": "Zanahoria", "cantidad_g": 60},
+            {"alimento": "Cebolla", "cantidad_g": 30},
+        ],
+        "instrucciones": "Guisa las lentejas con zanahoria y cebolla por 15 minutos. Sirve con rebanadas de plátano macho frito con poco aceite.",
+        "kcal_aprox": 360,
+    },
+    {
+        "nombre": "Tacos de pescado empanizado al horno",
+        "imagen_url": "https://images.unsplash.com/photo-1665401015549-712c0dc5ef85?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
+        "tiempo_comida": "Comida",
+        "goal_tags": ["cut", "maintenance"],
+        "categoria_tags": ["Bajo en grasa"],
+        "ingredientes": [
+            {"alimento": "Filete de pescado blanco", "cantidad_g": 180},
+            {"alimento": "Pan molido integral", "cantidad_g": 25},
+            {"alimento": "Tortilla de maíz", "cantidad_g": 90},
+            {"alimento": "Col morada picada", "cantidad_g": 50},
+        ],
+        "instrucciones": "Empaniza el pescado y hornea a 200°C por 15 minutos. Arma los tacos con tortilla, pescado y col morada.",
+        "kcal_aprox": 380,
+    },
+    {
+        "nombre": "Bowl de quinoa con garbanzo y verduras asadas",
+        "imagen_url": "https://images.unsplash.com/photo-1764674963000-0d113663bc0d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
+        "tiempo_comida": "Comida",
+        "goal_tags": ["cut", "maintenance"],
+        "categoria_tags": ["Bajo en grasa", "Ensaladas"],
+        "ingredientes": [
+            {"alimento": "Quinoa cocida", "cantidad_g": 120},
+            {"alimento": "Garbanzo cocido", "cantidad_g": 100},
+            {"alimento": "Calabacita asada", "cantidad_g": 80},
+            {"alimento": "Pimiento asado", "cantidad_g": 60},
+        ],
+        "instrucciones": "Mezcla la quinoa con el garbanzo y las verduras asadas. Sirve tibio o frío según preferencia.",
+        "kcal_aprox": 380,
+    },
+    {
+        "nombre": "Camarones al ajillo con arroz blanco",
+        "imagen_url": "https://images.unsplash.com/photo-1625943553852-781c6dd46faa?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
+        "tiempo_comida": "Comida",
+        "goal_tags": ["maintenance", "bulk"],
+        "categoria_tags": ["Alto en proteína"],
+        "ingredientes": [
+            {"alimento": "Camarón limpio", "cantidad_g": 180},
+            {"alimento": "Ajo picado", "cantidad_g": 15},
+            {"alimento": "Aceite de oliva", "cantidad_g": 10},
+            {"alimento": "Arroz blanco cocido", "cantidad_g": 100},
+        ],
+        "instrucciones": "Saltea el ajo en aceite de oliva hasta dorar, agrega los camarones y cocina 4-5 minutos. Sirve sobre arroz blanco.",
+        "kcal_aprox": 410,
+    },
+    # Cena
+    {
+        "nombre": "Crema de champiñones ligera",
+        "imagen_url": "https://images.unsplash.com/photo-1643786661490-966f1877effa?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
+        "tiempo_comida": "Cena",
+        "goal_tags": ["cut"],
+        "categoria_tags": ["Bajo en grasa"],
+        "ingredientes": [
+            {"alimento": "Champiñón fileteado", "cantidad_g": 200},
+            {"alimento": "Cebolla", "cantidad_g": 40},
+            {"alimento": "Leche descremada", "cantidad_g": 150},
+            {"alimento": "Caldo de verduras", "cantidad_g": 200},
+        ],
+        "instrucciones": "Sofríe champiñones y cebolla, agrega el caldo y cocina 10 minutos. Licúa con la leche descremada hasta obtener textura cremosa.",
+        "kcal_aprox": 160,
+    },
+    {
+        "nombre": "Ensalada de espinaca con nuez y queso panela",
+        "imagen_url": "https://images.unsplash.com/photo-1646487793655-bbf280273d2f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
+        "tiempo_comida": "Cena",
+        "goal_tags": ["cut", "maintenance"],
+        "categoria_tags": ["Ensaladas", "Bajo en grasa"],
+        "ingredientes": [
+            {"alimento": "Espinaca fresca", "cantidad_g": 100},
+            {"alimento": "Nuez", "cantidad_g": 15},
+            {"alimento": "Queso panela", "cantidad_g": 40},
+            {"alimento": "Vinagreta ligera", "cantidad_g": 15},
+        ],
+        "instrucciones": "Mezcla la espinaca con la nuez y el queso panela en cubos. Aliña con la vinagreta justo antes de servir.",
+        "kcal_aprox": 240,
+    },
+    {
+        "nombre": "Tostadas de atún con aguacate",
+        "imagen_url": "https://images.unsplash.com/photo-1604497181015-76590d828b75?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
+        "tiempo_comida": "Cena",
+        "goal_tags": ["cut", "maintenance"],
+        "categoria_tags": ["Alto en proteína"],
+        "ingredientes": [
+            {"alimento": "Atún en agua", "cantidad_g": 120},
+            {"alimento": "Aguacate", "cantidad_g": 50},
+            {"alimento": "Tostada horneada", "cantidad_g": 60},
+            {"alimento": "Jitomate picado", "cantidad_g": 40},
+        ],
+        "instrucciones": "Mezcla el atún escurrido con el aguacate machacado y el jitomate. Sirve sobre las tostadas horneadas.",
+        "kcal_aprox": 300,
+    },
+    {
+        "nombre": "Sopa de calabaza con jengibre",
+        "imagen_url": "https://images.unsplash.com/photo-1605034997223-1a4819bb58cf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
+        "tiempo_comida": "Cena",
+        "goal_tags": ["cut"],
+        "categoria_tags": ["Bajo en grasa"],
+        "ingredientes": [
+            {"alimento": "Calabaza de castilla", "cantidad_g": 250},
+            {"alimento": "Jengibre fresco", "cantidad_g": 10},
+            {"alimento": "Cebolla", "cantidad_g": 30},
+            {"alimento": "Caldo de verduras", "cantidad_g": 200},
+        ],
+        "instrucciones": "Cuece la calabaza con cebolla, jengibre y caldo por 20 minutos. Licúa hasta obtener una crema tersa.",
+        "kcal_aprox": 140,
+    },
+    {
+        "nombre": "Wrap de pavo con vegetales frescos",
+        "imagen_url": "https://images.unsplash.com/photo-1762631383815-784c04533802?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
+        "tiempo_comida": "Cena",
+        "goal_tags": ["cut", "maintenance"],
+        "categoria_tags": ["Alto en proteína"],
+        "ingredientes": [
+            {"alimento": "Pechuga de pavo rebanada", "cantidad_g": 100},
+            {"alimento": "Tortilla integral", "cantidad_g": 50},
+            {"alimento": "Lechuga", "cantidad_g": 30},
+            {"alimento": "Jitomate", "cantidad_g": 40},
+        ],
+        "instrucciones": "Rellena la tortilla integral con el pavo, la lechuga y el jitomate. Enrolla firmemente y corta a la mitad.",
+        "kcal_aprox": 280,
+    },
 ]
 
 
 def seed_recipes():
+    """Inserta cualquier receta de RECIPES cuyo nombre todavía no exista en la
+    base (entre las de banco, created_by=null) — permite agregar lotes nuevos
+    a esta lista sin duplicar las ya sembradas ni requerir un reset de base."""
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
-    existing = db.query(Recipe).filter(Recipe.created_by.is_(None)).count()
-    if existing > 0:
-        print(f"Recetas ya sembradas — {existing} encontradas. Saltando.")
+    existing_names = {n for (n,) in db.query(Recipe.nombre).filter(Recipe.created_by.is_(None)).all()}
+    to_insert = [item for item in RECIPES if item["nombre"] not in existing_names]
+    if not to_insert:
+        print(f"Recetas ya sembradas — {len(existing_names)} encontradas. Saltando.")
         db.close()
         return
-    for item in RECIPES:
+    for item in to_insert:
         db.add(Recipe(created_by=None, **item))
     db.commit()
     db.close()
-    print(f"Semilla de recetas completa — {len(RECIPES)} recetas insertadas.")
+    print(f"Semilla de recetas: {len(to_insert)} nuevas insertadas ({len(existing_names)} ya existían).")
 
 
 if __name__ == "__main__":
