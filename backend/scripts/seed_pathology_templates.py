@@ -8,8 +8,16 @@ tiempo — sigue siendo un menú semanal genuino, solo con repetición controlad
 """
 from backend.database import SessionLocal, engine
 from backend.models import Base, PathologyTemplate
+from backend.scripts.dish_images import DISH_IMAGES
 
 DIAS_SEMANA = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
+
+
+def _dish_image_url(alimento: str) -> str | None:
+    photo_id = DISH_IMAGES.get(alimento)
+    if not photo_id:
+        return None
+    return f"https://images.unsplash.com/photo-{photo_id}?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=500"
 
 # % del kcal_objetivo diario asignado a cada tiempo de comida
 DISTRIBUCION_TIEMPOS = {
@@ -28,7 +36,10 @@ def _build_semana(kcal_objetivo: float, split: dict, tiempos: dict) -> dict:
     for i, dia in enumerate(DIAS_SEMANA):
         comidas = []
         for tiempo, variantes in tiempos.items():
-            itens = variantes[i % len(variantes)]
+            itens = [
+                {**it, "imagen_url": _dish_image_url(it["alimento"])}
+                for it in variantes[i % len(variantes)]
+            ]
             kcal_tiempo = round(sum(it["kcal"] for it in itens))
             comidas.append({"tiempo": tiempo, "kcal": kcal_tiempo, "itens": itens})
         kcal_total = sum(c["kcal"] for c in comidas)

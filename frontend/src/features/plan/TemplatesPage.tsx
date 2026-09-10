@@ -54,25 +54,84 @@ function AssignForm({ template, onAssigned }: { template: PathologyTemplateSumma
   )
 }
 
+interface MenuItem {
+  alimento: string
+  quantidade_g: number
+  kcal: number
+  imagen_url?: string | null
+}
+interface MenuComida {
+  tiempo: string
+  kcal: number
+  itens: MenuItem[]
+}
+interface MenuDia {
+  dia: string
+  comidas: MenuComida[]
+  macros: { proteina_g: number; carb_g: number; gordura_g: number; kcal_total: number }
+}
+
 function DetailModal({ templateId, onClose }: { templateId: number; onClose: () => void }) {
   const { data: detail } = useQuery({ queryKey: ['pathology-template', templateId], queryFn: () => getPathologyTemplate(templateId) })
   if (!detail) return <p className="text-sm text-text-3">Cargando…</p>
-  const dias = detail.weekly_menu?.semana as Array<{ dia: string; comidas: Array<{ tiempo: string; kcal: number; itens: Array<{ alimento: string; quantidade_g: number }> }> }> | undefined
+  const dias = (detail.weekly_menu?.semana as MenuDia[] | undefined) ?? []
+  const style = CATEGORY_STYLE[detail.categoria] ?? DEFAULT_STYLE
+
+  const avgMacros = dias.reduce(
+    (acc, d) => ({
+      proteina_g: acc.proteina_g + d.macros.proteina_g,
+      carb_g: acc.carb_g + d.macros.carb_g,
+      gordura_g: acc.gordura_g + d.macros.gordura_g,
+      kcal_total: acc.kcal_total + d.macros.kcal_total,
+    }),
+    { proteina_g: 0, carb_g: 0, gordura_g: 0, kcal_total: 0 }
+  )
+  const n = dias.length || 1
+  const kcalAvg = avgMacros.kcal_total / n
+  const pctP = kcalAvg ? ((avgMacros.proteina_g / n) * 4 * 100) / kcalAvg : 0
+  const pctC = kcalAvg ? ((avgMacros.carb_g / n) * 4 * 100) / kcalAvg : 0
+  const pctF = kcalAvg ? ((avgMacros.gordura_g / n) * 9 * 100) / kcalAvg : 0
+
+  const uniqueDishes = new Map<string, MenuItem>()
+  dias.forEach((d) => d.comidas.forEach((c) => c.itens.forEach((it) => {
+    if (!uniqueDishes.has(it.alimento)) uniqueDishes.set(it.alimento, it)
+  })))
+
   return (
-    <div className="flex flex-col gap-4 max-h-[70vh] overflow-y-auto scrollbar-thin">
-      <p className="text-sm text-text-2">{detail.descripcion}</p>
-      {(dias ?? []).map((d) => (
-        <div key={d.dia}>
-          <h4 className="text-xs font-semibold uppercase tracking-wide text-accent mb-1.5">{d.dia}</h4>
-          <ul className="flex flex-col gap-1">
-            {d.comidas.map((c) => (
-              <li key={c.tiempo} className="text-xs text-text-2">
-                <span className="font-medium text-text">{c.tiempo}</span> ({c.kcal} kcal) — {c.itens.map((i) => i.alimento).join(', ')}
-              </li>
-            ))}
-          </ul>
+    <div className="flex flex-col gap-5 max-h-[75vh] overflow-y-auto scrollbar-thin">
+      <div className="flex gap-4">
+        <div className="h-24 w-24 shrink-0 overflow-hidden rounded-lg">
+          <CategoryTile imageUrl={detail.imagen_url} gradient={style.gradient} icon={style.icon} alt={detail.categoria} height={96} iconSize="text-2xl" />
         </div>
-      ))}
+        <div>
+          <h3 className="font-display text-lg font-bold text-text">{detail.nombre}</h3>
+          <p className="mt-1 text-xs text-text-3">{uniqueDishes.size} recetas · {detail.tiempos_por_dia} tiempos</p>
+        </div>
+      </div>
+
+      <p className="text-sm text-text-2">{detail.descripcion}</p>
+
+      <div className="flex flex-wrap gap-2">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-bg px-3 py-1.5 text-xs font-medium text-text-2">🔥 Calorías: {Math.round(kcalAvg)} kcal</span>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-bg px-3 py-1.5 text-xs font-medium text-text-2">🍞 HCO: {pctC.toFixed(1)}%</span>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-bg px-3 py-1.5 text-xs font-medium text-text-2">🥑 Lípidos: {pctF.toFixed(1)}%</span>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-bg px-3 py-1.5 text-xs font-medium text-text-2">🍗 Proteína: {pctP.toFixed(1)}%</span>
+      </div>
+
+      <div>
+        <h4 className="mb-2 text-sm font-semibold text-text">Recetas</h4>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {Array.from(uniqueDishes.values()).map((it) => (
+            <div key={it.alimento} className="overflow-hidden rounded-lg border border-border">
+              <CategoryTile imageUrl={it.imagen_url} gradient={style.gradient} icon="🍽" alt={it.alimento} height={80} iconSize="text-xl" />
+              <div className="p-2">
+                <p className="text-[11px] font-medium text-text leading-snug">{it.alimento}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <Button variant="ghost" onClick={onClose} className="self-end">Cerrar</Button>
     </div>
   )
@@ -150,7 +209,7 @@ function ClinicalLibrary() {
         </div>
       )}
 
-      <Modal open={detailId !== null} onClose={() => setDetailId(null)} title="Detalle de la plantilla" width={560}>
+      <Modal open={detailId !== null} onClose={() => setDetailId(null)} title="Detalle de la plantilla" width={720}>
         {detailId !== null && <DetailModal templateId={detailId} onClose={() => setDetailId(null)} />}
       </Modal>
 
