@@ -2,6 +2,41 @@ from pydantic import BaseModel, field_validator, model_validator
 from typing import Literal, Optional
 
 
+class MealSlot(BaseModel):
+    tiempo: str
+    pct: float
+    horario: Optional[str] = None
+
+
+class MealDistributionRequest(BaseModel):
+    items: list[MealSlot]
+
+    @model_validator(mode="after")
+    def pct_sums_close_to_100(self):
+        total = sum(i.pct for i in self.items)
+        if not (95 <= total <= 105):
+            raise ValueError(f"Los porcentajes deben sumar ~100% (suman {total:.0f}%)")
+        return self
+
+
+class MenuItemManual(BaseModel):
+    alimento: str
+    quantidade_g: float
+    kcal: float
+
+
+class MenuMealManual(BaseModel):
+    tiempo: str
+    kcal: float
+    itens: list[MenuItemManual]
+
+
+class MenuDayManual(BaseModel):
+    dia: str
+    comidas: list[MenuMealManual]
+    macros: dict
+
+
 class PlanRequest(BaseModel):
     patient_name: str
     patient_email: str

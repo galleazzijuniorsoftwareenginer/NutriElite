@@ -73,6 +73,7 @@ class Plan(Base):
     is_template = Column(Integer, default=0)
     template_name = Column(String, nullable=True)
     weekly_menu = Column(JSON, nullable=True)
+    meal_distribution = Column(JSON, nullable=True)
     public_token = Column(String, unique=True, nullable=True, index=True)
 from sqlalchemy import Column, Integer, String, Float
 from backend.database import Base

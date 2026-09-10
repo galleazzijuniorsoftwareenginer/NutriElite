@@ -123,6 +123,12 @@ export interface WeeklyMenu {
   semana: MenuDay[]
 }
 
+export interface MealSlot {
+  tiempo: string
+  pct: number
+  horario?: string
+}
+
 export interface PlanTemplate {
   id: number
   template_name: string

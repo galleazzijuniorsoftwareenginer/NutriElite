@@ -6,12 +6,13 @@ import { getPlan, listTemplates } from '../../api/plans'
 import { DatosStep } from './steps/DatosStep'
 import { DietocalculoStep } from './steps/DietocalculoStep'
 import { AuditoriaStep } from './steps/AuditoriaStep'
+import { DistribuyeStep } from './steps/DistribuyeStep'
 import { MenuStep } from './steps/MenuStep'
 import { ResumenStep } from './steps/ResumenStep'
 import { DEFAULT_PCT, type WizardPlanData } from './planTypes'
 import type { WeeklyMenu } from '../../types'
 
-const STEPS = ['Datos', 'Dietocálculo', 'Auditoría SMAE', 'Menú IA', 'Resumen y PDF']
+const STEPS = ['Datos', 'Dietocálculo', 'Auditoría SMAE', 'Distribuye', 'Menú IA', 'Resumen y PDF']
 
 export function PlanWizardPage() {
   const { planId: planIdParam } = useParams()
@@ -67,8 +68,17 @@ export function PlanWizardPage() {
         tmb: existingPlan.TMB,
         originalGet: existingPlan.GET,
       })
-      setMaxStep(2)
-      setStep(1)
+      // Si el plan ya tiene un menú semanal generado, lo restauramos para que
+      // el nutricionista pueda seguir editando alimentos sin tener que
+      // regenerarlo desde cero al reabrir el plan.
+      if (existingPlan.weekly_menu?.semana?.length) {
+        setWeeklyMenu(existingPlan.weekly_menu)
+        setMaxStep(5)
+        setStep(4)
+      } else {
+        setMaxStep(2)
+        setStep(1)
+      }
     }
   }, [existingPlan])
 
@@ -158,18 +168,32 @@ export function PlanWizardPage() {
       )}
 
       {step === 3 && plan && (
+        <DistribuyeStep
+          plan={plan}
+          carbPct={pct.carbPct}
+          protPct={pct.protPct}
+          fatPct={pct.fatPct}
+          kcalAdjustment={kcalAdjustment}
+          onContinue={() => {
+            setMaxStep((m) => Math.max(m, 4))
+            setStep(4)
+          }}
+        />
+      )}
+
+      {step === 4 && plan && (
         <MenuStep
           plan={plan}
           weeklyMenu={weeklyMenu}
           onMenuReady={(menu) => {
             setWeeklyMenu(menu)
-            setMaxStep((m) => Math.max(m, 4))
+            setMaxStep((m) => Math.max(m, 5))
           }}
-          onContinue={() => setStep(4)}
+          onContinue={() => setStep(5)}
         />
       )}
 
-      {step === 4 && plan && (
+      {step === 5 && plan && (
         <ResumenStep
           plan={plan}
           carbPct={pct.carbPct}

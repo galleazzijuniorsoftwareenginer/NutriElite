@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import clsx from 'clsx'
-import { regenerateDay, streamWeeklyMenu } from '../../../api/menu'
-import type { MenuDay, WeeklyMenu } from '../../../types'
+import { regenerateDay, streamWeeklyMenu, updateMenuDayManual } from '../../../api/menu'
+import type { MenuDay, MenuItem, WeeklyMenu } from '../../../types'
 import { Card } from '../../../components/Card'
 import { Button } from '../../../components/Button'
+import { Input } from '../../../components/Field'
 import { Spinner } from '../../../components/Spinner'
 import { LogoMark } from '../../../components/Logo'
 import type { WizardPlanData } from '../planTypes'
@@ -88,6 +89,77 @@ export function MenuStep({ plan, weeklyMenu, onMenuReady, onContinue }: Props) {
   const allDone = statuses.every((s) => s === 'done' || s === 'error')
   const activeMenuDay = days[activeDay]
 
+  const [editMode, setEditMode] = useState(false)
+  const [draft, setDraft] = useState<MenuDay | null>(null)
+
+  function startEdit() {
+    if (!activeMenuDay) return
+    setDraft(JSON.parse(JSON.stringify(activeMenuDay)))
+    setEditMode(true)
+  }
+
+  function cancelEdit() {
+    setEditMode(false)
+    setDraft(null)
+  }
+
+  function updateItem(mi: number, ii: number, field: keyof MenuItem, value: string | number) {
+    setDraft((prev) => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        comidas: prev.comidas.map((m, mmi) =>
+          mmi !== mi ? m : { ...m, itens: m.itens.map((it, iii) => (iii !== ii ? it : { ...it, [field]: value })) }
+        ),
+      }
+    })
+  }
+
+  function addItem(mi: number) {
+    setDraft((prev) =>
+      prev
+        ? {
+            ...prev,
+            comidas: prev.comidas.map((m, mmi) =>
+              mmi !== mi ? m : { ...m, itens: [...m.itens, { alimento: '', quantidade_g: 0, kcal: 0 }] }
+            ),
+          }
+        : prev
+    )
+  }
+
+  function removeItem(mi: number, ii: number) {
+    setDraft((prev) =>
+      prev
+        ? { ...prev, comidas: prev.comidas.map((m, mmi) => (mmi !== mi ? m : { ...m, itens: m.itens.filter((_, iii) => iii !== ii) })) }
+        : prev
+    )
+  }
+
+  const saveEditMut = useMutation({
+    mutationFn: () => {
+      if (!draft) throw new Error('Sin cambios')
+      const comidas = draft.comidas.map((m) => ({ ...m, kcal: m.itens.reduce((a, it) => a + (Number(it.kcal) || 0), 0) }))
+      const recomputed: MenuDay = {
+        ...draft,
+        comidas,
+        macros: { ...draft.macros, kcal_total: comidas.reduce((a, m) => a + m.kcal, 0) },
+      }
+      return updateMenuDayManual(plan.planId, recomputed.dia, recomputed)
+    },
+    onSuccess: (savedDay) => {
+      const idx = DIAS_SEMANA.indexOf(savedDay.dia)
+      const next = [...days]
+      next[idx] = savedDay
+      setDays(next)
+      onMenuReady({ semana: next.map((d, i) => d ?? fallbackDay(i)) })
+      setEditMode(false)
+      setDraft(null)
+    },
+  })
+
+  const displayDay = editMode ? draft : activeMenuDay
+
   return (
     <div className="flex flex-col gap-4">
       {!weeklyMenu && days.every((d) => d === null) && !generating && (
@@ -146,8 +218,8 @@ export function MenuStep({ plan, weeklyMenu, onMenuReady, onContinue }: Props) {
                 </button>
               ))}
             </div>
-            {activeMenuDay && (
-              <div className="mt-3 flex justify-center">
+            {activeMenuDay && !editMode && (
+              <div className="mt-3 flex justify-center gap-2">
                 <Button
                   size="sm"
                   variant="ai"
@@ -156,47 +228,115 @@ export function MenuStep({ plan, weeklyMenu, onMenuReady, onContinue }: Props) {
                 >
                   ↺ Regenerar este día
                 </Button>
+                {!activeMenuDay.error && (
+                  <Button size="sm" variant="secondary" onClick={startEdit}>
+                    ✏️ Editar alimentos
+                  </Button>
+                )}
               </div>
             )}
           </Card>
 
           {streamError && <p className="text-xs text-danger">{streamError}</p>}
 
-          {activeMenuDay && (
+          {displayDay && (
             <Card>
-              <h3 className="mb-3 text-sm font-semibold text-text">{activeMenuDay.dia}</h3>
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-text">{displayDay.dia}</h3>
+                {editMode && (
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="ghost" onClick={cancelEdit}>Cancelar</Button>
+                    <Button size="sm" loading={saveEditMut.isPending} onClick={() => saveEditMut.mutate()}>
+                      💾 Guardar cambios
+                    </Button>
+                  </div>
+                )}
+              </div>
 
-              {activeMenuDay.error ? (
+              {displayDay.error ? (
                 <p className="rounded-md bg-danger-light px-3 py-2 text-xs text-danger">
-                  No se pudo generar este día ({activeMenuDay.error}). Intenta regenerar.
+                  No se pudo generar este día ({displayDay.error}). Intenta regenerar.
                 </p>
               ) : (
                 <div className="flex flex-col gap-3">
-                  {activeMenuDay.comidas.map((meal, mi) => (
+                  {displayDay.comidas.map((meal, mi) => (
                     <div key={mi} className="rounded-md border border-border p-3">
                       <div className="mb-1.5 flex items-center justify-between text-xs">
                         <span className="font-semibold text-text">{meal.tiempo}</span>
-                        <span className="text-text-3">{meal.kcal} kcal</span>
+                        <span className="text-text-3">
+                          {editMode ? meal.itens.reduce((a, it) => a + (Number(it.kcal) || 0), 0) : meal.kcal} kcal
+                        </span>
                       </div>
-                      <ul className="flex flex-col gap-1">
-                        {meal.itens.map((item, ii) => (
-                          <li key={ii} className="flex items-center justify-between text-xs text-text-2">
-                            <span>{item.alimento}</span>
-                            <span className="text-text-3">
-                              {item.quantidade_g}g · {item.kcal} kcal
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
+                      {editMode ? (
+                        <div className="flex flex-col gap-1.5">
+                          {meal.itens.map((item, ii) => (
+                            <div key={ii} className="flex items-center gap-1.5">
+                              <div className="min-w-0 flex-1">
+                                <Input
+                                  value={item.alimento}
+                                  onChange={(e) => updateItem(mi, ii, 'alimento', e.target.value)}
+                                  placeholder="Alimento"
+                                  className="h-7 text-xs"
+                                />
+                              </div>
+                              <div className="w-16 shrink-0">
+                                <Input
+                                  type="number"
+                                  value={item.quantidade_g}
+                                  onChange={(e) => updateItem(mi, ii, 'quantidade_g', parseFloat(e.target.value) || 0)}
+                                  placeholder="g"
+                                  className="h-7 text-center text-xs"
+                                />
+                              </div>
+                              <span className="shrink-0 text-[10px] text-text-3">g</span>
+                              <div className="w-16 shrink-0">
+                                <Input
+                                  type="number"
+                                  value={item.kcal}
+                                  onChange={(e) => updateItem(mi, ii, 'kcal', parseFloat(e.target.value) || 0)}
+                                  placeholder="kcal"
+                                  className="h-7 text-center text-xs"
+                                />
+                              </div>
+                              <span className="shrink-0 text-[10px] text-text-3">kcal</span>
+                              <button onClick={() => removeItem(mi, ii)} className="shrink-0 text-danger hover:opacity-70">×</button>
+                            </div>
+                          ))}
+                          <Button size="sm" variant="ghost" className="w-fit" onClick={() => addItem(mi)}>
+                            + Agregar alimento
+                          </Button>
+                        </div>
+                      ) : (
+                        <ul className="flex flex-col gap-1">
+                          {meal.itens.map((item, ii) => (
+                            <li key={ii} className="flex items-center justify-between text-xs text-text-2">
+                              <span>{item.alimento}</span>
+                              <span className="text-text-3">
+                                {item.quantidade_g}g · {item.kcal} kcal
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </div>
                   ))}
                   <div className="flex justify-between rounded-md bg-bg px-3 py-2 text-xs font-medium text-text-2">
                     <span>Total del día</span>
-                    <span>
-                      {activeMenuDay.macros.kcal_total} kcal · P {activeMenuDay.macros.proteina_g}g · C{' '}
-                      {activeMenuDay.macros.carb_g}g · G {activeMenuDay.macros.gordura_g}g
-                    </span>
+                    {editMode ? (
+                      <span>{displayDay.comidas.reduce((a, m) => a + m.itens.reduce((b, it) => b + (Number(it.kcal) || 0), 0), 0)} kcal</span>
+                    ) : (
+                      <span>
+                        {displayDay.macros.kcal_total} kcal · P {displayDay.macros.proteina_g}g · C{' '}
+                        {displayDay.macros.carb_g}g · G {displayDay.macros.gordura_g}g
+                      </span>
+                    )}
                   </div>
+                  {editMode && (
+                    <p className="text-[11px] text-text-3">
+                      Los totales de proteína/carbohidratos/grasa del día no se recalculan automáticamente al editar
+                      alimentos a mano — ajusta la auditoría si necesitas que coincidan exactamente.
+                    </p>
+                  )}
                 </div>
               )}
             </Card>

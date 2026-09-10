@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from backend.database import SessionLocal
 from backend.models import Plan, User
-from backend.schemas.plan import PlanRequest
+from backend.schemas.plan import PlanRequest, MealDistributionRequest, MenuDayManual
 
 from backend.routes.auth import verify_token, verify_token_str
 
@@ -191,6 +191,72 @@ def export_plan_pdf(
         headers={"Content-Disposition": f"attachment; filename=plan_{plan_id}.pdf"}
     )
 
+# ---------- DISTRIBUCIÓN DE COMIDAS (paso "Distribuye") ----------
+@router.get("/plans/{plan_id}/meal-distribution")
+def get_meal_distribution(
+    plan_id: int,
+    db: Session = Depends(get_db),
+    token: dict = Depends(verify_token)
+):
+    from backend.services.ai_menu_service import DEFAULT_MEAL_DISTRIBUTION
+
+    username = token["sub"]
+    db_user = db.query(User).filter(User.username == username).first()
+    plan = db.query(Plan).filter(Plan.id == plan_id, Plan.user_id == db_user.id).first()
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plano não encontrado")
+
+    return {"items": plan.meal_distribution or DEFAULT_MEAL_DISTRIBUTION}
+
+
+@router.put("/plans/{plan_id}/meal-distribution")
+def save_meal_distribution(
+    plan_id: int,
+    data: MealDistributionRequest,
+    db: Session = Depends(get_db),
+    token: dict = Depends(verify_token)
+):
+    username = token["sub"]
+    db_user = db.query(User).filter(User.username == username).first()
+    plan = db.query(Plan).filter(Plan.id == plan_id, Plan.user_id == db_user.id).first()
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plano não encontrado")
+
+    plan.meal_distribution = [item.model_dump() for item in data.items]
+    db.commit()
+    return {"items": plan.meal_distribution}
+
+
+# ---------- EDICIÓN MANUAL DE UN DÍA DEL MENÚ ----------
+@router.put("/plans/{plan_id}/menu/day/{dia}")
+def update_menu_day_manual(
+    plan_id: int,
+    dia: str,
+    data: MenuDayManual,
+    db: Session = Depends(get_db),
+    token: dict = Depends(verify_token)
+):
+    """El nutricionista edita a mano un platillo/alimento dentro de un día ya
+    generado (por IA o manual) — sin volver a llamar a Claude. Reemplaza ese
+    día tal cual dentro de weekly_menu, igual que hace la regeneración por IA."""
+    username = token["sub"]
+    db_user = db.query(User).filter(User.username == username).first()
+    plan = db.query(Plan).filter(Plan.id == plan_id, Plan.user_id == db_user.id).first()
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plano não encontrado")
+
+    day_data = data.model_dump()
+    existing = plan.weekly_menu or {"semana": []}
+    dias_existentes = [d.get("dia") for d in existing.get("semana", [])]
+    if dia in dias_existentes:
+        semana = [day_data if d.get("dia") == dia else d for d in existing["semana"]]
+    else:
+        semana = existing.get("semana", []) + [day_data]
+    plan.weekly_menu = {"semana": semana}
+    db.commit()
+    return day_data
+
+
 # ---------- AI MENU GENERATION ----------
 @router.post("/plans/{plan_id}/menu/ai")
 def generate_ai_menu_endpoint(
@@ -214,7 +280,8 @@ def generate_ai_menu_endpoint(
     plan_data = {
         "goal": plan.goal,
         "weight": plan.weight,
-        "get": plan.get
+        "get": plan.get,
+        "meal_distribution": plan.meal_distribution,
     }
 
     try:
@@ -249,7 +316,7 @@ def regenerate_ai_menu_day(
         raise HTTPException(status_code=404, detail="Plano não encontrado")
 
     audit = SMAECalculationService.calculate(plan_id, db)
-    plan_data = {"goal": plan.goal, "weight": plan.weight, "get": plan.get}
+    plan_data = {"goal": plan.goal, "weight": plan.weight, "get": plan.get, "meal_distribution": plan.meal_distribution}
 
     avoid_dishes = []
     if plan.weekly_menu:
@@ -301,7 +368,7 @@ def generate_ai_menu_stream_endpoint(
         raise HTTPException(status_code=404, detail="Plano não encontrado")
 
     audit = SMAECalculationService.calculate(plan_id, db)
-    plan_data = {"goal": plan.goal, "weight": plan.weight, "get": plan.get}
+    plan_data = {"goal": plan.goal, "weight": plan.weight, "get": plan.get, "meal_distribution": plan.meal_distribution}
 
     def event_source():
         collected: dict[int, dict] = {}
@@ -382,6 +449,8 @@ def get_plan(
         "weight": plan.weight,
         "height": plan.height,
         "age": plan.age,
+        "weekly_menu": plan.weekly_menu,
+        "meal_distribution": plan.meal_distribution,
         "gender": plan.gender,
         "activity_level": plan.activity_level,
         "goal": plan.goal,

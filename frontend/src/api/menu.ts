@@ -12,6 +12,13 @@ export async function regenerateDay(planId: number, dia: string) {
   return data
 }
 
+/** Guarda ediciones manuales de un día (alimento cambiado, gramaje ajustado,
+ * ítem agregado/eliminado) sin volver a llamar a la IA. */
+export async function updateMenuDayManual(planId: number, dia: string, day: MenuDay) {
+  const { data } = await api.put<MenuDay>(`/plans/${planId}/menu/day/${encodeURIComponent(dia)}`, day)
+  return data
+}
+
 export interface MenuStreamHandlers {
   onDay: (idx: number, day: MenuDay) => void
   onDone: () => void
