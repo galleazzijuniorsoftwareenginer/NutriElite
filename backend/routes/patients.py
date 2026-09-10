@@ -215,3 +215,52 @@ def delete_patient(patient_id: int, db: Session = Depends(get_db), token: dict =
     db.delete(patient)
     db.commit()
     return {"ok": True}
+
+
+class PatientMessage(BaseModel):
+    subject: str
+    body: str
+
+
+@router.post("/patients/{patient_id}/send-message")
+def send_patient_message(patient_id: int, data: PatientMessage, db: Session = Depends(get_db), token: dict = Depends(verify_token)):
+    """Envía un correo directo al paciente desde 'Acciones' en su ficha —
+    reutiliza el mismo servicio de email que las citas y el reset de
+    contraseña, sin agregar un canal nuevo."""
+    import html as html_lib
+    from backend.services.email_service import send_email, render_branded_email, is_valid_email
+
+    username = token["sub"]
+    user = db.query(User).filter(User.username == username).first()
+    patient = db.query(Patient).filter(Patient.id == patient_id, Patient.user_id == user.id).first()
+    if not patient:
+        raise HTTPException(status_code=404, detail="Paciente não encontrado")
+    if not is_valid_email(patient.email):
+        raise HTTPException(status_code=400, detail="Este paciente no tiene un email válido registrado")
+
+    safe_subject = html_lib.escape(data.subject)
+    safe_body = html_lib.escape(data.body)
+    html = render_branded_email(safe_subject, f'<p style="color:#6b6584;font-size:14px;white-space:pre-line;">{safe_body}</p>')
+    sent = send_email(patient.email, data.subject, html)
+    if not sent:
+        raise HTTPException(status_code=502, detail="No se pudo enviar el correo — intenta de nuevo en un momento")
+    return {"ok": True}
+
+
+@router.post("/patients/{patient_id}/insights")
+def get_patient_insights(patient_id: int, db: Session = Depends(get_db), token: dict = Depends(verify_token)):
+    """Nota corta con IA sobre la evolución del paciente (tendencia de peso
+    y sugerencia para la próxima consulta) — se genera bajo demanda, no se
+    guarda, para no gastar tokens si el nutricionista no la pide."""
+    from backend.services.patient_insights_service import generate_patient_insights
+
+    username = token["sub"]
+    user = db.query(User).filter(User.username == username).first()
+    patient = db.query(Patient).filter(Patient.id == patient_id, Patient.user_id == user.id).first()
+    if not patient:
+        raise HTTPException(status_code=404, detail="Paciente não encontrado")
+
+    plans = db.query(Plan).filter(Plan.patient_id == patient_id).order_by(Plan.created_at.asc()).all()
+    plans_data = [{"created_at": str(p.created_at), "weight": p.weight, "goal": p.goal, "get": p.get} for p in plans]
+    insight = generate_patient_insights(patient.name, plans_data)
+    return {"insight": insight}

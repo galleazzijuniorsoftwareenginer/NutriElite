@@ -46,3 +46,13 @@ export async function getPatientPlans(id: number) {
   const { data } = await api.get(`/patients/${id}/plans`)
   return data
 }
+
+export async function sendPatientMessage(id: number, payload: { subject: string; body: string }) {
+  const { data } = await api.post<{ ok: boolean }>(`/patients/${id}/send-message`, payload)
+  return data
+}
+
+export async function getPatientInsights(id: number) {
+  const { data } = await api.post<{ insight: string }>(`/patients/${id}/insights`)
+  return data
+}
