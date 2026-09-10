@@ -15,7 +15,6 @@ const NAV_ITEMS: { to: string; label: string; end: boolean; icon: NavIconName }[
   { to: '/plantillas', label: 'Plantillas', end: false, icon: 'clipboard' },
   { to: '/recetas', label: 'Recetas', end: false, icon: 'cooking' },
   { to: '/referencia', label: 'Referencia', end: false, icon: 'book' },
-  { to: '/salon', label: 'Salón de clase', end: false, icon: 'graduation' },
 ]
 
 export function AppShell() {
@@ -63,12 +62,39 @@ export function AppShell() {
             </NavLink>
           ))}
         </nav>
-        {(isPro || role === 'student') && (
-          <div className="flex shrink-0 items-center gap-1.5 border-t border-border p-3">
-            {isPro && <Badge tone="ai">PRO</Badge>}
-            {role === 'student' && <Badge tone="blue">ESTUDIANTE</Badge>}
-          </div>
-        )}
+
+        <div className="flex shrink-0 flex-col gap-0.5 border-t border-border p-3">
+          <NavLink
+            to="/configuracion?tab=suscripcion"
+            className={({ isActive }) =>
+              clsx(
+                'flex items-center gap-2.5 rounded-md px-3 py-2 text-[13px] font-medium transition-colors',
+                isActive ? 'bg-accent-light text-accent' : 'text-text-2 hover:bg-bg hover:text-text'
+              )
+            }
+          >
+            <NavIcon name="crown" />
+            {isPro ? 'Mi plan' : 'Mejorar plan'}
+            {isPro && <Badge tone="ai" className="ml-auto">PRO</Badge>}
+          </NavLink>
+          <NavLink
+            to="/configuracion?tab=perfil"
+            className={({ isActive }) =>
+              clsx(
+                'flex items-center gap-2.5 rounded-md px-3 py-2 text-[13px] font-medium transition-colors',
+                isActive ? 'bg-accent-light text-accent' : 'text-text-2 hover:bg-bg hover:text-text'
+              )
+            }
+          >
+            <NavIcon name="settings" />
+            Configuración
+          </NavLink>
+          {role === 'student' && (
+            <div className="px-3 pt-1.5">
+              <Badge tone="blue">ESTUDIANTE</Badge>
+            </div>
+          )}
+        </div>
       </aside>
 
       <div className="flex min-h-screen flex-1 flex-col">

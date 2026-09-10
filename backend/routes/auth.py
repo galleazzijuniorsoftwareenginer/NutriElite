@@ -40,6 +40,13 @@ class UserLogin(BaseModel):
     username: str
     password: str
 
+class ChangePassword(BaseModel):
+    current_password: str
+    new_password: str
+
+class AccountDeleteConfirm(BaseModel):
+    password: str
+
 def hash_password(password: str):
     password = password[:72]
     return pwd_context.hash(password)
@@ -138,4 +145,92 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
     token = create_token({"sub": db_user.username})
 
     return {"access_token": token}
-  
+
+
+@router.post("/change-password")
+def change_password(payload: ChangePassword, token: dict = Depends(verify_token), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == token["sub"]).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if not verify_password(payload.current_password, user.password):
+        raise HTTPException(status_code=400, detail="Contraseña actual incorrecta")
+    if len(payload.new_password) < 6:
+        raise HTTPException(status_code=400, detail="La nueva contraseña debe tener al menos 6 caracteres")
+    user.password = hash_password(payload.new_password)
+    db.commit()
+    return {"message": "Contraseña actualizada"}
+
+
+@router.get("/export-data")
+def export_data(token: dict = Depends(verify_token), db: Session = Depends(get_db)):
+    from backend.models import Patient, Plan, Appointment, ClinicalRecord, Consultation, RenalAssessment
+
+    user = db.query(User).filter(User.username == token["sub"]).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    patients = db.query(Patient).filter(Patient.user_id == user.id).all()
+    patient_ids = [p.id for p in patients]
+    plans = db.query(Plan).filter(Plan.user_id == user.id).all()
+    appointments = db.query(Appointment).filter(Appointment.user_id == user.id).all()
+    clinical_records = db.query(ClinicalRecord).filter(ClinicalRecord.patient_id.in_(patient_ids)).all() if patient_ids else []
+    consultations = db.query(Consultation).filter(Consultation.patient_id.in_(patient_ids)).all() if patient_ids else []
+    renal = db.query(RenalAssessment).filter(RenalAssessment.patient_id.in_(patient_ids)).all() if patient_ids else []
+
+    def row(obj, fields):
+        return {f: getattr(obj, f) for f in fields}
+
+    return {
+        "usuario": {"username": user.username, "email": user.email, "role": user.role},
+        "pacientes": [row(p, ["id", "name", "email", "phone", "status", "notas_generales", "created_at"]) for p in patients],
+        "planes": [row(p, ["id", "patient_id", "patient_name", "goal", "weight", "height", "age", "gender", "tmb", "get", "protein", "carbs", "fats", "weekly_menu", "created_at"]) for p in plans],
+        "citas": [row(a, ["id", "patient_id", "scheduled_at", "duration_minutes", "status", "notes"]) for a in appointments],
+        "fichas_clinicas": [row(c, ["id", "patient_id"]) for c in clinical_records],
+        "consultas": [row(c, ["id", "patient_id", "fecha", "peso", "bioquimicos"]) for c in consultations],
+        "evaluaciones_renales": [row(r, ["id", "patient_id", "created_at"]) for r in renal],
+    }
+
+
+@router.delete("/account")
+def delete_account(payload: AccountDeleteConfirm, token: dict = Depends(verify_token), db: Session = Depends(get_db)):
+    from backend.models import (
+        Patient, Plan, PlanFoodGroup, ClinicalRecord, Consultation, RenalAssessment,
+        Appointment, Recipe, RecipeFavorite, Classroom, ClassroomEnrollment,
+        PlanPreferences, NutritionistProfile,
+    )
+
+    user = db.query(User).filter(User.username == token["sub"]).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if not verify_password(payload.password, user.password):
+        raise HTTPException(status_code=400, detail="Contraseña incorrecta")
+
+    uid = user.id
+    patient_ids = [p.id for p in db.query(Patient.id).filter(Patient.user_id == uid).all()]
+    plan_ids = [p.id for p in db.query(Plan.id).filter(Plan.user_id == uid).all()]
+    classroom_ids = [c.id for c in db.query(Classroom.id).filter(Classroom.professor_user_id == uid).all()]
+
+    if patient_ids:
+        db.query(RenalAssessment).filter(RenalAssessment.patient_id.in_(patient_ids)).delete(synchronize_session=False)
+        db.query(Consultation).filter(Consultation.patient_id.in_(patient_ids)).delete(synchronize_session=False)
+        db.query(ClinicalRecord).filter(ClinicalRecord.patient_id.in_(patient_ids)).delete(synchronize_session=False)
+        db.query(Appointment).filter(Appointment.patient_id.in_(patient_ids)).delete(synchronize_session=False)
+    if plan_ids:
+        db.query(PlanFoodGroup).filter(PlanFoodGroup.plan_id.in_(plan_ids)).delete(synchronize_session=False)
+
+    db.query(Appointment).filter(Appointment.user_id == uid).delete(synchronize_session=False)
+    db.query(Plan).filter(Plan.user_id == uid).delete(synchronize_session=False)
+    db.query(Patient).filter(Patient.user_id == uid).delete(synchronize_session=False)
+    db.query(RecipeFavorite).filter(RecipeFavorite.user_id == uid).delete(synchronize_session=False)
+    db.query(Recipe).filter(Recipe.created_by == uid).delete(synchronize_session=False)
+    if classroom_ids:
+        db.query(ClassroomEnrollment).filter(ClassroomEnrollment.classroom_id.in_(classroom_ids)).delete(synchronize_session=False)
+    db.query(ClassroomEnrollment).filter(ClassroomEnrollment.student_user_id == uid).delete(synchronize_session=False)
+    db.query(Classroom).filter(Classroom.professor_user_id == uid).delete(synchronize_session=False)
+    db.query(PlanPreferences).filter(PlanPreferences.user_id == uid).delete(synchronize_session=False)
+    db.query(NutritionistProfile).filter(NutritionistProfile.user_id == uid).delete(synchronize_session=False)
+    db.query(User).filter(User.id == uid).delete(synchronize_session=False)
+    db.commit()
+
+    return {"message": "Cuenta eliminada"}
+

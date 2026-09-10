@@ -11,12 +11,13 @@ const toneClasses: Record<Tone, string> = {
   ai: 'text-white [background:linear-gradient(120deg,var(--color-glow-violet),var(--color-glow-cyan))]',
 }
 
-export function Badge({ tone = 'neutral', children }: { tone?: Tone; children: React.ReactNode }) {
+export function Badge({ tone = 'neutral', className, children }: { tone?: Tone; className?: string; children: React.ReactNode }) {
   return (
     <span
       className={clsx(
         'inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold',
-        toneClasses[tone]
+        toneClasses[tone],
+        className
       )}
     >
       {children}

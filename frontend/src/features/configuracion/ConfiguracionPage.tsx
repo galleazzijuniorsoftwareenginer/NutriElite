@@ -4,13 +4,15 @@ import clsx from 'clsx'
 import { ProfileForm } from '../profile/ProfilePage'
 import { PreferenciasForm } from './PreferenciasForm'
 import { BillingContent } from '../billing/BillingPage'
+import { CuentaTab } from './CuentaTab'
 
-type Tab = 'perfil' | 'preferencias' | 'suscripcion'
+type Tab = 'perfil' | 'preferencias' | 'suscripcion' | 'cuenta'
 
 const TABS: { key: Tab; label: string; hint: string }[] = [
   { key: 'perfil', label: 'Perfil profesional', hint: 'Datos que aparecen en el PDF' },
   { key: 'preferencias', label: 'Preferencias de plan', hint: 'Valores por defecto al calcular' },
   { key: 'suscripcion', label: 'Suscripción', hint: 'Free vs Pro, facturación' },
+  { key: 'cuenta', label: 'Cuenta', hint: 'Contraseña, datos, eliminar cuenta' },
 ]
 
 export function ConfiguracionPage() {
@@ -48,6 +50,7 @@ export function ConfiguracionPage() {
           {tab === 'perfil' && <ProfileForm />}
           {tab === 'preferencias' && <PreferenciasForm />}
           {tab === 'suscripcion' && <BillingContent />}
+          {tab === 'cuenta' && <CuentaTab />}
         </div>
       </div>
     </div>
