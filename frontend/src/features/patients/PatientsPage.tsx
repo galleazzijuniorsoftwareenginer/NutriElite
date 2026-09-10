@@ -89,6 +89,14 @@ function PatientForm({
   const [activityCategory, setActivityCategory] = useState(initial?.activity_category ?? '')
   const [activityType, setActivityType] = useState(initial?.activity_type ?? '')
   const [etiquetasText, setEtiquetasText] = useState((initial?.etiquetas ?? []).join(', '))
+  const [phoneCountryCode, setPhoneCountryCode] = useState(initial?.phone_country_code ?? '')
+  const [country, setCountry] = useState(initial?.country ?? '')
+  const [timezone, setTimezone] = useState(initial?.timezone ?? '')
+  const [address, setAddress] = useState(initial?.address ?? '')
+  const [residencePlace, setResidencePlace] = useState(initial?.residence_place ?? '')
+  const [educationLevel, setEducationLevel] = useState(initial?.education_level ?? '')
+  const [maritalStatus, setMaritalStatus] = useState(initial?.marital_status ?? '')
+  const [childrenCount, setChildrenCount] = useState(initial?.children_count?.toString() ?? '')
 
   return (
     <form
@@ -103,6 +111,14 @@ function PatientForm({
           activity_category: activityCategory,
           activity_type: activityType,
           etiquetas: etiquetasText.split(',').map((t) => t.trim()).filter(Boolean),
+          phone_country_code: phoneCountryCode,
+          country,
+          timezone,
+          address,
+          residence_place: residencePlace,
+          education_level: educationLevel,
+          marital_status: maritalStatus,
+          children_count: childrenCount === '' ? null : parseInt(childrenCount, 10),
         })
       }}
       className="flex flex-col gap-4"
@@ -113,12 +129,61 @@ function PatientForm({
       <FieldWrap label="Email">
         <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
       </FieldWrap>
-      <FieldWrap label="Teléfono">
-        <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
-      </FieldWrap>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <FieldWrap label="Código país">
+          <Input value={phoneCountryCode} onChange={(e) => setPhoneCountryCode(e.target.value)} placeholder="+52" />
+        </FieldWrap>
+        <div className="sm:col-span-2">
+          <FieldWrap label="Teléfono">
+            <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+          </FieldWrap>
+        </div>
+      </div>
       <FieldWrap label="Etiquetas" hint="Separadas por coma — ej. Diabetes, Prioritario, Deportista">
         <Input value={etiquetasText} onChange={(e) => setEtiquetasText(e.target.value)} placeholder="Diabetes, Prioritario…" />
       </FieldWrap>
+
+      <div className="h-px bg-border" />
+      <p className="text-xs font-semibold text-text-2">Ficha básica</p>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <FieldWrap label="País">
+          <Input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="México" />
+        </FieldWrap>
+        <FieldWrap label="Zona horaria">
+          <Input value={timezone} onChange={(e) => setTimezone(e.target.value)} placeholder="America/Mexico_City" />
+        </FieldWrap>
+      </div>
+      <FieldWrap label="Domicilio">
+        <Input value={address} onChange={(e) => setAddress(e.target.value)} />
+      </FieldWrap>
+      <FieldWrap label="Lugar de residencia">
+        <Input value={residencePlace} onChange={(e) => setResidencePlace(e.target.value)} placeholder="Ciudad, estado" />
+      </FieldWrap>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <FieldWrap label="Escolaridad">
+          <Select value={educationLevel} onChange={(e) => setEducationLevel(e.target.value)}>
+            <option value="">Sin especificar</option>
+            <option value="primaria">Primaria</option>
+            <option value="secundaria">Secundaria</option>
+            <option value="preparatoria">Preparatoria</option>
+            <option value="licenciatura">Licenciatura</option>
+            <option value="posgrado">Posgrado</option>
+          </Select>
+        </FieldWrap>
+        <FieldWrap label="Estado civil">
+          <Select value={maritalStatus} onChange={(e) => setMaritalStatus(e.target.value)}>
+            <option value="">Sin especificar</option>
+            <option value="soltero">Soltero/a</option>
+            <option value="casado">Casado/a</option>
+            <option value="union_libre">Unión libre</option>
+            <option value="divorciado">Divorciado/a</option>
+            <option value="viudo">Viudo/a</option>
+          </Select>
+        </FieldWrap>
+        <FieldWrap label="Hijos">
+          <Input type="number" min={0} value={childrenCount} onChange={(e) => setChildrenCount(e.target.value)} />
+        </FieldWrap>
+      </div>
 
       <div className="h-px bg-border" />
       <p className="text-xs font-semibold text-text-2">Contacto de emergencia</p>

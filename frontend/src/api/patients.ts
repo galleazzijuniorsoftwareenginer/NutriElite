@@ -14,6 +14,14 @@ export interface PatientPayload {
   activity_category?: string
   activity_type?: string
   etiquetas?: string[]
+  timezone?: string
+  country?: string
+  phone_country_code?: string
+  address?: string
+  residence_place?: string
+  education_level?: string
+  marital_status?: string
+  children_count?: number | null
 }
 
 export async function listPatients(params?: {

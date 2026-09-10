@@ -43,6 +43,14 @@ interface PatientPlansResponse {
     activity_type: string | null
     activity_category: string | null
     etiquetas: string[]
+    timezone: string | null
+    country: string | null
+    phone_country_code: string | null
+    address: string | null
+    residence_place: string | null
+    education_level: string | null
+    marital_status: string | null
+    children_count: number | null
   }
   plans: { id: number; created_at: string; goal: string; weight: number; height: number | null; get: number; tmb: number }[]
 }
@@ -103,6 +111,14 @@ export function PatientDetailPage() {
         activity_type: patient.activity_type ?? '',
         activity_category: patient.activity_category ?? '',
         etiquetas: patient.etiquetas,
+        timezone: patient.timezone ?? '',
+        country: patient.country ?? '',
+        phone_country_code: patient.phone_country_code ?? '',
+        address: patient.address ?? '',
+        residence_place: patient.residence_place ?? '',
+        education_level: patient.education_level ?? '',
+        marital_status: patient.marital_status ?? '',
+        children_count: patient.children_count,
       })
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['patient', id] }),

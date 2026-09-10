@@ -55,6 +55,14 @@ export interface Patient {
   activity_category: string | null
   activity_type: string | null
   etiquetas: string[]
+  timezone: string | null
+  country: string | null
+  phone_country_code: string | null
+  address: string | null
+  residence_place: string | null
+  education_level: string | null
+  marital_status: string | null
+  children_count: number | null
   created_at: string
   total_plans: number
   last_plan: string | null

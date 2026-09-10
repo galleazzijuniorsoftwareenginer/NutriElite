@@ -29,6 +29,68 @@ class PatientCreate(BaseModel):
     activity_type: Optional[str] = ""
     activity_category: Optional[str] = ""
     etiquetas: Optional[list[str]] = []
+    timezone: Optional[str] = ""
+    country: Optional[str] = ""
+    phone_country_code: Optional[str] = ""
+    address: Optional[str] = ""
+    residence_place: Optional[str] = ""
+    education_level: Optional[str] = ""
+    marital_status: Optional[str] = ""
+    children_count: Optional[int] = None
+
+
+def _patient_dict(p: Patient) -> dict:
+    """Representación base del paciente (ficha básica) compartida por
+    create/update/list/plans — evita repetir la lista de campos cuatro
+    veces cada vez que se agrega uno nuevo."""
+    return {
+        "id": p.id,
+        "name": p.name,
+        "email": p.email,
+        "phone": p.phone,
+        "status": p.status or "activo",
+        "notas_generales": p.notas_generales,
+        "emergency_contact_name": p.emergency_contact_name,
+        "emergency_contact_phone": p.emergency_contact_phone,
+        "emergency_contact_relation": p.emergency_contact_relation,
+        "blood_type": p.blood_type,
+        "activity_type": p.activity_type,
+        "activity_category": p.activity_category,
+        "etiquetas": p.etiquetas or [],
+        "timezone": p.timezone,
+        "country": p.country,
+        "phone_country_code": p.phone_country_code,
+        "address": p.address,
+        "residence_place": p.residence_place,
+        "education_level": p.education_level,
+        "marital_status": p.marital_status,
+        "children_count": p.children_count,
+    }
+
+
+def _apply_patient_fields(patient: Patient, data: PatientCreate) -> None:
+    patient.name = data.name
+    patient.email = data.email
+    patient.phone = data.phone
+    if data.status is not None:
+        patient.status = data.status
+    patient.notas_generales = data.notas_generales
+    patient.emergency_contact_name = data.emergency_contact_name
+    patient.emergency_contact_phone = data.emergency_contact_phone
+    patient.emergency_contact_relation = data.emergency_contact_relation
+    patient.blood_type = data.blood_type
+    patient.activity_type = data.activity_type
+    patient.activity_category = data.activity_category
+    patient.etiquetas = data.etiquetas or []
+    patient.timezone = data.timezone
+    patient.country = data.country
+    patient.phone_country_code = data.phone_country_code
+    patient.address = data.address
+    patient.residence_place = data.residence_place
+    patient.education_level = data.education_level
+    patient.marital_status = data.marital_status
+    patient.children_count = data.children_count
+
 
 @router.get("/patients")
 def list_patients(
@@ -77,19 +139,7 @@ def list_patients(
             continue
 
         result.append({
-            "id": p.id,
-            "name": p.name,
-            "email": p.email,
-            "phone": p.phone,
-            "status": p.status or "activo",
-            "notas_generales": p.notas_generales,
-            "emergency_contact_name": p.emergency_contact_name,
-            "emergency_contact_phone": p.emergency_contact_phone,
-            "emergency_contact_relation": p.emergency_contact_relation,
-            "blood_type": p.blood_type,
-            "activity_type": p.activity_type,
-            "activity_category": p.activity_category,
-            "etiquetas": p.etiquetas or [],
+            **_patient_dict(p),
             "created_at": str(p.created_at),
             "total_plans": len(plans),
             "last_plan": str(last_plan.created_at) if last_plan else None,
@@ -106,39 +156,12 @@ def list_patients(
 def create_patient(data: PatientCreate, db: Session = Depends(get_db), token: dict = Depends(verify_token)):
     username = token["sub"]
     user = db.query(User).filter(User.username == username).first()
-    patient = Patient(
-        name=data.name,
-        email=data.email,
-        phone=data.phone,
-        status=data.status or "activo",
-        notas_generales=data.notas_generales,
-        emergency_contact_name=data.emergency_contact_name,
-        emergency_contact_phone=data.emergency_contact_phone,
-        emergency_contact_relation=data.emergency_contact_relation,
-        blood_type=data.blood_type,
-        activity_type=data.activity_type,
-        activity_category=data.activity_category,
-        etiquetas=data.etiquetas or [],
-        user_id=user.id,
-    )
+    patient = Patient(user_id=user.id)
+    _apply_patient_fields(patient, data)
     db.add(patient)
     db.commit()
     db.refresh(patient)
-    return {
-        "id": patient.id,
-        "name": patient.name,
-        "email": patient.email,
-        "phone": patient.phone,
-        "status": patient.status,
-        "notas_generales": patient.notas_generales,
-        "emergency_contact_name": patient.emergency_contact_name,
-        "emergency_contact_phone": patient.emergency_contact_phone,
-        "emergency_contact_relation": patient.emergency_contact_relation,
-        "blood_type": patient.blood_type,
-        "activity_type": patient.activity_type,
-        "activity_category": patient.activity_category,
-        "etiquetas": patient.etiquetas or [],
-    }
+    return _patient_dict(patient)
 
 @router.get("/patients/{patient_id}/plans")
 def patient_plans(patient_id: int, db: Session = Depends(get_db), token: dict = Depends(verify_token)):
@@ -149,21 +172,7 @@ def patient_plans(patient_id: int, db: Session = Depends(get_db), token: dict = 
         raise HTTPException(status_code=404, detail="Paciente não encontrado")
     plans = db.query(Plan).filter(Plan.patient_id == patient_id).order_by(Plan.created_at.desc()).all()
     return {
-        "patient": {
-            "id": patient.id,
-            "name": patient.name,
-            "email": patient.email,
-            "phone": patient.phone,
-            "status": patient.status,
-            "notas_generales": patient.notas_generales,
-            "emergency_contact_name": patient.emergency_contact_name,
-            "emergency_contact_phone": patient.emergency_contact_phone,
-            "emergency_contact_relation": patient.emergency_contact_relation,
-            "blood_type": patient.blood_type,
-            "activity_type": patient.activity_type,
-            "activity_category": patient.activity_category,
-            "etiquetas": patient.etiquetas or [],
-        },
+        "patient": _patient_dict(patient),
         "plans": [{"id": p.id, "created_at": str(p.created_at), "goal": p.goal, "weight": p.weight, "height": p.height, "get": p.get, "tmb": p.tmb} for p in plans]
     }
 
@@ -174,36 +183,10 @@ def update_patient(patient_id: int, data: PatientCreate, db: Session = Depends(g
     patient = db.query(Patient).filter(Patient.id == patient_id, Patient.user_id == user.id).first()
     if not patient:
         raise HTTPException(status_code=404, detail="Paciente não encontrado")
-    patient.name = data.name
-    patient.email = data.email
-    patient.phone = data.phone
-    if data.status is not None:
-        patient.status = data.status
-    patient.notas_generales = data.notas_generales
-    patient.emergency_contact_name = data.emergency_contact_name
-    patient.emergency_contact_phone = data.emergency_contact_phone
-    patient.emergency_contact_relation = data.emergency_contact_relation
-    patient.blood_type = data.blood_type
-    patient.activity_type = data.activity_type
-    patient.activity_category = data.activity_category
-    patient.etiquetas = data.etiquetas or []
+    _apply_patient_fields(patient, data)
     db.commit()
     db.refresh(patient)
-    return {
-        "id": patient.id,
-        "name": patient.name,
-        "email": patient.email,
-        "phone": patient.phone,
-        "status": patient.status,
-        "notas_generales": patient.notas_generales,
-        "emergency_contact_name": patient.emergency_contact_name,
-        "emergency_contact_phone": patient.emergency_contact_phone,
-        "emergency_contact_relation": patient.emergency_contact_relation,
-        "blood_type": patient.blood_type,
-        "activity_type": patient.activity_type,
-        "activity_category": patient.activity_category,
-        "etiquetas": patient.etiquetas or [],
-    }
+    return _patient_dict(patient)
 
 @router.delete("/patients/{patient_id}")
 def delete_patient(patient_id: int, db: Session = Depends(get_db), token: dict = Depends(verify_token)):
