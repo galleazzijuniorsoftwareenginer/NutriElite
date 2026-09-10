@@ -1,10 +1,130 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
-import { getPublicPlan } from '../../api/public'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { getPublicPlan, getBusySlots, bookPublicAppointment } from '../../api/public'
 import { Logo } from '../../components/Logo'
 import { Card } from '../../components/Card'
 import { Spinner } from '../../components/Spinner'
+import { Button } from '../../components/Button'
+
+const SLOT_START_HOUR = 8
+const SLOT_END_HOUR = 20
+const SLOT_MINUTES = 30
+const BOOKING_DURATION_MINUTES = 30
+
+function toDateInputValue(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+function BookingSection({ token }: { token: string }) {
+  const queryClient = useQueryClient()
+  const today = new Date()
+  const [selectedDate, setSelectedDate] = useState(toDateInputValue(today))
+  const [selectedTime, setSelectedTime] = useState<string | null>(null)
+  const [confirmed, setConfirmed] = useState<string | null>(null)
+  const [error, setError] = useState('')
+
+  const { data: busySlots } = useQuery({
+    queryKey: ['public-busy-slots', token],
+    queryFn: () => getBusySlots(token),
+  })
+
+  const timeSlots = useMemo(() => {
+    const slots: string[] = []
+    for (let h = SLOT_START_HOUR; h < SLOT_END_HOUR; h++) {
+      for (let m = 0; m < 60; m += SLOT_MINUTES) {
+        slots.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`)
+      }
+    }
+    return slots
+  }, [])
+
+  const isSlotBusy = (time: string) => {
+    const [h, m] = time.split(':').map(Number)
+    const start = new Date(`${selectedDate}T00:00:00`)
+    start.setHours(h, m, 0, 0)
+    const end = new Date(start.getTime() + BOOKING_DURATION_MINUTES * 60000)
+    const now = new Date()
+    if (start <= now) return true
+    return (busySlots ?? []).some((b) => {
+      const bStart = new Date(b.scheduled_at)
+      const bEnd = new Date(bStart.getTime() + b.duration_minutes * 60000)
+      return start < bEnd && bStart < end
+    })
+  }
+
+  const mut = useMutation({
+    mutationFn: () => {
+      const [h, m] = selectedTime!.split(':').map(Number)
+      const dt = new Date(`${selectedDate}T00:00:00`)
+      dt.setHours(h, m, 0, 0)
+      return bookPublicAppointment(token, dt.toISOString())
+    },
+    onSuccess: (res) => {
+      setConfirmed(new Date(res.scheduled_at).toLocaleString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }))
+      setSelectedTime(null)
+      queryClient.invalidateQueries({ queryKey: ['public-busy-slots', token] })
+    },
+    onError: (err: unknown) => {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+      setError(detail || 'No se pudo agendar la cita, intenta con otro horario.')
+    },
+  })
+
+  const maxDate = new Date(today.getTime() + 60 * 86400000)
+
+  return (
+    <Card>
+      <h2 className="mb-1 text-sm font-semibold text-text">📅 Agendar mi próxima cita</h2>
+      <p className="mb-4 text-xs text-text-2">Horario disponible: {SLOT_START_HOUR}:00 – {SLOT_END_HOUR}:00.</p>
+
+      {confirmed ? (
+        <div className="rounded-md bg-accent-2-light px-4 py-3 text-sm text-accent-2">
+          ✅ Cita confirmada para <b className="capitalize">{confirmed}</b>. Recibirás un correo de confirmación.
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3">
+          <input
+            type="date"
+            value={selectedDate}
+            min={toDateInputValue(today)}
+            max={toDateInputValue(maxDate)}
+            onChange={(e) => {
+              setSelectedDate(e.target.value)
+              setSelectedTime(null)
+            }}
+            className="w-full max-w-xs rounded-md border border-border bg-surface px-3 py-2 text-sm text-text outline-none focus:border-accent"
+          />
+          <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-6">
+            {timeSlots.map((t) => {
+              const busy = isSlotBusy(t)
+              return (
+                <button
+                  key={t}
+                  disabled={busy}
+                  onClick={() => setSelectedTime(t)}
+                  className={`rounded-md border px-2 py-1.5 text-xs font-medium transition-colors ${
+                    busy
+                      ? 'cursor-not-allowed border-border text-text-3 opacity-40'
+                      : selectedTime === t
+                        ? 'border-accent bg-accent text-white'
+                        : 'border-border text-text hover:bg-bg'
+                  }`}
+                >
+                  {t}
+                </button>
+              )
+            })}
+          </div>
+          {error && <p className="text-xs text-danger">{error}</p>}
+          <Button disabled={!selectedTime} loading={mut.isPending} onClick={() => mut.mutate()} className="self-start">
+            Confirmar cita
+          </Button>
+        </div>
+      )}
+    </Card>
+  )
+}
 
 export function PublicPlanPage() {
   const { token } = useParams()
@@ -111,6 +231,8 @@ export function PublicPlanPage() {
             </Card>
           </>
         )}
+
+        {data.can_book && token && <BookingSection token={token} />}
       </main>
     </div>
   )
