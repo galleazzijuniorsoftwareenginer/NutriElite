@@ -200,6 +200,25 @@ def call_claude_with_retry(prompt: str, api_key: str, retries: int = 1) -> str:
             last_error = e
     raise last_error
 
+def _validate_day_json(parsed: dict) -> None:
+    """El modelo a veces omite quantidade_g en algún alimento (JSON válido
+    pero incompleto) — eso pasaba silenciosamente y el PDF mostraba "—g".
+    Se valida acá para que ese caso dispare un reintento en vez de guardarse."""
+    comidas = parsed.get("comidas")
+    if not comidas:
+        raise ValueError("Respuesta sin comidas")
+    for comida in comidas:
+        itens = comida.get("itens") or comida.get("items")
+        if not itens:
+            raise ValueError(f"Tiempo sin alimentos: {comida.get('tiempo')}")
+        for item in itens:
+            qty = item.get("quantidade_g")
+            if not isinstance(qty, (int, float)) or qty <= 0:
+                raise ValueError(f"Alimento sin quantidade_g válido: {item.get('alimento')}")
+            if not item.get("alimento"):
+                raise ValueError("Alimento sin nombre")
+
+
 def generate_day(dia: str, day_index: int, goal_es: str, weight: float, get: float,
                  protein_g: float, carbs_g: float, fats_g: float,
                  food_context: str, api_key: str,
@@ -244,8 +263,16 @@ Responde SOLO con JSON:
 {{"tiempo":"Colación nocturna","kcal":{int(get*0.05)},"itens":[{{"alimento":"nombre","quantidade_g":100,"kcal":69}}]}}
 ],"macros":{{"proteina_g":{protein_g:.0f},"carb_g":{carbs_g:.0f},"gordura_g":{fats_g:.0f},"kcal_total":{get:.0f}}}}}"""
 
-    text = call_claude_with_retry(prompt, api_key, retries=1)
-    return json.loads(text)
+    last_error = None
+    for attempt in range(2):
+        text = call_claude_with_retry(prompt, api_key, retries=0)
+        try:
+            parsed = json.loads(text)
+            _validate_day_json(parsed)
+            return parsed
+        except (json.JSONDecodeError, ValueError) as e:
+            last_error = e
+    raise last_error
 
 def _fallback_day(dia: str, protein_g: float, carbs_g: float, fats_g: float, get: float, error: str) -> dict:
     return {
