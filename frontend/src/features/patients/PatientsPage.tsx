@@ -20,6 +20,19 @@ const STATUS_TONE: Record<PatientStatus, 'accent' | 'neutral' | 'warn'> = {
   pausado: 'warn',
 }
 
+function daysSince(dateStr: string | null): number | null {
+  if (!dateStr) return null
+  return Math.floor((Date.now() - new Date(dateStr).getTime()) / 86400000)
+}
+
+function lastPlanLabel(dateStr: string | null): string {
+  const days = daysSince(dateStr)
+  if (days === null) return 'Sin plan aún'
+  if (days === 0) return 'Último plan: hoy'
+  if (days === 1) return 'Último plan: ayer'
+  return `Último plan: hace ${days} días`
+}
+
 function PatientForm({
   initial,
   onSubmit,
@@ -199,8 +212,13 @@ export function PatientsPage() {
                     <div className="flex items-center gap-2">
                       <p className="truncate text-sm font-medium text-text">{p.name}</p>
                       <Badge tone={STATUS_TONE[p.status ?? 'activo']}>{STATUS_LABEL[p.status ?? 'activo']}</Badge>
+                      {p.status === 'activo' && (daysSince(p.last_plan) === null || (daysSince(p.last_plan) ?? 0) >= 30) && (
+                        <Badge tone="warn">⏰ Seguimiento</Badge>
+                      )}
                     </div>
-                    <p className="truncate text-xs text-text-3">{p.email || 'Sin email'} {p.phone && `· ${p.phone}`}</p>
+                    <p className="truncate text-xs text-text-3">
+                      {p.email || 'Sin email'} {p.phone && `· ${p.phone}`} · {lastPlanLabel(p.last_plan)}
+                    </p>
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5">

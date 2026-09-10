@@ -113,6 +113,25 @@ export function AgendaPage() {
     },
   })
 
+  const { data: allAppointments } = useQuery({
+    queryKey: ['appointments', 'agenda', 'todas'],
+    queryFn: () => listAppointments(false),
+  })
+
+  const stats = useMemo(() => {
+    const all = allAppointments ?? []
+    const now = new Date()
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    const thisMonth = all.filter((a) => new Date(a.scheduled_at) >= startOfMonth)
+    const completed = thisMonth.filter((a) => a.status === 'completed').length
+    const noShow = thisMonth.filter((a) => a.status === 'no_show').length
+    const cancelled = thisMonth.filter((a) => a.status === 'cancelled').length
+    const closed = completed + noShow
+    const noShowRate = closed > 0 ? Math.round((noShow / closed) * 100) : 0
+    const upcoming = all.filter((a) => a.status === 'scheduled' && new Date(a.scheduled_at) >= now).length
+    return { thisMonth: thisMonth.length, completed, cancelled, noShowRate, upcoming }
+  }, [allAppointments])
+
   const grouped = useMemo(() => {
     const map = new Map<string, Appointment[]>()
     ;(appointments ?? []).forEach((a) => {
@@ -129,6 +148,25 @@ export function AgendaPage() {
       <div>
         <h1 className="font-display text-2xl font-semibold text-text">Agenda</h1>
         <p className="text-sm text-text-2">Todas tus citas en un solo lugar.</p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Card className="flex flex-col gap-0.5 py-3">
+          <span className="text-[11px] font-medium text-text-2">Próximas</span>
+          <span className="font-display text-xl font-semibold text-accent">{stats.upcoming}</span>
+        </Card>
+        <Card className="flex flex-col gap-0.5 py-3">
+          <span className="text-[11px] font-medium text-text-2">Este mes</span>
+          <span className="font-display text-xl font-semibold text-accent-2">{stats.thisMonth}</span>
+        </Card>
+        <Card className="flex flex-col gap-0.5 py-3">
+          <span className="text-[11px] font-medium text-text-2">Completadas (mes)</span>
+          <span className="font-display text-xl font-semibold text-accent">{stats.completed}</span>
+        </Card>
+        <Card className="flex flex-col gap-0.5 py-3">
+          <span className="text-[11px] font-medium text-text-2">Tasa de inasistencia</span>
+          <span className="font-display text-xl font-semibold text-warn">{stats.noShowRate}%</span>
+        </Card>
       </div>
 
       <div className="inline-flex self-start gap-0.5 rounded-full border border-border bg-bg p-1">
