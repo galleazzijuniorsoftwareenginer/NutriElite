@@ -757,6 +757,181 @@ TEMPLATES = [
             ],
         },
     ),
+    dict(
+        nombre="Plan pediátrico escolar",
+        categoria="Pediátrica",
+        kcal_objetivo=1600,
+        imagen_url="https://images.unsplash.com/photo-1684160244466-b89ef03b7638?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
+        descripcion="Porciones adecuadas para edad escolar (7-10 años) con presentaciones atractivas — cubre requerimientos de crecimiento sin excesos de azúcar añadida.",
+        split={"p": 15, "f": 30, "c": 55},
+        tiempos={
+            "Desayuno": [
+                [{"alimento": "Yogur griego natural", "quantidade_g": 150, "kcal": 100}, {"alimento": "Fresas", "quantidade_g": 80, "kcal": 28}],
+                [{"alimento": "Huevo cocido con aguacate y aceitunas", "quantidade_g": 150, "kcal": 220}, {"alimento": "Pan integral", "quantidade_g": 25, "kcal": 65}],
+                [{"alimento": "Avena en hojuelas", "quantidade_g": 150, "kcal": 170}],
+            ],
+            "Colación AM": [
+                [{"alimento": "Manzana", "quantidade_g": 120, "kcal": 62}],
+                [{"alimento": "Queso panela", "quantidade_g": 30, "kcal": 70}],
+                [{"alimento": "Plátano", "quantidade_g": 100, "kcal": 90}],
+            ],
+            "Comida": [
+                [{"alimento": "Quesadilla de queso con verduras", "quantidade_g": 200, "kcal": 380}],
+                [{"alimento": "Nuggets de pollo horneados", "quantidade_g": 150, "kcal": 300}, {"alimento": "Arroz integral", "quantidade_g": 60, "kcal": 70}],
+                [{"alimento": "Pechuga de pollo a la plancha", "quantidade_g": 120, "kcal": 190}, {"alimento": "Arroz integral", "quantidade_g": 70, "kcal": 80}, {"alimento": "Zanahoria y pepino con limón", "quantidade_g": 80, "kcal": 25}],
+            ],
+            "Colación PM": [
+                [{"alimento": "Yogur natural bajo en grasa", "quantidade_g": 120, "kcal": 60}],
+                [{"alimento": "Uvas", "quantidade_g": 100, "kcal": 69}],
+                [{"alimento": "Nueces", "quantidade_g": 10, "kcal": 65}],
+            ],
+            "Cena": [
+                [{"alimento": "Tortilla de claras con champiñones y queso panela", "quantidade_g": 180, "kcal": 180}],
+                [{"alimento": "Sopa de verduras con pollo deshebrado", "quantidade_g": 220, "kcal": 160}],
+                [{"alimento": "Ensalada de atún con verduras", "quantidade_g": 180, "kcal": 170}],
+            ],
+        },
+    ),
+    dict(
+        nombre="Plan geriátrico",
+        categoria="Geriátrica",
+        kcal_objetivo=1600,
+        imagen_url="https://images.unsplash.com/photo-1575467678930-c7acd65d6470?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
+        descripcion="Proteína elevada para prevenir sarcopenia, texturas suaves de fácil masticación y buena hidratación — con calcio y vitamina D para salud ósea.",
+        split={"p": 25, "f": 30, "c": 45},
+        tiempos={
+            "Desayuno": [
+                [{"alimento": "Yogur griego natural", "quantidade_g": 200, "kcal": 130}, {"alimento": "Plátano", "quantidade_g": 100, "kcal": 90}],
+                [{"alimento": "Huevo pochado con espinaca y jitomate", "quantidade_g": 180, "kcal": 200}],
+                [{"alimento": "Avena integral con canela", "quantidade_g": 180, "kcal": 200}],
+            ],
+            "Colación AM": [
+                [{"alimento": "Requesón con fruta", "quantidade_g": 150, "kcal": 150}],
+                [{"alimento": "Manzana", "quantidade_g": 130, "kcal": 68}],
+                [{"alimento": "Queso panela", "quantidade_g": 40, "kcal": 95}],
+            ],
+            "Comida": [
+                [{"alimento": "Puré de papa con pollo deshebrado", "quantidade_g": 280, "kcal": 360}],
+                [{"alimento": "Filete de pescado al vapor", "quantidade_g": 200, "kcal": 230}, {"alimento": "Arroz integral", "quantidade_g": 80, "kcal": 90}],
+                [{"alimento": "Crema de calabaza con semillas", "quantidade_g": 280, "kcal": 220}, {"alimento": "Queso panela", "quantidade_g": 40, "kcal": 95}],
+            ],
+            "Colación PM": [
+                [{"alimento": "Yogur natural bajo en grasa", "quantidade_g": 150, "kcal": 75}],
+                [{"alimento": "Requesón con fruta", "quantidade_g": 150, "kcal": 150}],
+                [{"alimento": "Plátano", "quantidade_g": 100, "kcal": 90}],
+            ],
+            "Cena": [
+                [{"alimento": "Sopa de verduras con pollo deshebrado", "quantidade_g": 300, "kcal": 220}],
+                [{"alimento": "Pescado blanco al vapor con verduras", "quantidade_g": 220, "kcal": 210}],
+                [{"alimento": "Tortilla de claras con champiñones y queso panela", "quantidade_g": 220, "kcal": 220}],
+            ],
+        },
+    ),
+    dict(
+        nombre="Plan de soporte nutricional oncológico",
+        categoria="Oncológica",
+        kcal_objetivo=2000,
+        imagen_url="https://images.unsplash.com/photo-1693996045300-521e9d08cabc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
+        descripcion="Hipercalórico e hiperproteico para preservar masa magra durante el tratamiento, con preparaciones bien cocidas y de fácil tolerancia — ajustable según apetito y efectos secundarios.",
+        split={"p": 25, "f": 30, "c": 45},
+        tiempos={
+            "Desayuno": [
+                [{"alimento": "Licuado de avena, plátano y proteína en polvo", "quantidade_g": 350, "kcal": 400}],
+                [{"alimento": "Huevos revueltos con aguacate y queso", "quantidade_g": 220, "kcal": 420}],
+                [{"alimento": "Yogur griego con granola y proteína", "quantidade_g": 280, "kcal": 400}],
+            ],
+            "Colación AM": [
+                [{"alimento": "Licuado hipercalórico de plátano y crema de cacahuate", "quantidade_g": 300, "kcal": 350}],
+                [{"alimento": "Batido de proteína con leche", "quantidade_g": 300, "kcal": 220}],
+                [{"alimento": "Requesón con fruta", "quantidade_g": 200, "kcal": 200}],
+            ],
+            "Comida": [
+                [{"alimento": "Pechuga de pollo con arroz y vegetales", "quantidade_g": 350, "kcal": 550}],
+                [{"alimento": "Salmón con camote y espárragos", "quantidade_g": 320, "kcal": 480}],
+                [{"alimento": "Puré de papa con pollo deshebrado", "quantidade_g": 320, "kcal": 420}],
+            ],
+            "Colación PM": [
+                [{"alimento": "Yogur griego con nuez", "quantidade_g": 220, "kcal": 260}],
+                [{"alimento": "Requesón con fruta", "quantidade_g": 200, "kcal": 200}],
+                [{"alimento": "Batido de proteína con leche", "quantidade_g": 300, "kcal": 220}],
+            ],
+            "Cena": [
+                [{"alimento": "Tazón de pavo molido con vegetales y quinoa", "quantidade_g": 320, "kcal": 440}],
+                [{"alimento": "Crema de calabaza con semillas", "quantidade_g": 300, "kcal": 230}, {"alimento": "Queso panela", "quantidade_g": 50, "kcal": 115}],
+                [{"alimento": "Pescado al horno con verduras y arroz", "quantidade_g": 320, "kcal": 400}],
+            ],
+        },
+    ),
+    dict(
+        nombre="Catálogo renal KDOQI",
+        categoria="Renal KDOQI",
+        kcal_objetivo=1800,
+        imagen_url="https://images.unsplash.com/photo-1705147289789-6df2593f1b1e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
+        descripcion="Punto de partida general alineado a guías KDOQI (proteína moderada, sodio/potasio/fósforo controlados) — cada paciente requiere ajuste individual según estadio de ERC y laboratorios (ver Módulo renal).",
+        split={"p": 12, "f": 30, "c": 58},
+        tiempos={
+            "Desayuno": [
+                [{"alimento": "Claras revueltas con avena y frutos rojos", "quantidade_g": 200, "kcal": 260}],
+                [{"alimento": "Omelette de claras con champiñones", "quantidade_g": 180, "kcal": 160}, {"alimento": "Tortilla de maíz", "quantidade_g": 30, "kcal": 65}],
+                [{"alimento": "Avena en hojuelas", "quantidade_g": 180, "kcal": 200}],
+            ],
+            "Colación AM": [
+                [{"alimento": "Manzana", "quantidade_g": 130, "kcal": 68}],
+                [{"alimento": "Ciruela", "quantidade_g": 100, "kcal": 46}],
+                [{"alimento": "Piña con jengibre", "quantidade_g": 130, "kcal": 70}],
+            ],
+            "Comida": [
+                [{"alimento": "Arroz blanco con claras de huevo", "quantidade_g": 280, "kcal": 320}],
+                [{"alimento": "Pechuga de pollo a la plancha", "quantidade_g": 150, "kcal": 250}, {"alimento": "Arroz integral", "quantidade_g": 90, "kcal": 100}],
+                [{"alimento": "Filete de pescado al vapor", "quantidade_g": 180, "kcal": 210}, {"alimento": "Tortilla de maíz", "quantidade_g": 30, "kcal": 65}],
+            ],
+            "Colación PM": [
+                [{"alimento": "Ensalada verde mixta", "quantidade_g": 120, "kcal": 30}],
+                [{"alimento": "Manzana", "quantidade_g": 130, "kcal": 68}],
+                [{"alimento": "Pan integral", "quantidade_g": 30, "kcal": 75}],
+            ],
+            "Cena": [
+                [{"alimento": "Tortilla de claras con champiñones y queso panela", "quantidade_g": 200, "kcal": 200}],
+                [{"alimento": "Sopa de verduras con pollo deshebrado", "quantidade_g": 280, "kcal": 200}],
+                [{"alimento": "Ensalada de atún con verduras", "quantidade_g": 220, "kcal": 210}],
+            ],
+        },
+    ),
+    dict(
+        nombre="Manejo del hipertiroidismo",
+        categoria="Hipertiroidismo",
+        kcal_objetivo=2200,
+        imagen_url="https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800",
+        descripcion="Aporte calórico elevado para compensar el estado hipermetabólico, con calcio extra por el riesgo de pérdida ósea y sin exceso de yodo ni estimulantes.",
+        split={"p": 25, "f": 30, "c": 45},
+        tiempos={
+            "Desayuno": [
+                [{"alimento": "Yogur griego con nuez y miel", "quantidade_g": 220, "kcal": 300}],
+                [{"alimento": "Avena con leche de almendra y plátano", "quantidade_g": 280, "kcal": 380}],
+                [{"alimento": "Huevos revueltos con aguacate y queso", "quantidade_g": 220, "kcal": 420}],
+            ],
+            "Colación AM": [
+                [{"alimento": "Queso panela", "quantidade_g": 50, "kcal": 115}],
+                [{"alimento": "Almendras", "quantidade_g": 25, "kcal": 145}],
+                [{"alimento": "Requesón con fruta", "quantidade_g": 180, "kcal": 180}],
+            ],
+            "Comida": [
+                [{"alimento": "Salmón a la mantequilla con espárragos", "quantidade_g": 280, "kcal": 500}],
+                [{"alimento": "Pechuga de pollo con arroz y vegetales", "quantidade_g": 350, "kcal": 550}],
+                [{"alimento": "Bistec de res con arroz integral y ensalada", "quantidade_g": 320, "kcal": 500}],
+            ],
+            "Colación PM": [
+                [{"alimento": "Batido de proteína con leche", "quantidade_g": 300, "kcal": 220}],
+                [{"alimento": "Yogur griego con nuez", "quantidade_g": 220, "kcal": 260}],
+                [{"alimento": "Plátano con crema de cacahuate", "quantidade_g": 150, "kcal": 250}],
+            ],
+            "Cena": [
+                [{"alimento": "Tazón de pavo molido con vegetales y quinoa", "quantidade_g": 320, "kcal": 440}],
+                [{"alimento": "Pescado al horno con verduras y arroz", "quantidade_g": 320, "kcal": 400}],
+                [{"alimento": "Requesón con fruta", "quantidade_g": 200, "kcal": 200}, {"alimento": "Pan integral", "quantidade_g": 30, "kcal": 75}],
+            ],
+        },
+    ),
 ]
 
 
