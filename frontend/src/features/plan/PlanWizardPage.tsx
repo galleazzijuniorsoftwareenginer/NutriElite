@@ -90,20 +90,20 @@ export function PlanWizardPage() {
         </h1>
       </div>
 
-      <div className="flex items-center gap-1 overflow-x-auto rounded-lg border border-border bg-surface p-1.5">
+      <div className="flex items-center gap-1.5 overflow-x-auto rounded-lg border border-border bg-surface p-1.5">
         {STEPS.map((label, i) => (
           <button
             key={label}
             onClick={() => goToStep(i)}
             disabled={i > maxStep}
             className={clsx(
-              'flex shrink-0 items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
+              'flex flex-1 basis-0 items-center justify-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium transition-colors',
               i === step ? 'bg-accent-light text-accent' : i <= maxStep ? 'text-text-2 hover:bg-bg' : 'text-text-3 cursor-not-allowed'
             )}
           >
             <span
               className={clsx(
-                'flex h-5 w-5 items-center justify-center rounded-full text-[10px]',
+                'flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px]',
                 i === step ? 'bg-accent text-white' : i < maxStep ? 'bg-accent-light text-accent' : 'bg-bg text-text-3'
               )}
             >

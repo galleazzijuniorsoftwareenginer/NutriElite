@@ -127,24 +127,37 @@ export function MenuStep({ plan, weeklyMenu, onMenuReady, onContinue }: Props) {
                 />
               </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {DIAS_SEMANA.map((dia, i) => (
-                <button
-                  key={dia}
-                  onClick={() => statuses[i] !== 'pending' && setActiveDay(i)}
-                  disabled={statuses[i] === 'pending'}
-                  className={clsx(
-                    'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors',
-                    activeDay === i ? 'border-accent bg-accent-light text-accent' : 'border-border text-text-2',
-                    statuses[i] === 'pending' && 'opacity-40'
-                  )}
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-1 flex-wrap gap-2">
+                {DIAS_SEMANA.map((dia, i) => (
+                  <button
+                    key={dia}
+                    onClick={() => statuses[i] !== 'pending' && setActiveDay(i)}
+                    disabled={statuses[i] === 'pending'}
+                    className={clsx(
+                      'flex flex-1 basis-[130px] items-center justify-center gap-1.5 rounded-full border px-4 py-2.5 text-sm font-semibold transition-colors',
+                      activeDay === i ? 'border-accent bg-accent-light text-accent' : 'border-border text-text-2',
+                      statuses[i] === 'pending' && 'opacity-40'
+                    )}
+                  >
+                    {statuses[i] === 'loading' && <Spinner className="h-3.5 w-3.5 border" />}
+                    {statuses[i] === 'done' && <span className="text-accent">✓</span>}
+                    {statuses[i] === 'error' && <span className="text-danger">✗</span>}
+                    {dia}
+                  </button>
+                ))}
+              </div>
+              {activeMenuDay && (
+                <Button
+                  size="sm"
+                  variant="ai"
+                  loading={regenMut.isPending && regenMut.variables === activeMenuDay.dia}
+                  onClick={() => regenMut.mutate(activeMenuDay.dia)}
+                  className="shrink-0"
                 >
-                  {statuses[i] === 'loading' && <Spinner className="h-3 w-3 border" />}
-                  {statuses[i] === 'done' && <span className="text-accent">✓</span>}
-                  {statuses[i] === 'error' && <span className="text-danger">✗</span>}
-                  {dia.slice(0, 3)}
-                </button>
-              ))}
+                  ↺ Regenerar este día
+                </Button>
+              )}
             </div>
           </Card>
 
@@ -152,17 +165,7 @@ export function MenuStep({ plan, weeklyMenu, onMenuReady, onContinue }: Props) {
 
           {activeMenuDay && (
             <Card>
-              <div className="mb-3 flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-text">{activeMenuDay.dia}</h3>
-                <Button
-                  size="sm"
-                  variant="ai"
-                  loading={regenMut.isPending && regenMut.variables === activeMenuDay.dia}
-                  onClick={() => regenMut.mutate(activeMenuDay.dia)}
-                >
-                  ↺ Regenerar este día
-                </Button>
-              </div>
+              <h3 className="mb-3 text-sm font-semibold text-text">{activeMenuDay.dia}</h3>
 
               {activeMenuDay.error ? (
                 <p className="rounded-md bg-danger-light px-3 py-2 text-xs text-danger">
