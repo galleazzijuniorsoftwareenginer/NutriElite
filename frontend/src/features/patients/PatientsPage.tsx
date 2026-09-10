@@ -35,6 +35,14 @@ function lastPlanLabel(dateStr: string | null): string {
   return `Último plan: hace ${days} días`
 }
 
+function lastUsedLabel(dateStr: string | null): string {
+  const days = daysSince(dateStr)
+  if (days === null) return 'Sin uso registrado'
+  if (days === 0) return 'Hoy'
+  if (days === 1) return 'Ayer'
+  return `Hace ${days} días`
+}
+
 function CopyPortalLinkButton({ planId, mode }: { planId: number; mode: 'completo' | 'agendar' }) {
   const [state, setState] = useState<'idle' | 'loading' | 'copied'>('idle')
 
@@ -80,6 +88,15 @@ function PatientForm({
   const [bloodType, setBloodType] = useState(initial?.blood_type ?? '')
   const [activityCategory, setActivityCategory] = useState(initial?.activity_category ?? '')
   const [activityType, setActivityType] = useState(initial?.activity_type ?? '')
+  const [etiquetasText, setEtiquetasText] = useState((initial?.etiquetas ?? []).join(', '))
+  const [phoneCountryCode, setPhoneCountryCode] = useState(initial?.phone_country_code ?? '')
+  const [country, setCountry] = useState(initial?.country ?? '')
+  const [timezone, setTimezone] = useState(initial?.timezone ?? '')
+  const [address, setAddress] = useState(initial?.address ?? '')
+  const [residencePlace, setResidencePlace] = useState(initial?.residence_place ?? '')
+  const [educationLevel, setEducationLevel] = useState(initial?.education_level ?? '')
+  const [maritalStatus, setMaritalStatus] = useState(initial?.marital_status ?? '')
+  const [childrenCount, setChildrenCount] = useState(initial?.children_count?.toString() ?? '')
 
   return (
     <form
@@ -93,6 +110,15 @@ function PatientForm({
           blood_type: bloodType,
           activity_category: activityCategory,
           activity_type: activityType,
+          etiquetas: etiquetasText.split(',').map((t) => t.trim()).filter(Boolean),
+          phone_country_code: phoneCountryCode,
+          country,
+          timezone,
+          address,
+          residence_place: residencePlace,
+          education_level: educationLevel,
+          marital_status: maritalStatus,
+          children_count: childrenCount === '' ? null : parseInt(childrenCount, 10),
         })
       }}
       className="flex flex-col gap-4"
@@ -103,9 +129,61 @@ function PatientForm({
       <FieldWrap label="Email">
         <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
       </FieldWrap>
-      <FieldWrap label="Teléfono">
-        <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <FieldWrap label="Código país">
+          <Input value={phoneCountryCode} onChange={(e) => setPhoneCountryCode(e.target.value)} placeholder="+52" />
+        </FieldWrap>
+        <div className="sm:col-span-2">
+          <FieldWrap label="Teléfono">
+            <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+          </FieldWrap>
+        </div>
+      </div>
+      <FieldWrap label="Etiquetas" hint="Separadas por coma — ej. Diabetes, Prioritario, Deportista">
+        <Input value={etiquetasText} onChange={(e) => setEtiquetasText(e.target.value)} placeholder="Diabetes, Prioritario…" />
       </FieldWrap>
+
+      <div className="h-px bg-border" />
+      <p className="text-xs font-semibold text-text-2">Ficha básica</p>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <FieldWrap label="País">
+          <Input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="México" />
+        </FieldWrap>
+        <FieldWrap label="Zona horaria">
+          <Input value={timezone} onChange={(e) => setTimezone(e.target.value)} placeholder="America/Mexico_City" />
+        </FieldWrap>
+      </div>
+      <FieldWrap label="Domicilio">
+        <Input value={address} onChange={(e) => setAddress(e.target.value)} />
+      </FieldWrap>
+      <FieldWrap label="Lugar de residencia">
+        <Input value={residencePlace} onChange={(e) => setResidencePlace(e.target.value)} placeholder="Ciudad, estado" />
+      </FieldWrap>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <FieldWrap label="Escolaridad">
+          <Select value={educationLevel} onChange={(e) => setEducationLevel(e.target.value)}>
+            <option value="">Sin especificar</option>
+            <option value="primaria">Primaria</option>
+            <option value="secundaria">Secundaria</option>
+            <option value="preparatoria">Preparatoria</option>
+            <option value="licenciatura">Licenciatura</option>
+            <option value="posgrado">Posgrado</option>
+          </Select>
+        </FieldWrap>
+        <FieldWrap label="Estado civil">
+          <Select value={maritalStatus} onChange={(e) => setMaritalStatus(e.target.value)}>
+            <option value="">Sin especificar</option>
+            <option value="soltero">Soltero/a</option>
+            <option value="casado">Casado/a</option>
+            <option value="union_libre">Unión libre</option>
+            <option value="divorciado">Divorciado/a</option>
+            <option value="viudo">Viudo/a</option>
+          </Select>
+        </FieldWrap>
+        <FieldWrap label="Hijos">
+          <Input type="number" min={0} value={childrenCount} onChange={(e) => setChildrenCount(e.target.value)} />
+        </FieldWrap>
+      </div>
 
       <div className="h-px bg-border" />
       <p className="text-xs font-semibold text-text-2">Contacto de emergencia</p>
@@ -178,13 +256,29 @@ export function PatientsPage() {
   const queryClient = useQueryClient()
   const [statusFilter, setStatusFilter] = useState<PatientStatus | 'todos'>('todos')
   const [sort, setSort] = useState<'recent' | 'name' | 'oldest' | 'last_plan'>('recent')
+  const [etiquetaFilter, setEtiquetaFilter] = useState('')
+  const [appFilter, setAppFilter] = useState<'todos' | 'activada' | 'desactivada'>('todos')
+  const [planHasta, setPlanHasta] = useState('')
   const { data: patients, isLoading } = useQuery({
-    queryKey: ['patients', statusFilter, sort],
-    queryFn: () => listPatients({ status: statusFilter === 'todos' ? undefined : statusFilter, sort }),
+    queryKey: ['patients', statusFilter, sort, etiquetaFilter, appFilter, planHasta],
+    queryFn: () =>
+      listPatients({
+        status: statusFilter === 'todos' ? undefined : statusFilter,
+        sort,
+        etiqueta: etiquetaFilter || undefined,
+        app: appFilter === 'todos' ? undefined : appFilter,
+        plan_hasta: planHasta || undefined,
+      }),
   })
   const [search, setSearch] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Patient | undefined>(undefined)
+
+  const allTags = useMemo(() => {
+    const set = new Set<string>()
+    for (const p of patients ?? []) for (const t of p.etiquetas || []) set.add(t)
+    return Array.from(set).sort()
+  }, [patients])
 
   const createMut = useMutation({
     mutationFn: createPatient,
@@ -273,6 +367,48 @@ export function PatientsPage() {
         </div>
       </div>
 
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="inline-flex gap-0.5 rounded-full border border-border bg-bg p-1">
+          {([
+            ['todos', 'Todos'],
+            ['activada', 'App activada'],
+            ['desactivada', 'App desactivada'],
+          ] as const).map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setAppFilter(key)}
+              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                appFilter === key ? 'bg-surface text-accent shadow-card' : 'text-text-2'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <Select value={etiquetaFilter} onChange={(e) => setEtiquetaFilter(e.target.value)} className="w-auto">
+          <option value="">Todas las etiquetas</option>
+          {allTags.map((t) => (
+            <option key={t} value={t}>{t}</option>
+          ))}
+        </Select>
+        <label className="flex items-center gap-2 text-xs text-text-2">
+          Plan asignado hasta
+          <Input type="date" value={planHasta} onChange={(e) => setPlanHasta(e.target.value)} className="w-auto" />
+        </label>
+        {(etiquetaFilter || appFilter !== 'todos' || planHasta) && (
+          <button
+            onClick={() => {
+              setEtiquetaFilter('')
+              setAppFilter('todos')
+              setPlanHasta('')
+            }}
+            className="text-xs font-medium text-text-3 underline hover:text-text-2"
+          >
+            Limpiar filtros
+          </button>
+        )}
+      </div>
+
       <Card className="p-0 overflow-hidden">
         {isLoading ? (
           <p className="p-6 text-sm text-text-3">Cargando…</p>
@@ -293,9 +429,18 @@ export function PatientsPage() {
                       {p.status === 'activo' && (daysSince(p.last_plan) === null || (daysSince(p.last_plan) ?? 0) >= 30) && (
                         <Badge tone="warn">⏰ Seguimiento</Badge>
                       )}
+                      <Badge tone={p.app_activada ? 'accent' : 'neutral'}>
+                        {p.app_activada ? '📱 App activada' : '📱 App desactivada'}
+                      </Badge>
+                      {p.etiquetas.map((t) => (
+                        <span key={t} className="rounded-full bg-bg px-2 py-0.5 text-[10px] font-medium text-text-2">
+                          {t}
+                        </span>
+                      ))}
                     </div>
                     <p className="truncate text-xs text-text-3">
                       {p.email || 'Sin email'} {p.phone && `· ${p.phone}`} · {lastPlanLabel(p.last_plan)}
+                      {p.app_activada && ` · Último uso: ${lastUsedLabel(p.portal_last_accessed)}`}
                     </p>
                   </div>
                 </div>

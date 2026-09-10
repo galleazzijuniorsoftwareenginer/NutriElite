@@ -15,7 +15,7 @@ export function gramsFromPct(get: number, carbPct: number, protPct: number, fatP
 }
 
 export function clampAdjustment(adj: number) {
-  return Math.max(-500, Math.min(500, adj))
+  return Math.max(-3000, Math.min(5000, adj))
 }
 
 export const OMS_RANGES = {

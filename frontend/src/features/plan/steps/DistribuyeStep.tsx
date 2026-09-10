@@ -1,12 +1,31 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { getMealDistribution, saveMealDistribution } from '../../../api/plans'
+import { getMealDistribution, saveMealDistribution, getAudit } from '../../../api/plans'
 import type { MealSlot } from '../../../types'
 import { Card } from '../../../components/Card'
 import { Button } from '../../../components/Button'
 import { Input } from '../../../components/Field'
 import type { WizardPlanData } from '../planTypes'
 import { clampAdjustment, gramsFromPct } from '../planMath'
+
+/** Reparte `total` porciones enteras entre los pesos dados (%) sin perder ni sumar de más,
+ * usando el método de mayores restos: cada celda recibe el piso de su parte proporcional
+ * y las unidades sobrantes van a las celdas con mayor resto decimal. */
+function distributePortions(total: number, weights: number[]): number[] {
+  const sumW = weights.reduce((a, b) => a + b, 0)
+  if (total <= 0 || sumW <= 0) return weights.map(() => 0)
+  const raw = weights.map((w) => (w / sumW) * total)
+  const floors = raw.map(Math.floor)
+  let remainder = total - floors.reduce((a, b) => a + b, 0)
+  const order = raw
+    .map((v, i) => ({ i, frac: v - Math.floor(v) }))
+    .sort((a, b) => b.frac - a.frac)
+  const result = [...floors]
+  for (let k = 0; k < order.length && remainder > 0; k++, remainder--) {
+    result[order[k].i] += 1
+  }
+  return result
+}
 
 interface Props {
   plan: WizardPlanData
@@ -29,6 +48,15 @@ const DEFAULT_ITEMS: MealSlot[] = [
 export function DistribuyeStep({ plan, carbPct, protPct, fatPct, kcalAdjustment, onContinue }: Props) {
   const get = plan.originalGet + clampAdjustment(kcalAdjustment)
   const { carbG, protG, fatG } = gramsFromPct(get, carbPct, protPct, fatPct)
+
+  const auditOverride = useMemo(
+    () => ({ protein_g: protG, carbs_g: carbG, fats_g: fatG }),
+    [protG, carbG, fatG]
+  )
+  const { data: audit } = useQuery({
+    queryKey: ['audit', plan.planId, auditOverride],
+    queryFn: () => getAudit(plan.planId, auditOverride),
+  })
 
   const { data: loaded } = useQuery({
     queryKey: ['meal-distribution', plan.planId],
@@ -139,6 +167,43 @@ export function DistribuyeStep({ plan, carbPct, protPct, fatPct, kcalAdjustment,
           </p>
         )}
       </Card>
+
+      {audit && audit.smae_table.length > 0 && (
+        <Card className="overflow-x-auto lg:col-span-2">
+          <h3 className="mb-3 text-sm font-semibold text-text">Porciones SMAE por tiempo de comida</h3>
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="border-b border-border text-text-3">
+                <th className="py-2 font-medium">Grupo</th>
+                {items.map((slot, i) => (
+                  <th key={i} className="text-center font-medium">{slot.tiempo}</th>
+                ))}
+                <th className="text-center font-medium">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {audit.smae_table.map((row, ri) => {
+                const perSlot = distributePortions(row.portions, items.map((s) => s.pct))
+                return (
+                  <tr key={ri} className="border-b border-border/60">
+                    <td className="py-2">
+                      <span className="rounded bg-accent-light px-1.5 py-0.5 text-[10px] font-medium text-accent">{row.group}</span>
+                      {row.subgroup && <span className="ml-1 text-text-3">{row.subgroup}</span>}
+                    </td>
+                    {perSlot.map((p, si) => (
+                      <td key={si} className="text-center text-text-2">{p || '—'}</td>
+                    ))}
+                    <td className="text-center font-semibold text-text">{row.portions}</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+          <p className="mt-2 text-[11px] text-text-3">
+            Reparto sugerido de porciones SMAE según el % de cada tiempo de comida — ajusta el % arriba para redistribuir.
+          </p>
+        </Card>
+      )}
 
       <div className="flex flex-col gap-4">
         <Card>

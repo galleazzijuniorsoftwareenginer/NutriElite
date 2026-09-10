@@ -13,9 +13,24 @@ export interface PatientPayload {
   blood_type?: string
   activity_category?: string
   activity_type?: string
+  etiquetas?: string[]
+  timezone?: string
+  country?: string
+  phone_country_code?: string
+  address?: string
+  residence_place?: string
+  education_level?: string
+  marital_status?: string
+  children_count?: number | null
 }
 
-export async function listPatients(params?: { status?: string; sort?: string }) {
+export async function listPatients(params?: {
+  status?: string
+  sort?: string
+  etiqueta?: string
+  app?: 'activada' | 'desactivada'
+  plan_hasta?: string
+}) {
   const { data } = await api.get<Patient[]>('/patients', { params })
   return data
 }
@@ -37,5 +52,15 @@ export async function deletePatient(id: number) {
 
 export async function getPatientPlans(id: number) {
   const { data } = await api.get(`/patients/${id}/plans`)
+  return data
+}
+
+export async function sendPatientMessage(id: number, payload: { subject: string; body: string }) {
+  const { data } = await api.post<{ ok: boolean }>(`/patients/${id}/send-message`, payload)
+  return data
+}
+
+export async function getPatientInsights(id: number) {
+  const { data } = await api.post<{ insight: string }>(`/patients/${id}/insights`)
   return data
 }

@@ -7,6 +7,13 @@ export async function generateWeeklyMenu(planId: number) {
   return data
 }
 
+/** Arma el menú semanal a partir de recetas reales del acervo (sin llamar a
+ * la IA) — método primario, instantáneo, recomendado antes de recurrir a IA. */
+export async function generateAcervoMenu(planId: number) {
+  const { data } = await api.post<WeeklyMenu>(`/plans/${planId}/menu/acervo`)
+  return data
+}
+
 export async function regenerateDay(planId: number, dia: string) {
   const { data } = await api.post<MenuDay>(`/plans/${planId}/menu/ai/day/${encodeURIComponent(dia)}`)
   return data

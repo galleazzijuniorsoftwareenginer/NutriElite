@@ -295,6 +295,44 @@ def generate_ai_menu_endpoint(
         raise HTTPException(status_code=500, detail=f"Erro ao gerar menu: {str(e)}")
 
 
+# ---------- MENU DESDE EL ACERVO DE RECETAS (método primario, sin IA) ----------
+@router.post("/plans/{plan_id}/menu/acervo")
+def generate_acervo_menu_endpoint(
+    plan_id: int,
+    db: Session = Depends(get_db),
+    token: dict = Depends(verify_token)
+):
+    from backend.services.smae_calculation_service import SMAECalculationService
+    from backend.services.recipe_menu_service import generate_acervo_menu
+
+    username = token["sub"]
+    db_user = db.query(User).filter(User.username == username).first()
+    plan = db.query(Plan).filter(
+        Plan.id == plan_id,
+        Plan.user_id == db_user.id
+    ).first()
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plano não encontrado")
+
+    audit = SMAECalculationService.calculate(plan_id, db)
+    plan_data = {
+        "goal": plan.goal,
+        "weight": plan.weight,
+        "get": plan.get,
+        "meal_distribution": plan.meal_distribution,
+    }
+
+    try:
+        menu = generate_acervo_menu(plan_data, audit, db, user_id=db_user.id)
+        plan.weekly_menu = menu
+        db.commit()
+        return menu
+    except Exception as e:
+        import traceback
+        print("ERRO MENU ACERVO:", traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Erro ao gerar menu del acervo: {str(e)}")
+
+
 # ---------- REGENERATE SINGLE DAY OF AI MENU ----------
 @router.post("/plans/{plan_id}/menu/ai/day/{dia}")
 def regenerate_ai_menu_day(

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import clsx from 'clsx'
-import { regenerateDay, streamWeeklyMenu, updateMenuDayManual } from '../../../api/menu'
+import { generateAcervoMenu, regenerateDay, streamWeeklyMenu, updateMenuDayManual } from '../../../api/menu'
 import type { MenuDay, MenuItem, WeeklyMenu } from '../../../types'
 import { Card } from '../../../components/Card'
 import { Button } from '../../../components/Button'
@@ -68,6 +68,15 @@ export function MenuStep({ plan, weeklyMenu, onMenuReady, onContinue }: Props) {
   function fallbackDay(idx: number): MenuDay {
     return { dia: DIAS_SEMANA[idx], comidas: [], macros: { proteina_g: 0, carb_g: 0, gordura_g: 0, kcal_total: 0 }, error: 'No generado' }
   }
+
+  const acervoMut = useMutation({
+    mutationFn: () => generateAcervoMenu(plan.planId),
+    onSuccess: (menu) => {
+      setDays(menu.semana)
+      setStatuses(menu.semana.map((d) => (d.error ? 'error' : 'done')))
+      onMenuReady(menu)
+    },
+  })
 
   const regenMut = useMutation({
     mutationFn: (dia: string) => regenerateDay(plan.planId, dia),
@@ -168,14 +177,22 @@ export function MenuStep({ plan, weeklyMenu, onMenuReady, onContinue }: Props) {
             <LogoMark size={280} />
           </div>
           <LogoMark size={52} animated />
-          <p className="font-display text-xl font-semibold tracking-tight">Generador de menú semanal con IA</p>
+          <p className="font-display text-xl font-semibold tracking-tight">Generador de menú semanal</p>
           <p className="max-w-md text-sm text-deep-text-2">
-            Genera un plan alimenticio de 7 días con platillos mexicanos auténticos, respetando la distribución SMAE
-            de tu auditoría. Los 7 días se generan en paralelo — verás cada uno aparecer en tiempo real.
+            Arma un plan de 7 días con recetas reales de tu acervo, respetando la distribución SMAE y el horario de
+            cada tiempo de comida. Si el acervo no alcanza para lo que buscas, también puedes generarlo con IA.
           </p>
-          <Button variant="ai" onClick={startGeneration} className="relative mt-2">
-            ✨ Generar cardápio semanal
-          </Button>
+          <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+            <Button variant="primary" loading={acervoMut.isPending} onClick={() => acervoMut.mutate()} className="relative">
+              📖 Generar desde el acervo
+            </Button>
+            <Button variant="ai" onClick={startGeneration} className="relative">
+              ✨ Generar con IA
+            </Button>
+          </div>
+          {acervoMut.isError && (
+            <p className="text-xs font-medium text-danger">No se pudo generar desde el acervo — intenta con IA.</p>
+          )}
         </Card>
       )}
 
@@ -343,9 +360,12 @@ export function MenuStep({ plan, weeklyMenu, onMenuReady, onContinue }: Props) {
           )}
 
           {allDone && (
-            <div className="flex justify-end gap-2">
+            <div className="flex flex-wrap justify-end gap-2">
+              <Button variant="secondary" loading={acervoMut.isPending} onClick={() => acervoMut.mutate()}>
+                📖 Regenerar desde acervo
+              </Button>
               <Button variant="secondary" onClick={startGeneration}>
-                ↺ Regenerar semana completa
+                ✨ Regenerar con IA
               </Button>
               <Button variant="primary" onClick={onContinue}>Continuar al resumen →</Button>
             </div>
