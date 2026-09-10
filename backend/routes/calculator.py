@@ -163,6 +163,7 @@ def export_plan_pdf(
                 "emergency_contact_phone": patient.emergency_contact_phone,
                 "emergency_contact_relation": patient.emergency_contact_relation,
                 "blood_type": patient.blood_type,
+                "activity_category": patient.activity_category,
                 "activity_type": patient.activity_type,
             }
         rows = (

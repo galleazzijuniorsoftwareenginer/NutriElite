@@ -251,8 +251,19 @@ def generate_plan_pdf(plan, menu_data=None, perfil_data=None, override_plan=None
     label_cell_style = ParagraphStyle("pdfLabelCell", parent=styles["normal"], fontSize=9.5, textColor=TEXT_2, fontName="Helvetica-Bold")
     if patient_data and patient_data.get("blood_type"):
         datos_rows.append([Paragraph("Tipo sanguíneo", label_cell_style), patient_data["blood_type"], "", ""])
-    if patient_data and patient_data.get("activity_type"):
-        datos_rows.append([Paragraph("Actividad física", label_cell_style), Paragraph(patient_data["activity_type"], cell_style), "", ""])
+    ACTIVITY_CATEGORY_LABEL = {
+        "sedentario": "Sedentario",
+        "caminata": "Caminata / actividad ligera",
+        "ejercicio_moderado": "Ejercicio moderado",
+        "deporte_recreativo": "Deporte recreativo",
+        "deporte_competitivo": "Deporte competitivo / alto rendimiento",
+    }
+    if patient_data and (patient_data.get("activity_category") or patient_data.get("activity_type")):
+        activity_text = " — ".join(filter(None, [
+            ACTIVITY_CATEGORY_LABEL.get(patient_data.get("activity_category")),
+            patient_data.get("activity_type"),
+        ]))
+        datos_rows.append([Paragraph("Actividad física", label_cell_style), Paragraph(activity_text, cell_style), "", ""])
     if patient_data and (patient_data.get("emergency_contact_name") or patient_data.get("emergency_contact_phone")):
         contacto_emergencia = " · ".join(filter(None, [
             patient_data.get("emergency_contact_name"),

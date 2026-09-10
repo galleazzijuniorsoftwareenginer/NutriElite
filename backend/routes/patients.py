@@ -26,6 +26,7 @@ class PatientCreate(BaseModel):
     emergency_contact_relation: Optional[str] = ""
     blood_type: Optional[str] = ""
     activity_type: Optional[str] = ""
+    activity_category: Optional[str] = ""
 
 @router.get("/patients")
 def list_patients(
@@ -61,6 +62,7 @@ def list_patients(
             "emergency_contact_relation": p.emergency_contact_relation,
             "blood_type": p.blood_type,
             "activity_type": p.activity_type,
+            "activity_category": p.activity_category,
             "created_at": str(p.created_at),
             "total_plans": len(plans),
             "last_plan": str(plans[0].created_at) if plans else None,
@@ -86,6 +88,7 @@ def create_patient(data: PatientCreate, db: Session = Depends(get_db), token: di
         emergency_contact_relation=data.emergency_contact_relation,
         blood_type=data.blood_type,
         activity_type=data.activity_type,
+        activity_category=data.activity_category,
         user_id=user.id,
     )
     db.add(patient)
@@ -103,6 +106,7 @@ def create_patient(data: PatientCreate, db: Session = Depends(get_db), token: di
         "emergency_contact_relation": patient.emergency_contact_relation,
         "blood_type": patient.blood_type,
         "activity_type": patient.activity_type,
+        "activity_category": patient.activity_category,
     }
 
 @router.get("/patients/{patient_id}/plans")
@@ -126,6 +130,7 @@ def patient_plans(patient_id: int, db: Session = Depends(get_db), token: dict = 
             "emergency_contact_relation": patient.emergency_contact_relation,
             "blood_type": patient.blood_type,
             "activity_type": patient.activity_type,
+            "activity_category": patient.activity_category,
         },
         "plans": [{"id": p.id, "created_at": str(p.created_at), "goal": p.goal, "weight": p.weight, "height": p.height, "get": p.get, "tmb": p.tmb} for p in plans]
     }
@@ -148,6 +153,7 @@ def update_patient(patient_id: int, data: PatientCreate, db: Session = Depends(g
     patient.emergency_contact_relation = data.emergency_contact_relation
     patient.blood_type = data.blood_type
     patient.activity_type = data.activity_type
+    patient.activity_category = data.activity_category
     db.commit()
     db.refresh(patient)
     return {
@@ -162,6 +168,7 @@ def update_patient(patient_id: int, data: PatientCreate, db: Session = Depends(g
         "emergency_contact_relation": patient.emergency_contact_relation,
         "blood_type": patient.blood_type,
         "activity_type": patient.activity_type,
+        "activity_category": patient.activity_category,
     }
 
 @router.delete("/patients/{patient_id}")

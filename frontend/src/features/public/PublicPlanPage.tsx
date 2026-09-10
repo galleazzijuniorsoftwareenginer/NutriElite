@@ -16,7 +16,7 @@ function toDateInputValue(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-function BookingSection({ token }: { token: string }) {
+export function BookingSection({ token }: { token: string }) {
   const queryClient = useQueryClient()
   const today = new Date()
   const [selectedDate, setSelectedDate] = useState(toDateInputValue(today))
@@ -232,7 +232,13 @@ export function PublicPlanPage() {
           </>
         )}
 
-        {data.can_book && token && <BookingSection token={token} />}
+        {token && (data.can_book ? (
+          <BookingSection token={token} />
+        ) : (
+          <Card className="py-6 text-center text-xs text-text-3">
+            El agendamiento no está disponible para este plan todavía — tu nutricionista debe vincularlo a tu ficha de paciente.
+          </Card>
+        ))}
       </main>
     </div>
   )

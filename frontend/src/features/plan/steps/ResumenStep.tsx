@@ -1,6 +1,8 @@
 import { useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Link } from 'react-router-dom'
 import { pdfDownloadUrl, saveAsTemplate, sharePlan } from '../../../api/plans'
+import { getProfile } from '../../../api/profile'
 import { Card } from '../../../components/Card'
 import { Button } from '../../../components/Button'
 import { Input } from '../../../components/Field'
@@ -21,9 +23,11 @@ interface Props {
 export function ResumenStep({ plan, carbPct, protPct, fatPct, kcalAdjustment, weeklyMenu }: Props) {
   const token = useAuthStore((s) => s.token)
   const queryClient = useQueryClient()
+  const { data: profile } = useQuery({ queryKey: ['profile'], queryFn: getProfile })
   const [shareUrl, setShareUrl] = useState('')
   const [sharing, setSharing] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [copiedBooking, setCopiedBooking] = useState(false)
   const [templateName, setTemplateName] = useState('')
   const [templateSaved, setTemplateSaved] = useState(false)
   const templateMut = useMutation({
@@ -52,6 +56,12 @@ export function ResumenStep({ plan, carbPct, protPct, fatPct, kcalAdjustment, we
     await navigator.clipboard.writeText(shareUrl)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  async function handleCopyBookingOnly() {
+    await navigator.clipboard.writeText(`${shareUrl}/agendar`)
+    setCopiedBooking(true)
+    setTimeout(() => setCopiedBooking(false), 2000)
   }
 
   async function handleDownload() {
@@ -135,6 +145,29 @@ export function ResumenStep({ plan, carbPct, protPct, fatPct, kcalAdjustment, we
         {templateSaved && <p className="text-[11px] font-medium text-accent">✓ Plantilla guardada</p>}
       </Card>
 
+      <Card className="flex flex-col gap-3">
+        <h3 className="text-sm font-semibold text-text">Logo de marca</h3>
+        <p className="text-xs text-text-2">
+          {profile?.logo_base64
+            ? 'Tu logo aparece en el encabezado del PDF.'
+            : 'Sube tu logo en el perfil para que aparezca en el encabezado del PDF.'}
+        </p>
+        <div className="flex items-center gap-3">
+          {profile?.logo_base64 ? (
+            <img src={profile.logo_base64} alt="Logo" className="h-12 w-12 rounded-full border border-border object-cover" />
+          ) : (
+            <div className="flex h-12 w-12 items-center justify-center rounded-full border border-dashed border-border-strong text-[9px] text-text-3">
+              Sin logo
+            </div>
+          )}
+          <Link to="/configuracion?tab=perfil" className="flex-1">
+            <Button variant="secondary" className="w-full">
+              {profile?.logo_base64 ? 'Cambiar logo →' : 'Configurar mi logo →'}
+            </Button>
+          </Link>
+        </div>
+      </Card>
+
       <Card className="flex flex-col gap-3 lg:col-span-3">
         <h3 className="text-sm font-semibold text-text">Portal del paciente</h3>
         <p className="text-xs text-text-2">
@@ -143,16 +176,24 @@ export function ResumenStep({ plan, carbPct, protPct, fatPct, kcalAdjustment, we
           automáticamente si regeneras el menú.
         </p>
         {shareUrl ? (
-          <div className="flex flex-wrap items-center gap-2">
-            <input
-              readOnly
-              value={shareUrl}
-              className="h-9 min-w-0 flex-1 rounded-md border border-border bg-bg px-3 text-xs text-text-2"
-              onFocus={(e) => e.target.select()}
-            />
-            <Button size="sm" variant="secondary" onClick={handleCopy}>
-              {copied ? '✓ Copiado' : 'Copiar enlace'}
-            </Button>
+          <div className="flex flex-col gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                readOnly
+                value={shareUrl}
+                className="h-9 min-w-0 flex-1 rounded-md border border-border bg-bg px-3 text-xs text-text-2"
+                onFocus={(e) => e.target.select()}
+              />
+              <Button size="sm" variant="secondary" onClick={handleCopy}>
+                {copied ? '✓ Copiado' : 'Copiar enlace'}
+              </Button>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-text-3">Solo el calendario, sin el cardápio (para cuando aún no compartes la dieta):</span>
+              <Button size="sm" variant="ghost" onClick={handleCopyBookingOnly}>
+                {copiedBooking ? '✓ Copiado' : '📅 Link solo agendar'}
+              </Button>
+            </div>
           </div>
         ) : (
           <Button variant="secondary" loading={sharing} onClick={handleShare} className="w-fit">

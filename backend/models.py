@@ -31,6 +31,7 @@ class Patient(Base):
     emergency_contact_phone = Column(String, nullable=True)
     emergency_contact_relation = Column(String, nullable=True)
     blood_type = Column(String, nullable=True)  # A+|A-|B+|B-|AB+|AB-|O+|O-
+    activity_category = Column(String, nullable=True)  # sedentario|caminata|ejercicio_moderado|deporte_recreativo|deporte_competitivo
     activity_type = Column(String, nullable=True)  # descripción libre: "Camina 30min 3x/sem", "Fútbol competitivo"
     user_id = Column(Integer, ForeignKey("users.id"))
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

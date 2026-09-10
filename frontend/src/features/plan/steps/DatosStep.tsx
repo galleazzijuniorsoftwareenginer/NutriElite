@@ -27,13 +27,17 @@ const FORMULAS: { value: Formula; label: string; hint: string; needsBodyFat?: bo
   { value: 'cunningham', label: 'Cunningham', hint: 'Como Katch-McArdle pero más agresiva — atletas muy magros.', needsBodyFat: true },
 ]
 
-function schofieldCategory(age: number): string {
-  if (age < 3) return '0–3 años'
-  if (age <= 10) return '3–10 años'
-  if (age <= 18) return '10–18 años'
-  if (age <= 30) return '18–30 años'
-  if (age <= 60) return '30–60 años'
-  return '60+ años'
+function personCategory(age: number): string {
+  if (age < 3) return 'Bebé/niño(a) (0–3 años)'
+  if (age <= 10) return 'Niño(a) (3–10 años)'
+  if (age <= 18) return 'Adolescente (10–18 años)'
+  if (age <= 30) return 'Adulto joven (18–30 años)'
+  if (age <= 60) return 'Adulto (30–60 años)'
+  return 'Adulto mayor (60+ años)'
+}
+
+function isPediatric(age: number): boolean {
+  return age < 18
 }
 
 export function DatosStep({ initial, onCreated }: Props) {
@@ -183,17 +187,24 @@ export function DatosStep({ initial, onCreated }: Props) {
             </FieldWrap>
             <FieldWrap
               label="Edad"
-              hint={formula === 'schofield' && age ? `Categoría Schofield: ${schofieldCategory(parseInt(age, 10) || 0)}` : undefined}
+              hint={age ? `Categoría: ${personCategory(parseInt(age, 10) || 0)}` : undefined}
             >
               <Input type="number" value={age} onChange={(e) => setAge(e.target.value)} required />
             </FieldWrap>
             <FieldWrap label="Género">
               <Select value={gender} onChange={(e) => setGender(e.target.value as Gender)}>
-                <option value="female">Femenino</option>
-                <option value="male">Masculino</option>
+                <option value="female">{age && isPediatric(parseInt(age, 10) || 0) ? 'Niña' : 'Femenino'}</option>
+                <option value="male">{age && isPediatric(parseInt(age, 10) || 0) ? 'Niño' : 'Masculino'}</option>
               </Select>
             </FieldWrap>
           </div>
+
+          {age && isPediatric(parseInt(age, 10) || 0) && formula !== 'schofield' && (
+            <p className="rounded-md bg-warn-light px-3 py-2 text-xs text-warn">
+              ⚠ Mifflin, Harris-Benedict, Katch-McArdle y Cunningham fueron validadas en población adulta.
+              Para menores de 18 años se recomienda la fórmula Schofield (tiene franjas específicas por edad).
+            </p>
+          )}
 
           {FORMULAS.find((f) => f.value === formula)?.needsBodyFat && (
             <FieldWrap label="% de grasa corporal" hint="Medido por bioimpedancia o pliegues cutáneos — requerido por esta fórmula.">

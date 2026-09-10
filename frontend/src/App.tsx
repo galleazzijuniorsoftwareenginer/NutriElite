@@ -13,6 +13,7 @@ import { TemplatesPage } from './features/plan/TemplatesPage'
 import { BillingPage } from './features/billing/BillingPage'
 import { PlanWizardPage } from './features/plan/PlanWizardPage'
 import { PublicPlanPage } from './features/public/PublicPlanPage'
+import { PublicBookingOnlyPage } from './features/public/PublicBookingOnlyPage'
 import { ReferencePage } from './features/reference/ReferencePage'
 import { ClassroomsPage } from './features/classroom/ClassroomsPage'
 import { RecipesPage } from './features/recipes/RecipesPage'
@@ -33,6 +34,7 @@ export function App() {
       <Route path="/olvide-password" element={<ForgotPasswordPage />} />
       <Route path="/redefinir-senha" element={<ResetPasswordPage />} />
       <Route path="/portal/:token" element={<PublicPlanPage />} />
+      <Route path="/portal/:token/agendar" element={<PublicBookingOnlyPage />} />
 
       <Route element={<ProtectedRoute />}>
         <Route element={<AppShell />}>

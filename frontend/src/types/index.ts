@@ -52,6 +52,7 @@ export interface Patient {
   emergency_contact_phone: string | null
   emergency_contact_relation: string | null
   blood_type: string | null
+  activity_category: string | null
   activity_type: string | null
   created_at: string
   total_plans: number

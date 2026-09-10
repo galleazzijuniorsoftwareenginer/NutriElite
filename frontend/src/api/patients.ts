@@ -11,6 +11,7 @@ export interface PatientPayload {
   emergency_contact_phone?: string
   emergency_contact_relation?: string
   blood_type?: string
+  activity_category?: string
   activity_type?: string
 }
 

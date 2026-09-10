@@ -34,14 +34,15 @@ function lastPlanLabel(dateStr: string | null): string {
   return `Último plan: hace ${days} días`
 }
 
-function CopyPortalLinkButton({ planId }: { planId: number }) {
+function CopyPortalLinkButton({ planId, mode }: { planId: number; mode: 'completo' | 'agendar' }) {
   const [state, setState] = useState<'idle' | 'loading' | 'copied'>('idle')
 
   async function handleClick() {
     setState('loading')
     try {
       const { url } = await sharePlan(planId)
-      await navigator.clipboard.writeText(url)
+      const finalUrl = mode === 'agendar' ? `${url}/agendar` : url
+      await navigator.clipboard.writeText(finalUrl)
       setState('copied')
       setTimeout(() => setState('idle'), 2000)
     } catch {
@@ -51,7 +52,7 @@ function CopyPortalLinkButton({ planId }: { planId: number }) {
 
   return (
     <Button size="sm" variant="ghost" loading={state === 'loading'} onClick={handleClick}>
-      {state === 'copied' ? '✓ Copiado' : '🔗 Copiar link'}
+      {state === 'copied' ? '✓ Copiado' : mode === 'agendar' ? '📅 Link agendar' : '🔗 Copiar link'}
     </Button>
   )
 }
@@ -76,6 +77,7 @@ function PatientForm({
   const [emergencyPhone, setEmergencyPhone] = useState(initial?.emergency_contact_phone ?? '')
   const [emergencyRelation, setEmergencyRelation] = useState(initial?.emergency_contact_relation ?? '')
   const [bloodType, setBloodType] = useState(initial?.blood_type ?? '')
+  const [activityCategory, setActivityCategory] = useState(initial?.activity_category ?? '')
   const [activityType, setActivityType] = useState(initial?.activity_type ?? '')
 
   return (
@@ -88,6 +90,7 @@ function PatientForm({
           emergency_contact_phone: emergencyPhone,
           emergency_contact_relation: emergencyRelation,
           blood_type: bloodType,
+          activity_category: activityCategory,
           activity_type: activityType,
         })
       }}
@@ -126,10 +129,20 @@ function PatientForm({
             ))}
           </Select>
         </FieldWrap>
-        <FieldWrap label="Actividad física" hint="Desde caminata hasta el deporte que practica.">
-          <Input value={activityType} onChange={(e) => setActivityType(e.target.value)} placeholder="Ej. Camina 30 min 3x/sem, fútbol…" />
+        <FieldWrap label="Categoría de actividad física">
+          <Select value={activityCategory} onChange={(e) => setActivityCategory(e.target.value)}>
+            <option value="">Sin especificar</option>
+            <option value="sedentario">Sedentario (sin actividad regular)</option>
+            <option value="caminata">Caminata / actividad ligera</option>
+            <option value="ejercicio_moderado">Ejercicio moderado (cardio o pesas regular)</option>
+            <option value="deporte_recreativo">Deporte recreativo (liga amateur)</option>
+            <option value="deporte_competitivo">Deporte competitivo / alto rendimiento</option>
+          </Select>
         </FieldWrap>
       </div>
+      <FieldWrap label="Detalle de la actividad" hint="Qué deporte o actividad específica practica.">
+        <Input value={activityType} onChange={(e) => setActivityType(e.target.value)} placeholder="Ej. Fútbol 3x/semana, natación…" />
+      </FieldWrap>
 
       {initial && (
         <FieldWrap label="Estado">
@@ -287,7 +300,12 @@ export function PatientsPage() {
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5">
                   <span className="hidden text-xs text-text-3 sm:inline">{p.total_plans} plan(es)</span>
-                  {p.last_plan_id && <CopyPortalLinkButton planId={p.last_plan_id} />}
+                  {p.last_plan_id && (
+                    <>
+                      <CopyPortalLinkButton planId={p.last_plan_id} mode="completo" />
+                      <CopyPortalLinkButton planId={p.last_plan_id} mode="agendar" />
+                    </>
+                  )}
                   <Link to={`/pacientes/${p.id}`}>
                     <Button size="sm" variant="secondary">Ver</Button>
                   </Link>
