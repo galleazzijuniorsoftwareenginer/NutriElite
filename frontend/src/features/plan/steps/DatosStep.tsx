@@ -1,5 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import clsx from 'clsx'
 import { createPlan } from '../../../api/plans'
+import { getPlanPreferences } from '../../../api/preferences'
 import { Card } from '../../../components/Card'
 import { Button } from '../../../components/Button'
 import { FieldWrap, Input, Select } from '../../../components/Field'
@@ -16,6 +19,12 @@ interface Props {
   onCreated: (plan: WizardPlanData) => void
 }
 
+const FORMULAS: { value: Formula; label: string; hint: string }[] = [
+  { value: 'mifflin', label: 'Mifflin-St Jeor', hint: 'La más usada en adultos — buena precisión general.' },
+  { value: 'harris', label: 'Harris-Benedict', hint: 'Fórmula clásica, tiende a sobreestimar un poco el GET.' },
+  { value: 'schofield', label: 'Schofield', hint: 'Recomendada para población pediátrica.' },
+]
+
 export function DatosStep({ initial, onCreated }: Props) {
   const [patientName, setPatientName] = useState(initial.patientName)
   const [patientEmail, setPatientEmail] = useState(initial.patientEmail)
@@ -29,6 +38,18 @@ export function DatosStep({ initial, onCreated }: Props) {
   const [formula, setFormula] = useState<Formula>('mifflin')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [prefsApplied, setPrefsApplied] = useState(false)
+
+  const { data: prefs } = useQuery({ queryKey: ['plan-preferences'], queryFn: getPlanPreferences })
+
+  useEffect(() => {
+    if (prefs && !prefsApplied) {
+      setFormula(prefs.default_formula)
+      setActivityLevel(String(prefs.default_activity_level))
+      setGoal(prefs.default_goal)
+      setPrefsApplied(true)
+    }
+  }, [prefs, prefsApplied])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -84,75 +105,95 @@ export function DatosStep({ initial, onCreated }: Props) {
   }
 
   return (
-    <Card>
-      <h2 className="mb-4 text-sm font-semibold text-text">Datos del paciente</h2>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <FieldWrap label="Nombre">
-            <Input value={patientName} onChange={(e) => setPatientName(e.target.value)} required />
-          </FieldWrap>
-          <FieldWrap label="Email">
-            <Input type="email" value={patientEmail} onChange={(e) => setPatientEmail(e.target.value)} />
-          </FieldWrap>
-          <FieldWrap label="Teléfono">
-            <Input value={patientPhone} onChange={(e) => setPatientPhone(e.target.value)} />
-          </FieldWrap>
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[240px_1fr]">
+      <Card className="h-fit">
+        <h3 className="mb-1 text-sm font-semibold text-text">Fórmula metabólica</h3>
+        <p className="mb-4 text-xs text-text-2">Elige la que quieras usar para este plan.</p>
+        <div className="flex flex-col gap-2">
+          {FORMULAS.map((f) => (
+            <button
+              key={f.value}
+              type="button"
+              onClick={() => setFormula(f.value)}
+              className={clsx(
+                'rounded-md border px-3.5 py-2.5 text-left transition-colors',
+                formula === f.value
+                  ? 'border-accent bg-accent-light'
+                  : 'border-border bg-surface hover:bg-bg'
+              )}
+            >
+              <span className={clsx('block text-sm font-semibold', formula === f.value ? 'text-accent' : 'text-text')}>
+                {f.label}
+              </span>
+              <span className="mt-0.5 block text-[11px] leading-snug text-text-3">{f.hint}</span>
+            </button>
+          ))}
         </div>
+      </Card>
 
-        <div className="h-px bg-border" />
+      <Card>
+        <h2 className="mb-4 text-sm font-semibold text-text">Datos del paciente</h2>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <FieldWrap label="Nombre">
+              <Input value={patientName} onChange={(e) => setPatientName(e.target.value)} required />
+            </FieldWrap>
+            <FieldWrap label="Email">
+              <Input type="email" value={patientEmail} onChange={(e) => setPatientEmail(e.target.value)} />
+            </FieldWrap>
+            <FieldWrap label="Teléfono">
+              <Input value={patientPhone} onChange={(e) => setPatientPhone(e.target.value)} />
+            </FieldWrap>
+          </div>
 
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          <FieldWrap label="Peso (kg)">
-            <Input type="number" step="0.1" value={weight} onChange={(e) => setWeight(e.target.value)} required />
-          </FieldWrap>
-          <FieldWrap label="Altura (cm)">
-            <Input type="number" step="0.1" value={height} onChange={(e) => setHeight(e.target.value)} required />
-          </FieldWrap>
-          <FieldWrap label="Edad">
-            <Input type="number" value={age} onChange={(e) => setAge(e.target.value)} required />
-          </FieldWrap>
-          <FieldWrap label="Género">
-            <Select value={gender} onChange={(e) => setGender(e.target.value as Gender)}>
-              <option value="female">Femenino</option>
-              <option value="male">Masculino</option>
-            </Select>
-          </FieldWrap>
-        </div>
+          <div className="h-px bg-border" />
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <FieldWrap label="Nivel de actividad">
-            <Select value={activityLevel} onChange={(e) => setActivityLevel(e.target.value)}>
-              <option value="1.2">Sedentario (1.2)</option>
-              <option value="1.375">Ligero (1.375)</option>
-              <option value="1.55">Moderado (1.55)</option>
-              <option value="1.725">Intenso (1.725)</option>
-              <option value="1.9">Muy intenso (1.9)</option>
-            </Select>
-          </FieldWrap>
-          <FieldWrap label="Objetivo">
-            <Select value={goal} onChange={(e) => setGoal(e.target.value as Goal)}>
-              <option value="cut">Pérdida de peso</option>
-              <option value="maintenance">Mantenimiento</option>
-              <option value="bulk">Ganancia de masa</option>
-            </Select>
-          </FieldWrap>
-          <FieldWrap label="Fórmula metabólica">
-            <Select value={formula} onChange={(e) => setFormula(e.target.value as Formula)}>
-              <option value="mifflin">Mifflin-St Jeor</option>
-              <option value="harris">Harris-Benedict</option>
-              <option value="schofield">Schofield (pediátrica)</option>
-            </Select>
-          </FieldWrap>
-        </div>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <FieldWrap label="Peso (kg)">
+              <Input type="number" step="0.1" value={weight} onChange={(e) => setWeight(e.target.value)} required />
+            </FieldWrap>
+            <FieldWrap label="Altura (cm)">
+              <Input type="number" step="0.1" value={height} onChange={(e) => setHeight(e.target.value)} required />
+            </FieldWrap>
+            <FieldWrap label="Edad">
+              <Input type="number" value={age} onChange={(e) => setAge(e.target.value)} required />
+            </FieldWrap>
+            <FieldWrap label="Género">
+              <Select value={gender} onChange={(e) => setGender(e.target.value as Gender)}>
+                <option value="female">Femenino</option>
+                <option value="male">Masculino</option>
+              </Select>
+            </FieldWrap>
+          </div>
 
-        {error && <p className="text-xs text-danger">{error}</p>}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <FieldWrap label="Nivel de actividad">
+              <Select value={activityLevel} onChange={(e) => setActivityLevel(e.target.value)}>
+                <option value="1.2">Sedentario (1.2)</option>
+                <option value="1.375">Ligero (1.375)</option>
+                <option value="1.55">Moderado (1.55)</option>
+                <option value="1.725">Intenso (1.725)</option>
+                <option value="1.9">Muy intenso (1.9)</option>
+              </Select>
+            </FieldWrap>
+            <FieldWrap label="Objetivo">
+              <Select value={goal} onChange={(e) => setGoal(e.target.value as Goal)}>
+                <option value="cut">Pérdida de peso</option>
+                <option value="maintenance">Mantenimiento</option>
+                <option value="bulk">Ganancia de masa</option>
+              </Select>
+            </FieldWrap>
+          </div>
 
-        <div className="flex justify-end">
-          <Button type="submit" loading={loading}>
-            Calcular plan →
-          </Button>
-        </div>
-      </form>
-    </Card>
+          {error && <p className="text-xs text-danger">{error}</p>}
+
+          <div className="flex justify-end">
+            <Button type="submit" loading={loading}>
+              Calcular plan →
+            </Button>
+          </div>
+        </form>
+      </Card>
+    </div>
   )
 }
