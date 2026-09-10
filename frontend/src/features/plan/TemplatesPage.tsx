@@ -71,8 +71,29 @@ interface MenuDia {
   macros: { proteina_g: number; carb_g: number; gordura_g: number; kcal_total: number }
 }
 
+function DishDetailModal({ dish, gradient, occurrences, onClose }: { dish: MenuItem; gradient: string; occurrences: string[]; onClose: () => void }) {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="h-40 w-full overflow-hidden rounded-lg">
+        <CategoryTile imageUrl={dish.imagen_url} gradient={gradient} icon="🍽" alt={dish.alimento} height={160} iconSize="text-4xl" />
+      </div>
+      <h3 className="font-display text-lg font-bold text-text">{dish.alimento}</h3>
+      <div className="flex gap-2">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-bg px-3 py-1.5 text-xs font-medium text-text-2">⚖️ {dish.quantidade_g} g</span>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-bg px-3 py-1.5 text-xs font-medium text-text-2">🔥 {Math.round(dish.kcal)} kcal</span>
+      </div>
+      <div>
+        <h4 className="mb-1.5 text-sm font-semibold text-text">Aparece en</h4>
+        <p className="text-sm text-text-2">{occurrences.join(' · ')}</p>
+      </div>
+      <Button variant="ghost" onClick={onClose} className="self-end">Cerrar</Button>
+    </div>
+  )
+}
+
 function DetailModal({ templateId, onClose }: { templateId: number; onClose: () => void }) {
   const { data: detail } = useQuery({ queryKey: ['pathology-template', templateId], queryFn: () => getPathologyTemplate(templateId) })
+  const [openDish, setOpenDish] = useState<string | null>(null)
   if (!detail) return <p className="text-sm text-text-3">Cargando…</p>
   const dias = (detail.weekly_menu?.semana as MenuDia[] | undefined) ?? []
   const style = CATEGORY_STYLE[detail.categoria] ?? DEFAULT_STYLE
@@ -93,9 +114,14 @@ function DetailModal({ templateId, onClose }: { templateId: number; onClose: () 
   const pctF = kcalAvg ? ((avgMacros.gordura_g / n) * 9 * 100) / kcalAvg : 0
 
   const uniqueDishes = new Map<string, MenuItem>()
+  const occurrencesByDish = new Map<string, string[]>()
   dias.forEach((d) => d.comidas.forEach((c) => c.itens.forEach((it) => {
     if (!uniqueDishes.has(it.alimento)) uniqueDishes.set(it.alimento, it)
+    const list = occurrencesByDish.get(it.alimento) ?? []
+    list.push(`${d.dia} (${c.tiempo})`)
+    occurrencesByDish.set(it.alimento, list)
   })))
+  const openDishData = openDish ? uniqueDishes.get(openDish) : null
 
   return (
     <div className="flex flex-col gap-5 max-h-[75vh] overflow-y-auto scrollbar-thin">
@@ -122,17 +148,33 @@ function DetailModal({ templateId, onClose }: { templateId: number; onClose: () 
         <h4 className="mb-2 text-sm font-semibold text-text">Recetas</h4>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {Array.from(uniqueDishes.values()).map((it) => (
-            <div key={it.alimento} className="overflow-hidden rounded-lg border border-border">
+            <button
+              key={it.alimento}
+              type="button"
+              onClick={() => setOpenDish(it.alimento)}
+              className="overflow-hidden rounded-lg border border-border text-left transition-transform hover:-translate-y-0.5 hover:shadow-float"
+            >
               <CategoryTile imageUrl={it.imagen_url} gradient={style.gradient} icon="🍽" alt={it.alimento} height={80} iconSize="text-xl" />
               <div className="p-2">
                 <p className="text-[11px] font-medium text-text leading-snug">{it.alimento}</p>
               </div>
-            </div>
+            </button>
           ))}
         </div>
       </div>
 
       <Button variant="ghost" onClick={onClose} className="self-end">Cerrar</Button>
+
+      <Modal open={openDish !== null} onClose={() => setOpenDish(null)} title="Detalle del platillo" width={420}>
+        {openDishData && (
+          <DishDetailModal
+            dish={openDishData}
+            gradient={style.gradient}
+            occurrences={occurrencesByDish.get(openDish!) ?? []}
+            onClose={() => setOpenDish(null)}
+          />
+        )}
+      </Modal>
     </div>
   )
 }
