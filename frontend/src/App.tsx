@@ -15,6 +15,7 @@ import { PlanWizardPage } from './features/plan/PlanWizardPage'
 import { PublicPlanPage } from './features/public/PublicPlanPage'
 import { ReferencePage } from './features/reference/ReferencePage'
 import { ClassroomsPage } from './features/classroom/ClassroomsPage'
+import { RecipesPage } from './features/recipes/RecipesPage'
 
 export function App() {
   const [params] = useSearchParams()
@@ -39,6 +40,7 @@ export function App() {
           <Route path="plan/nuevo" element={<PlanWizardPage />} />
           <Route path="plan/:planId" element={<PlanWizardPage />} />
           <Route path="plantillas" element={<TemplatesPage />} />
+          <Route path="recetas" element={<RecipesPage />} />
           <Route path="referencia" element={<ReferencePage />} />
           <Route path="salon" element={<ClassroomsPage />} />
           <Route path="perfil" element={<ProfilePage />} />
