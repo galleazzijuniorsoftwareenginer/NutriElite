@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { AuthLayout } from './AuthLayout'
 import { FieldWrap, Input } from '../../components/Field'
@@ -29,6 +29,20 @@ export function LoginPage() {
   const navigate = useNavigate()
   const setSession = useAuthStore((s) => s.setSession)
   const setProfile = useAuthStore((s) => s.setProfile)
+  const usernameRef = useRef<HTMLInputElement>(null)
+  const errorRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    // Autofocus solo en escritorio (puntero fino): en móvil evita abrir el
+    // teclado virtual apenas se carga la pantalla.
+    if (window.matchMedia('(pointer: fine)').matches) {
+      usernameRef.current?.focus()
+    }
+  }, [])
+
+  useEffect(() => {
+    if (error) errorRef.current?.focus()
+  }, [error])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -45,7 +59,7 @@ export function LoginPage() {
       }
       navigate('/')
     } catch {
-      setError('Usuario o contraseña incorrectos.')
+      setError('Usuario o contraseña incorrectos. Verifica tus datos o restablece tu contraseña.')
     } finally {
       setLoading(false)
     }
@@ -55,31 +69,51 @@ export function LoginPage() {
     <AuthLayout title="Bienvenido de nuevo" subtitle="Inicia sesión para continuar con tus pacientes.">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <FieldWrap label="Usuario">
-          <Input value={username} onChange={(e) => setUsername(e.target.value)} required autoFocus autoComplete="username" />
+          <Input
+            ref={usernameRef}
+            name="username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+            autoComplete="username"
+            spellCheck={false}
+            aria-invalid={!!error}
+            aria-describedby={error ? 'login-error' : undefined}
+          />
         </FieldWrap>
         <FieldWrap label="Contraseña">
           <div className="relative">
             <Input
+              name="password"
               type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete="current-password"
+              spellCheck={false}
               className="pr-10"
+              aria-invalid={!!error}
+              aria-describedby={error ? 'login-error' : undefined}
             />
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
-              className="absolute right-0 top-0 flex h-10 w-10 items-center justify-center text-text-3 transition-colors hover:text-text-2"
-              tabIndex={-1}
+              className="absolute right-0 top-0 flex h-10 w-10 items-center justify-center rounded-md text-text-3 transition-colors hover:text-text-2 touch-manipulation focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 outline-none"
               aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+              aria-pressed={showPassword}
             >
               <EyeIcon open={showPassword} />
             </button>
           </div>
         </FieldWrap>
         {error && (
-          <div className="flex items-center gap-2 rounded-md border border-danger/20 bg-danger-light px-3 py-2 text-xs font-medium text-danger">
+          <div
+            id="login-error"
+            role="alert"
+            tabIndex={-1}
+            ref={errorRef}
+            className="flex items-center gap-2 rounded-md border border-danger/20 bg-danger-light px-3 py-2 text-xs font-medium text-danger outline-none"
+          >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0" aria-hidden="true">
               <circle cx="12" cy="12" r="10" />
               <line x1="12" y1="8" x2="12" y2="12" />

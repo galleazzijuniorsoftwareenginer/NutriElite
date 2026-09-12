@@ -8,19 +8,19 @@ function PlanPreviewCard() {
     { key: 'fat', label: 'Grasa', grams: 55, pct: 25, color: 'var(--color-fat)' },
   ]
   const rows = [
-    { group: 'Cereales y tubérculos', portions: '6 porciones' },
-    { group: 'Alimentos de origen animal', portions: '5 porciones' },
+    { group: 'Cereales y tubérculos', portions: '6 porciones' },
+    { group: 'Alimentos de origen animal', portions: '5 porciones' },
   ]
 
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 shadow-float backdrop-blur-sm">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-[11px] font-medium uppercase tracking-wider text-deep-text-2/80">Plan activo</p>
+          <p className="text-xs text-deep-text-2/80">Plan activo</p>
           <p className="mt-0.5 font-display text-sm font-semibold text-deep-text">Paciente · Pérdida de peso</p>
         </div>
         <span className="shrink-0 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-deep-text">
-          1,840 kcal
+          1,840&nbsp;kcal
         </span>
       </div>
 
@@ -91,7 +91,7 @@ export function AuthLayout({ title, subtitle, children }: { title: string; subti
           <div className="mb-8 lg:hidden">
             <Logo size={28} />
           </div>
-          <h1 className="font-display text-[1.75rem] font-semibold tracking-tight text-text">{title}</h1>
+          <h1 className="text-balance font-display text-[1.75rem] font-semibold tracking-tight text-text">{title}</h1>
           <p className="mt-1.5 text-sm text-text-2">{subtitle}</p>
           <div className="mt-8">{children}</div>
         </div>
