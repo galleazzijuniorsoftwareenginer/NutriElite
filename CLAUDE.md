@@ -109,6 +109,7 @@ backend/
   scripts/
     seed_smae.py           # Seeds food groups and default admin
     seed_recipes.py        # Seeds the system recipe bank (created_by=null)
+  tests/                   # pytest suite — metabolic formulas, SMAE seed 4-4-9 consistency, calculate_smae_portions, renal_service, AI menu plausibility validation
   static/app/               # Built frontend output lives here in the container (git-ignored); index_backup.html is the old vanilla-JS SPA kept for reference
 
 frontend/
@@ -154,4 +155,4 @@ A day that failed to generate carries an `"error"` string field and empty `"comi
 
 ## CI/CD
 
-GitHub Actions (`.github/workflows/sonar.yml`) runs SonarCloud static analysis on push to `main`. Deployment is to Railway via Docker; the multi-stage `Dockerfile` builds the frontend with Node, then copies the output into the Python image, which runs `uvicorn` on `$PORT` (default 8080).
+GitHub Actions (`.github/workflows/sonar.yml`) runs the backend pytest suite (`backend/tests/`) on every push and pull request, and SonarCloud static analysis on push to `main` only. Run tests locally with `pip install -r requirements-dev.txt && pytest`. Deployment is to Railway via Docker; the multi-stage `Dockerfile` builds the frontend with Node, then copies the output into the Python image, which runs `uvicorn` on `$PORT` (default 8080).
