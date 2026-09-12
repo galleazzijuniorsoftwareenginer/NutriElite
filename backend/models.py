@@ -204,6 +204,11 @@ class Consultation(Base):
     plan_objetivos = Column(Text, nullable=True)
     evolucion = Column(Text, nullable=True)
 
+    # Insumos para la criba de desnutrición GLIM (criterio etiológico) — el
+    # criterio fenotípico se deriva de peso/talla ya capturados arriba.
+    ingesta_reducida = Column(String, nullable=True)  # no|leve|severa
+    carga_enfermedad_aguda = Column(Integer, nullable=True)  # 0/1 — enfermedad aguda/crónica con inflamación
+
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 
@@ -219,6 +224,9 @@ class RenalAssessment(Base):
     dialysis_modality = Column(String, nullable=False, default="none")  # none|hemodialysis|peritoneal
     weight = Column(Float, nullable=False)
     age = Column(Integer, nullable=True)
+    height_cm = Column(Float, nullable=True)
+    gender = Column(String, nullable=True)  # male|female — usado para peso ideal/ajustado (Devine)
+    dosing_weight_kg = Column(Float, nullable=True)  # peso usado en kcal/kg y proteína/kg (ajustado si aplica)
 
     # Laboratorios opcionales que ajustan las metas
     potassium_meq_l = Column(Float, nullable=True)
@@ -345,6 +353,24 @@ class PlanPreferences(Base):
     kcal_adjustment_bulk = Column(Float, default=300)
 
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class FoodLogEntry(Base):
+    """Diario alimentario / recordatorio — el paciente registra lo que comió
+    desde el portal público (sin login), el nutricionista lo ve en la ficha.
+    Texto libre por entrada, sin IA ni banco de alimentos: da visibilidad real
+    de la ingesta entre consultas, que es lo que faltaba frente a Avena/
+    Nutrium/Cronometer Pro (todos tienen diario alimentario del paciente)."""
+    __tablename__ = "food_log_entries"
+
+    id = Column(Integer, primary_key=True, index=True)
+    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False)
+    plan_id = Column(Integer, ForeignKey("plans.id"), nullable=True)
+
+    tiempo_comida = Column(String, nullable=False)  # Desayuno|Colación|Comida|Cena|Otro
+    descripcion = Column(Text, nullable=False)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 
 class NutritionistProfile(Base):

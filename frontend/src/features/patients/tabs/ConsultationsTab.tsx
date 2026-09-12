@@ -5,6 +5,7 @@ import {
   createConsultation,
   deleteConsultation,
   extractLabsFromImage,
+  getGlimAssessment,
   listConsultations,
 } from '../../../api/clinical'
 import { createAppointment } from '../../../api/appointments'
@@ -123,15 +124,19 @@ function NewConsultationForm({
   const [pliegueSuprailiaco, setPliegueSuprailiaco] = useState('')
   const [pliegueMuslo, setPliegueMuslo] = useState('')
 
+  const [ingestaReducida, setIngestaReducida] = useState<'no' | 'leve' | 'severa'>('no')
+  const [cargaEnfermedad, setCargaEnfermedad] = useState(false)
+
   const [saveError, setSaveError] = useState('')
 
   useEffect(() => {
     dirtyRef.current = Boolean(
       motivo || peso || talla || diagnostico || evolucion || labs.length > 0 ||
       pliegueMetodo !== 'ninguno' || grasaManual || pliegueEdad ||
-      pliequePecho || pliegueAbdominal || pliegueTriceps || pliegueSuprailiaco || pliegueMuslo
+      pliequePecho || pliegueAbdominal || pliegueTriceps || pliegueSuprailiaco || pliegueMuslo ||
+      ingestaReducida !== 'no' || cargaEnfermedad
     )
-  }, [motivo, peso, talla, diagnostico, evolucion, labs, pliegueMetodo, grasaManual, pliegueEdad, pliequePecho, pliegueAbdominal, pliegueTriceps, pliegueSuprailiaco, pliegueMuslo, dirtyRef])
+  }, [motivo, peso, talla, diagnostico, evolucion, labs, pliegueMetodo, grasaManual, pliegueEdad, pliequePecho, pliegueAbdominal, pliegueTriceps, pliegueSuprailiaco, pliegueMuslo, ingestaReducida, cargaEnfermedad, dirtyRef])
 
   const saveMut = useMutation({
     mutationFn: () =>
@@ -151,6 +156,8 @@ function NewConsultationForm({
         grasa_corporal_metodo: pliegueMetodo !== 'ninguno' ? pliegueMetodo : null,
         edad_medicion: pliegueMetodo === 'pliegues_jp3' && pliegueEdad ? parseInt(pliegueEdad, 10) : null,
         sexo_medicion: pliegueMetodo === 'pliegues_jp3' ? pliegueSexo : null,
+        ingesta_reducida: ingestaReducida,
+        carga_enfermedad_aguda: cargaEnfermedad,
       }),
     onSuccess: () => {
       dirtyRef.current = false
@@ -289,6 +296,25 @@ function NewConsultationForm({
         </div>
       </FieldWrap>
 
+      <div className="rounded-md border border-border p-3">
+        <p className="mb-2 text-xs font-medium text-text-2">
+          Criba de desnutrición (GLIM) — criterio etiológico
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          <FieldWrap label="Ingesta alimentaria">
+            <Select value={ingestaReducida} onChange={(e) => setIngestaReducida(e.target.value as typeof ingestaReducida)}>
+              <option value="no">Normal</option>
+              <option value="leve">Reducida (leve)</option>
+              <option value="severa">Reducida (severa, ≤50% o &gt;2 semanas)</option>
+            </Select>
+          </FieldWrap>
+          <label className="flex items-center gap-2 self-end pb-1.5 text-xs text-text-2">
+            <input type="checkbox" checked={cargaEnfermedad} onChange={(e) => setCargaEnfermedad(e.target.checked)} />
+            Enfermedad aguda/crónica con inflamación
+          </label>
+        </div>
+      </div>
+
       <FieldWrap label="Diagnóstico nutricional">
         <Input value={diagnostico} onChange={(e) => setDiagnostico(e.target.value)} />
       </FieldWrap>
@@ -314,6 +340,13 @@ export function ConsultationsTab({ patientId }: { patientId: number }) {
   const [scheduleOpen, setScheduleOpen] = useState(false)
   const [scheduled, setScheduled] = useState(false)
   const consultaDirtyRef = useRef(false)
+
+  const { data: glim } = useQuery({
+    queryKey: ['glim-assessment', patientId, consultations?.length],
+    queryFn: () => getGlimAssessment(patientId),
+    enabled: Boolean(consultations && consultations.length > 0),
+    retry: false,
+  })
 
   async function handleCloseConsultaModal() {
     if (consultaDirtyRef.current) {
@@ -365,6 +398,40 @@ export function ConsultationsTab({ patientId }: { patientId: number }) {
               </LineChart>
             </ResponsiveContainer>
           </div>
+        </Card>
+      )}
+
+      {glim && (
+        <Card className={glim.diagnosed ? (glim.severity === 'severa' ? 'border-danger/40' : 'border-warn/40') : undefined}>
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-semibold text-text-2">Criba de desnutrición (GLIM)</h3>
+            {glim.diagnosed ? (
+              <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${glim.severity === 'severa' ? 'bg-danger-light text-danger' : 'bg-warn-light text-warn'}`}>
+                Desnutrición {glim.severity}
+              </span>
+            ) : (
+              <span className="rounded-full bg-accent-light px-2.5 py-0.5 text-[11px] font-semibold text-accent">
+                Sin criterios GLIM presentes
+              </span>
+            )}
+          </div>
+          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-text-2">
+            {glim.bmi != null && <span>IMC: {glim.bmi}</span>}
+            {glim.weight_loss_pct != null && (
+              <span>
+                Cambio de peso: {glim.weight_loss_pct > 0 ? '-' : '+'}
+                {Math.abs(glim.weight_loss_pct)}% en {glim.weight_loss_period_months} meses
+              </span>
+            )}
+          </div>
+          {(glim.phenotypic_criteria.length > 0 || glim.etiologic_criteria.length > 0) && (
+            <ul className="mt-2 list-disc pl-4 text-xs text-text-2">
+              {[...glim.phenotypic_criteria, ...glim.etiologic_criteria].map((c) => (
+                <li key={c.code}>{c.detail}</li>
+              ))}
+            </ul>
+          )}
+          <p className="mt-2 text-[11px] text-text-3">{glim.note}</p>
         </Card>
       )}
 

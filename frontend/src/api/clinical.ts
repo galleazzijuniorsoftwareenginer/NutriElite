@@ -1,5 +1,5 @@
 import { api } from './client'
-import type { ClinicalRecord, Consultation, LabValue, RenalAssessment, RenalAssessmentRequest } from '../types/clinical'
+import type { ClinicalRecord, Consultation, GlimAssessment, LabValue, RenalAssessment, RenalAssessmentRequest } from '../types/clinical'
 
 export async function getClinicalRecord(patientId: number) {
   const { data } = await api.get<ClinicalRecord>(`/patients/${patientId}/clinical-record`)
@@ -46,5 +46,24 @@ export async function createRenalAssessment(patientId: number, payload: RenalAss
 
 export async function listRenalAssessments(patientId: number) {
   const { data } = await api.get<RenalAssessment[]>(`/patients/${patientId}/renal-assessments`)
+  return data
+}
+
+export async function getGlimAssessment(patientId: number) {
+  const { data } = await api.get<GlimAssessment>(`/patients/${patientId}/glim-assessment`)
+  return data
+}
+
+export interface FoodLogEntry {
+  id: number
+  patient_id: number
+  plan_id: number | null
+  tiempo_comida: string
+  descripcion: string
+  created_at: string
+}
+
+export async function getFoodLog(patientId: number) {
+  const { data } = await api.get<FoodLogEntry[]>(`/patients/${patientId}/food-log`)
   return data
 }

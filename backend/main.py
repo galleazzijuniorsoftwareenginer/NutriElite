@@ -17,7 +17,6 @@ from backend.routes.pathology_templates import router as pathology_templates_rou
 from backend.routes.preferences import router as preferences_router
 from backend.scripts.seed_pathology_templates import seed_pathology_templates
 from backend.scripts.seed_recipes import seed_recipes
-from backend.routes import smae
 from backend.database import engine
 from backend.models import Base
 from backend.scripts.seed_smae import seed, seed_default_user
@@ -87,6 +86,11 @@ if engine.dialect.name == "postgresql":
         conn.execute(text("ALTER TABLE plans ADD COLUMN IF NOT EXISTS menu_idioma VARCHAR DEFAULT 'es'"))
         conn.execute(text("ALTER TABLE plans ADD COLUMN IF NOT EXISTS menu_region VARCHAR DEFAULT 'México'"))
         conn.execute(text("ALTER TABLE plans ADD COLUMN IF NOT EXISTS restricted_ingredients JSON"))
+        conn.execute(text("ALTER TABLE renal_assessments ADD COLUMN IF NOT EXISTS height_cm FLOAT"))
+        conn.execute(text("ALTER TABLE renal_assessments ADD COLUMN IF NOT EXISTS gender VARCHAR"))
+        conn.execute(text("ALTER TABLE renal_assessments ADD COLUMN IF NOT EXISTS dosing_weight_kg FLOAT"))
+        conn.execute(text("ALTER TABLE consultations ADD COLUMN IF NOT EXISTS ingesta_reducida VARCHAR"))
+        conn.execute(text("ALTER TABLE consultations ADD COLUMN IF NOT EXISTS carga_enfermedad_aguda INTEGER"))
         conn.commit()
 
 # Corrige um erro de digitação nos dados de seed (Azucares/Con grasa tinha
@@ -109,7 +113,6 @@ seed_pathology_templates()
 app.include_router(calculator_router)
 app.include_router(auth_router)
 app.include_router(food_router)
-app.include_router(smae.router)
 app.include_router(patients_router)
 app.include_router(profile_router)
 app.include_router(stripe_router)

@@ -57,6 +57,9 @@ class ConsultationCreate(BaseModel):
     # Solo para calcular JP3 a partir de los pliegues — no se persisten
     edad_medicion: Optional[int] = None
     sexo_medicion: Optional[str] = None
+    # Insumos GLIM (criterio etiológico)
+    ingesta_reducida: Optional[str] = None  # no|leve|severa
+    carga_enfermedad_aguda: Optional[bool] = None
 
 
 class ConsultationResponse(BaseModel):
@@ -81,6 +84,8 @@ class ConsultationResponse(BaseModel):
     pliegue_muslo: Optional[float] = None
     grasa_corporal_pct: Optional[float] = None
     grasa_corporal_metodo: Optional[str] = None
+    ingesta_reducida: Optional[str] = None
+    carga_enfermedad_aguda: Optional[bool] = None
 
     class Config:
         from_attributes = True
@@ -96,6 +101,8 @@ class RenalAssessmentCreate(BaseModel):
     albumin_g_dl: Optional[float] = None
     egfr: Optional[float] = None
     consultation_id: Optional[int] = None
+    height_cm: Optional[float] = None
+    gender: Optional[str] = None  # male|female — habilita el ajuste de peso por obesidad
 
 
 class RenalAssessmentResponse(BaseModel):
@@ -110,6 +117,9 @@ class RenalAssessmentResponse(BaseModel):
     phosphorus_mg_dl: Optional[float] = None
     albumin_g_dl: Optional[float] = None
     egfr: Optional[float] = None
+    height_cm: Optional[float] = None
+    gender: Optional[str] = None
+    dosing_weight_kg: Optional[float] = None
     kcal_per_kg: float
     kcal_total: float
     protein_g_per_kg: float
