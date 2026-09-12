@@ -212,23 +212,81 @@ def call_claude_with_retry(prompt: str, api_key: str, retries: int = 1) -> str:
             last_error = e
     raise last_error
 
+# Límites físicos de densidad calórica (kcal por 100g) usados para detectar
+# alimentos con kcal claramente inventados por el modelo — no dependen de un
+# banco de alimentos (que no existe hoy), solo de la regla 4-4-9: nada
+# comestible supera la densidad del aceite puro (~900 kcal/100g), y nada con
+# peso declarado tiene kcal casi cero.
+MAX_KCAL_PER_100G = 900
+MIN_KCAL_PER_100G = 3
+
+# Tolerancia entre la suma de los itens de un tiempo/día y el kcal declarado
+# para ese tiempo/día — generosa porque el modelo redondea, pero suficiente
+# para atrapar un total de tiempo/día groseramente inconsistente con sus
+# propios itens (ej. itens suman 300kcal pero el tiempo dice 900kcal).
+KCAL_SUM_TOLERANCE_PCT = 0.35
+KCAL_SUM_TOLERANCE_ABS = 80
+
+
 def _validate_day_json(parsed: dict) -> None:
     """El modelo a veces omite quantidade_g en algún alimento (JSON válido
     pero incompleto) — eso pasaba silenciosamente y el PDF mostraba "—g".
-    Se valida acá para que ese caso dispare un reintento en vez de guardarse."""
+    También valida plausibilidad nutricional básica: densidad calórica
+    físicamente imposible por alimento, y consistencia entre la suma de los
+    itens y el kcal declarado por tiempo de comida y por día — antes de esto
+    solo se validaba la forma del JSON, nunca si los números tenían sentido."""
     comidas = parsed.get("comidas")
     if not comidas:
         raise ValueError("Respuesta sin comidas")
+
+    day_items_kcal = 0.0
+    day_comidas_kcal = 0.0
+
     for comida in comidas:
         itens = comida.get("itens") or comida.get("items")
         if not itens:
             raise ValueError(f"Tiempo sin alimentos: {comida.get('tiempo')}")
+
+        items_kcal = 0.0
         for item in itens:
             qty = item.get("quantidade_g")
             if not isinstance(qty, (int, float)) or qty <= 0:
                 raise ValueError(f"Alimento sin quantidade_g válido: {item.get('alimento')}")
             if not item.get("alimento"):
                 raise ValueError("Alimento sin nombre")
+
+            kcal = item.get("kcal")
+            if isinstance(kcal, (int, float)) and kcal > 0:
+                density = kcal / qty * 100
+                if density > MAX_KCAL_PER_100G or density < MIN_KCAL_PER_100G:
+                    raise ValueError(
+                        f"Densidad calórica implausible en '{item.get('alimento')}': "
+                        f"{kcal}kcal / {qty}g = {density:.0f}kcal/100g"
+                    )
+                items_kcal += kcal
+
+        comida_kcal = comida.get("kcal")
+        if isinstance(comida_kcal, (int, float)) and comida_kcal > 0 and items_kcal > 0:
+            diff = abs(items_kcal - comida_kcal)
+            if diff > KCAL_SUM_TOLERANCE_ABS and diff > comida_kcal * KCAL_SUM_TOLERANCE_PCT:
+                raise ValueError(
+                    f"Suma de itens de '{comida.get('tiempo')}' ({items_kcal:.0f}kcal) "
+                    f"inconsistente con su kcal declarado ({comida_kcal}kcal)"
+                )
+
+        day_items_kcal += items_kcal
+        if isinstance(comida_kcal, (int, float)):
+            day_comidas_kcal += comida_kcal
+
+    macros = parsed.get("macros") or {}
+    kcal_total = macros.get("kcal_total")
+    if isinstance(kcal_total, (int, float)) and kcal_total > 0 and day_items_kcal > 0:
+        diff = abs(day_items_kcal - kcal_total)
+        if diff > KCAL_SUM_TOLERANCE_ABS and diff > kcal_total * KCAL_SUM_TOLERANCE_PCT:
+            raise ValueError(
+                f"Suma de itens del día ({day_items_kcal:.0f}kcal) inconsistente "
+                f"con macros.kcal_total ({kcal_total}kcal)"
+            )
 
 
 IDIOMA_NOMBRES = {"es": "español", "en": "inglés (English)", "pt": "portugués (Português)"}
