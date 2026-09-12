@@ -18,6 +18,7 @@ import { confirmAction } from '../../store/confirmStore'
 import { ClinicalRecordTab } from './tabs/ClinicalRecordTab'
 import { ConsultationsTab } from './tabs/ConsultationsTab'
 import { RenalTab } from './tabs/RenalTab'
+import { FoodLogTab } from './tabs/FoodLogTab'
 
 const GOAL_LABEL: Record<string, string> = {
   cut: 'Pérdida de peso',
@@ -25,7 +26,7 @@ const GOAL_LABEL: Record<string, string> = {
   maintenance: 'Mantenimiento',
 }
 
-const TABS = ['Planes', 'Ficha clínica', 'Consultas', 'Módulo renal'] as const
+const TABS = ['Planes', 'Ficha clínica', 'Consultas', 'Módulo renal', 'Diario alimentario'] as const
 type Tab = (typeof TABS)[number]
 
 interface PatientPlansResponse {
@@ -259,6 +260,7 @@ export function PatientDetailPage() {
           {tab === 'Ficha clínica' && <ClinicalRecordTab patientId={patientId} />}
           {tab === 'Consultas' && <ConsultationsTab patientId={patientId} />}
           {tab === 'Módulo renal' && <RenalTab patientId={patientId} />}
+          {tab === 'Diario alimentario' && <FoodLogTab patientId={patientId} />}
         </div>
 
         <div className="flex flex-col gap-4">

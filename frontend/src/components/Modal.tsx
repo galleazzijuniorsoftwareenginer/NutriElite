@@ -26,11 +26,11 @@ export function Modal({ open, onClose, title, children, width = 480 }: ModalProp
         onClick={onClose}
       />
       <div
-        className="relative w-full rounded-lg bg-surface shadow-float animate-modal-in"
+        className="relative flex max-h-[90vh] w-full flex-col rounded-lg bg-surface shadow-float animate-modal-in"
         style={{ maxWidth: width }}
       >
         {title && (
-          <div className="flex items-center justify-between border-b border-border px-5 py-4">
+          <div className="flex shrink-0 items-center justify-between border-b border-border px-5 py-4">
             <h2 className="text-sm font-semibold text-text">{title}</h2>
             <button
               onClick={onClose}
@@ -41,7 +41,7 @@ export function Modal({ open, onClose, title, children, width = 480 }: ModalProp
             </button>
           </div>
         )}
-        <div className="p-5">{children}</div>
+        <div className="overflow-y-auto p-5">{children}</div>
       </div>
     </div>,
     document.body

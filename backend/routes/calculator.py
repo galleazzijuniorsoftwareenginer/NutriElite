@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from backend.database import SessionLocal
 from backend.models import Plan, User
-from backend.schemas.plan import PlanRequest, MealDistributionRequest, MenuDayManual
+from backend.schemas.plan import PlanRequest, MealDistributionRequest, MenuDayManual, PlanConfigRequest
 
 from backend.routes.auth import verify_token, verify_token_str
 
@@ -227,6 +227,50 @@ def save_meal_distribution(
     return {"items": plan.meal_distribution}
 
 
+# ---------- CONFIGURACIÓN DEL PLAN (idioma/región/ingredientes restringidos) ----------
+@router.get("/plans/{plan_id}/config")
+def get_plan_config(
+    plan_id: int,
+    db: Session = Depends(get_db),
+    token: dict = Depends(verify_token)
+):
+    username = token["sub"]
+    db_user = db.query(User).filter(User.username == username).first()
+    plan = db.query(Plan).filter(Plan.id == plan_id, Plan.user_id == db_user.id).first()
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plano não encontrado")
+
+    return {
+        "idioma": plan.menu_idioma or "es",
+        "region": plan.menu_region or "México",
+        "restricted_ingredients": plan.restricted_ingredients or [],
+    }
+
+
+@router.put("/plans/{plan_id}/config")
+def save_plan_config(
+    plan_id: int,
+    data: PlanConfigRequest,
+    db: Session = Depends(get_db),
+    token: dict = Depends(verify_token)
+):
+    username = token["sub"]
+    db_user = db.query(User).filter(User.username == username).first()
+    plan = db.query(Plan).filter(Plan.id == plan_id, Plan.user_id == db_user.id).first()
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plano não encontrado")
+
+    plan.menu_idioma = data.idioma
+    plan.menu_region = data.region
+    plan.restricted_ingredients = data.restricted_ingredients
+    db.commit()
+    return {
+        "idioma": plan.menu_idioma,
+        "region": plan.menu_region,
+        "restricted_ingredients": plan.restricted_ingredients,
+    }
+
+
 # ---------- EDICIÓN MANUAL DE UN DÍA DEL MENÚ ----------
 @router.put("/plans/{plan_id}/menu/day/{dia}")
 def update_menu_day_manual(
@@ -257,6 +301,52 @@ def update_menu_day_manual(
     return day_data
 
 
+# ---------- MICRONUTRIENTES (planilla por ingrediente, datos USDA) ----------
+@router.get("/plans/{plan_id}/menu/micronutrients")
+def get_menu_micronutrients(
+    plan_id: int,
+    db: Session = Depends(get_db),
+    token: dict = Depends(verify_token)
+):
+    from backend.services.micronutrient_service import calculate_plan_micronutrients
+
+    username = token["sub"]
+    db_user = db.query(User).filter(User.username == username).first()
+    plan = db.query(Plan).filter(Plan.id == plan_id, Plan.user_id == db_user.id).first()
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plano não encontrado")
+    if not plan.weekly_menu:
+        raise HTTPException(status_code=400, detail="Este plan aún no tiene un menú generado")
+
+    return calculate_plan_micronutrients(db, plan.weekly_menu)
+
+
+@router.get("/plans/{plan_id}/menu/micronutrients/xlsx")
+def export_menu_micronutrients_xlsx(
+    plan_id: int,
+    db: Session = Depends(get_db),
+    token: dict = Depends(verify_token)
+):
+    from backend.services.micronutrient_service import calculate_plan_micronutrients
+    from backend.services.micronutrient_xlsx import generate_micronutrients_xlsx
+
+    username = token["sub"]
+    db_user = db.query(User).filter(User.username == username).first()
+    plan = db.query(Plan).filter(Plan.id == plan_id, Plan.user_id == db_user.id).first()
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plano não encontrado")
+    if not plan.weekly_menu:
+        raise HTTPException(status_code=400, detail="Este plan aún no tiene un menú generado")
+
+    result = calculate_plan_micronutrients(db, plan.weekly_menu)
+    buffer = generate_micronutrients_xlsx(result)
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename=micronutrientes_plan_{plan_id}.xlsx"}
+    )
+
+
 # ---------- AI MENU GENERATION ----------
 @router.post("/plans/{plan_id}/menu/ai")
 def generate_ai_menu_endpoint(
@@ -282,6 +372,9 @@ def generate_ai_menu_endpoint(
         "weight": plan.weight,
         "get": plan.get,
         "meal_distribution": plan.meal_distribution,
+        "idioma": plan.menu_idioma,
+        "region": plan.menu_region,
+        "restricted_ingredients": plan.restricted_ingredients,
     }
 
     try:
@@ -320,6 +413,7 @@ def generate_acervo_menu_endpoint(
         "weight": plan.weight,
         "get": plan.get,
         "meal_distribution": plan.meal_distribution,
+        "restricted_ingredients": plan.restricted_ingredients,
     }
 
     try:
@@ -354,7 +448,15 @@ def regenerate_ai_menu_day(
         raise HTTPException(status_code=404, detail="Plano não encontrado")
 
     audit = SMAECalculationService.calculate(plan_id, db)
-    plan_data = {"goal": plan.goal, "weight": plan.weight, "get": plan.get, "meal_distribution": plan.meal_distribution}
+    plan_data = {
+        "goal": plan.goal,
+        "weight": plan.weight,
+        "get": plan.get,
+        "meal_distribution": plan.meal_distribution,
+        "idioma": plan.menu_idioma,
+        "region": plan.menu_region,
+        "restricted_ingredients": plan.restricted_ingredients,
+    }
 
     avoid_dishes = []
     if plan.weekly_menu:
@@ -406,7 +508,15 @@ def generate_ai_menu_stream_endpoint(
         raise HTTPException(status_code=404, detail="Plano não encontrado")
 
     audit = SMAECalculationService.calculate(plan_id, db)
-    plan_data = {"goal": plan.goal, "weight": plan.weight, "get": plan.get, "meal_distribution": plan.meal_distribution}
+    plan_data = {
+        "goal": plan.goal,
+        "weight": plan.weight,
+        "get": plan.get,
+        "meal_distribution": plan.meal_distribution,
+        "idioma": plan.menu_idioma,
+        "region": plan.menu_region,
+        "restricted_ingredients": plan.restricted_ingredients,
+    }
 
     def event_source():
         collected: dict[int, dict] = {}

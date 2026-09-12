@@ -332,23 +332,26 @@ export function PatientsPage() {
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="inline-flex gap-0.5 rounded-full border border-border bg-bg p-1">
-          {([
-            ['todos', 'Todos'],
-            ['activo', 'Activos'],
-            ['pausado', 'En pausa'],
-            ['inactivo', 'Inactivos'],
-          ] as const).map(([key, label]) => (
-            <button
-              key={key}
-              onClick={() => setStatusFilter(key)}
-              className={`rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
-                statusFilter === key ? 'bg-surface text-accent shadow-card' : 'text-text-2'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-text-3">Estado</span>
+          <div className="inline-flex gap-0.5 rounded-full border border-border bg-bg p-1">
+            {([
+              ['todos', 'Todos'],
+              ['activo', 'Activos'],
+              ['pausado', 'En pausa'],
+              ['inactivo', 'Inactivos'],
+            ] as const).map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => setStatusFilter(key)}
+                className={`rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
+                  statusFilter === key ? 'bg-surface text-accent shadow-card' : 'text-text-2'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
@@ -368,22 +371,25 @@ export function PatientsPage() {
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <div className="inline-flex gap-0.5 rounded-full border border-border bg-bg p-1">
-          {([
-            ['todos', 'Todos'],
-            ['activada', 'App activada'],
-            ['desactivada', 'App desactivada'],
-          ] as const).map(([key, label]) => (
-            <button
-              key={key}
-              onClick={() => setAppFilter(key)}
-              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
-                appFilter === key ? 'bg-surface text-accent shadow-card' : 'text-text-2'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-text-3">App</span>
+          <div className="inline-flex gap-0.5 rounded-full border border-border bg-bg p-1">
+            {([
+              ['todos', 'Todos'],
+              ['activada', 'App activada'],
+              ['desactivada', 'App desactivada'],
+            ] as const).map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => setAppFilter(key)}
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  appFilter === key ? 'bg-surface text-accent shadow-card' : 'text-text-2'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
         <Select value={etiquetaFilter} onChange={(e) => setEtiquetaFilter(e.target.value)} className="w-auto">
           <option value="">Todas las etiquetas</option>

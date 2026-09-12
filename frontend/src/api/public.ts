@@ -8,6 +8,16 @@ export interface PublicPlan {
   weekly_menu: WeeklyMenu
   shopping_list: { alimento: string; cantidad_g_total: number; veces_usado: number }[]
   can_book: boolean
+  can_log_food: boolean
+}
+
+export interface FoodLogEntry {
+  id: number
+  patient_id: number
+  plan_id: number | null
+  tiempo_comida: string
+  descripcion: string
+  created_at: string
 }
 
 export interface BusySlot {
@@ -30,5 +40,18 @@ export async function bookPublicAppointment(token: string, scheduledAt: string, 
     `/public/plans/${token}/appointments`,
     { scheduled_at: scheduledAt, notes: notes || '' }
   )
+  return data
+}
+
+export async function getPublicFoodLog(token: string) {
+  const { data } = await api.get<FoodLogEntry[]>(`/public/plans/${token}/food-log`)
+  return data
+}
+
+export async function createPublicFoodLogEntry(token: string, tiempoComida: string, descripcion: string) {
+  const { data } = await api.post<FoodLogEntry>(`/public/plans/${token}/food-log`, {
+    tiempo_comida: tiempoComida,
+    descripcion,
+  })
   return data
 }

@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from backend.database import SessionLocal
-from backend.models import Patient, User, ClinicalRecord, Consultation, RenalAssessment
+from backend.models import Patient, User, ClinicalRecord, Consultation, RenalAssessment, Plan, FoodLogEntry
+from backend.schemas.food_log import FoodLogEntryResponse
 from backend.routes.auth import verify_token
 from backend.schemas.clinical import (
     ClinicalRecordUpdate,
@@ -116,6 +117,8 @@ def create_consultation(
     bioquimicos = payload.pop("bioquimicos", None)
     signos_vitales = payload.pop("signos_vitales", None)
     payload = _process_consultation_payload(payload)
+    if payload.get("carga_enfermedad_aguda") is not None:
+        payload["carga_enfermedad_aguda"] = int(payload["carga_enfermedad_aguda"])
     consultation = Consultation(
         patient_id=patient_id,
         bioquimicos=[lv for lv in (bioquimicos or [])],
@@ -148,6 +151,8 @@ def update_consultation(
     payload = data.model_dump()
     payload["bioquimicos"] = payload.get("bioquimicos") or []
     payload = _process_consultation_payload(payload)
+    if payload.get("carga_enfermedad_aguda") is not None:
+        payload["carga_enfermedad_aguda"] = int(payload["carga_enfermedad_aguda"])
     for field, value in payload.items():
         setattr(consultation, field, value)
     db.commit()
@@ -174,6 +179,76 @@ def delete_consultation(
     db.delete(consultation)
     db.commit()
     return {"ok": True}
+
+
+# ---------- CRIBA DE DESNUTRICIÓN (GLIM) ----------
+@router.get("/patients/{patient_id}/glim-assessment")
+def get_glim_assessment(
+    patient_id: int,
+    age: int | None = None,
+    height_cm: float | None = None,
+    db: Session = Depends(get_db),
+    token: dict = Depends(verify_token),
+):
+    """Calcula la criba GLIM a partir de la consulta más reciente y el
+    historial de peso — no persiste nada, se recalcula en cada consulta a la
+    ficha. age/height_cm pueden pasarse como override; por defecto se toman
+    de la talla registrada en consultas y de la edad del plan más reciente."""
+    _get_owned_patient(patient_id, db, token)
+    consultations = (
+        db.query(Consultation)
+        .filter(Consultation.patient_id == patient_id)
+        .order_by(Consultation.fecha.desc())
+        .all()
+    )
+    if not consultations:
+        raise HTTPException(status_code=404, detail="No hay consultas registradas para calcular GLIM")
+
+    latest = consultations[0]
+
+    if height_cm is None:
+        height_cm = next((c.talla for c in consultations if c.talla), None)
+
+    if age is None:
+        latest_plan = (
+            db.query(Plan)
+            .filter(Plan.patient_id == patient_id)
+            .order_by(Plan.created_at.desc())
+            .first()
+        )
+        age = latest_plan.age if latest_plan else None
+
+    from backend.services.glim_service import calculate_glim
+
+    weight_history = [(c.fecha, c.peso) for c in consultations[1:] if c.peso]
+    result = calculate_glim(
+        weight_history=weight_history,
+        current_weight=latest.peso,
+        height_cm=height_cm,
+        age=age,
+        ingesta_reducida=latest.ingesta_reducida,
+        carga_enfermedad_aguda=bool(latest.carga_enfermedad_aguda),
+        current_date=latest.fecha,
+    )
+    result["based_on_consultation_id"] = latest.id
+    result["age_used"] = age
+    result["height_cm_used"] = height_cm
+    return result
+
+
+# ---------- DIARIO ALIMENTARIO (vista del nutricionista) ----------
+@router.get("/patients/{patient_id}/food-log", response_model=list[FoodLogEntryResponse])
+def list_food_log_entries_for_nutritionist(
+    patient_id: int, db: Session = Depends(get_db), token: dict = Depends(verify_token)
+):
+    _get_owned_patient(patient_id, db, token)
+    return (
+        db.query(FoodLogEntry)
+        .filter(FoodLogEntry.patient_id == patient_id)
+        .order_by(FoodLogEntry.created_at.desc())
+        .limit(100)
+        .all()
+    )
 
 
 # ---------- EXTRACCIÓN DE LABORATORIOS CON IA (revisión manual antes de guardar) ----------
@@ -211,6 +286,8 @@ def create_renal_assessment(
             age=data.age,
             potassium_meq_l=data.potassium_meq_l,
             phosphorus_mg_dl=data.phosphorus_mg_dl,
+            height_cm=data.height_cm,
+            gender=data.gender,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -226,6 +303,8 @@ def create_renal_assessment(
         phosphorus_mg_dl=data.phosphorus_mg_dl,
         albumin_g_dl=data.albumin_g_dl,
         egfr=data.egfr,
+        height_cm=data.height_cm,
+        gender=data.gender,
         **targets,
     )
     db.add(assessment)

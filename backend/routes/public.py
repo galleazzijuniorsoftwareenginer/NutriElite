@@ -3,7 +3,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from backend.database import SessionLocal
-from backend.models import Plan, Patient, Appointment, User, NutritionistProfile
+from backend.models import Plan, Patient, Appointment, User, NutritionistProfile, FoodLogEntry
+from backend.schemas.food_log import FoodLogEntryCreate, FoodLogEntryResponse
 from backend.services.shopping_list_service import build_shopping_list
 from backend.services.email_service import send_email, render_branded_email
 
@@ -52,6 +53,7 @@ def get_public_plan(public_token: str, db: Session = Depends(get_db)):
         "weekly_menu": weekly_menu,
         "shopping_list": shopping_list,
         "can_book": plan.patient_id is not None,
+        "can_log_food": plan.patient_id is not None,
     }
 
 
@@ -154,3 +156,50 @@ def book_appointment(public_token: str, data: PublicBookingRequest, db: Session 
         send_email(notify_email, "Nueva cita agendada — NutriElite", html)
 
     return {"id": appt.id, "scheduled_at": appt.scheduled_at, "duration_minutes": appt.duration_minutes}
+
+
+# ---------- DIARIO ALIMENTARIO (recordatorio del paciente, sin login) ----------
+FOOD_LOG_HISTORY_DAYS = 14
+
+
+@router.post("/plans/{public_token}/food-log", response_model=FoodLogEntryResponse)
+def create_food_log_entry(public_token: str, data: FoodLogEntryCreate, db: Session = Depends(get_db)):
+    """El paciente registra lo que comió desde su portal — texto libre, sin
+    IA ni banco de alimentos. Le da al nutricionista visibilidad real de la
+    ingesta entre consultas, algo que hoy solo se sabe preguntando."""
+    plan = db.query(Plan).filter(Plan.public_token == public_token).first()
+    if not plan:
+        raise HTTPException(status_code=404, detail="Enlace no válido o expirado")
+    if not plan.patient_id:
+        raise HTTPException(status_code=400, detail="Este plan no está vinculado a un paciente registrado")
+    if not data.descripcion.strip():
+        raise HTTPException(status_code=400, detail="Describe lo que comiste")
+
+    entry = FoodLogEntry(
+        patient_id=plan.patient_id,
+        plan_id=plan.id,
+        tiempo_comida=data.tiempo_comida,
+        descripcion=data.descripcion.strip(),
+    )
+    db.add(entry)
+    db.commit()
+    db.refresh(entry)
+    return entry
+
+
+@router.get("/plans/{public_token}/food-log", response_model=list[FoodLogEntryResponse])
+def list_food_log_entries(public_token: str, db: Session = Depends(get_db)):
+    """El paciente ve solo sus propias entradas recientes de este mismo plan/portal."""
+    plan = db.query(Plan).filter(Plan.public_token == public_token).first()
+    if not plan:
+        raise HTTPException(status_code=404, detail="Enlace no válido o expirado")
+    if not plan.patient_id:
+        return []
+
+    since = datetime.utcnow() - timedelta(days=FOOD_LOG_HISTORY_DAYS)
+    return (
+        db.query(FoodLogEntry)
+        .filter(FoodLogEntry.patient_id == plan.patient_id, FoodLogEntry.created_at >= since)
+        .order_by(FoodLogEntry.created_at.desc())
+        .all()
+    )

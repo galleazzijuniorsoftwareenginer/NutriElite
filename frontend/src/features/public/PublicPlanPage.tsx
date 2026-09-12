@@ -1,11 +1,76 @@
 import { useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { getPublicPlan, getBusySlots, bookPublicAppointment } from '../../api/public'
+import {
+  getPublicPlan,
+  getBusySlots,
+  bookPublicAppointment,
+  getPublicFoodLog,
+  createPublicFoodLogEntry,
+} from '../../api/public'
 import { Logo } from '../../components/Logo'
 import { Card } from '../../components/Card'
 import { Spinner } from '../../components/Spinner'
 import { Button } from '../../components/Button'
+import { Select } from '../../components/Field'
+
+const TIEMPOS_COMIDA = ['Desayuno', 'Colación', 'Comida', 'Cena', 'Otro']
+
+function FoodLogSection({ token }: { token: string }) {
+  const queryClient = useQueryClient()
+  const [tiempo, setTiempo] = useState(TIEMPOS_COMIDA[0])
+  const [descripcion, setDescripcion] = useState('')
+
+  const { data: entries } = useQuery({
+    queryKey: ['public-food-log', token],
+    queryFn: () => getPublicFoodLog(token),
+  })
+
+  const mut = useMutation({
+    mutationFn: () => createPublicFoodLogEntry(token, tiempo, descripcion),
+    onSuccess: () => {
+      setDescripcion('')
+      queryClient.invalidateQueries({ queryKey: ['public-food-log', token] })
+    },
+  })
+
+  return (
+    <Card>
+      <h2 className="mb-1 text-sm font-semibold text-text">📝 Diario alimentario</h2>
+      <p className="mb-4 text-xs text-text-2">
+        Registra lo que comiste realmente — le ayuda a tu nutricionista a ajustar tu plan.
+      </p>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <Select value={tiempo} onChange={(e) => setTiempo(e.target.value)} className="sm:w-40">
+          {TIEMPOS_COMIDA.map((t) => (
+            <option key={t} value={t}>{t}</option>
+          ))}
+        </Select>
+        <input
+          type="text"
+          value={descripcion}
+          onChange={(e) => setDescripcion(e.target.value)}
+          placeholder="¿Qué comiste?"
+          className="flex-1 rounded-md border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-3 outline-none focus:border-accent"
+        />
+        <Button disabled={!descripcion.trim()} loading={mut.isPending} onClick={() => mut.mutate()}>
+          Registrar
+        </Button>
+      </div>
+      {(entries ?? []).length > 0 && (
+        <ul className="mt-4 flex flex-col gap-2">
+          {(entries ?? []).map((e) => (
+            <li key={e.id} className="rounded-md bg-bg px-3 py-2 text-xs">
+              <span className="font-medium text-text">{e.tiempo_comida}</span>
+              <span className="text-text-3"> · {new Date(e.created_at).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}</span>
+              <p className="mt-0.5 text-text-2">{e.descripcion}</p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
+  )
+}
 
 const SLOT_START_HOUR = 8
 const SLOT_END_HOUR = 20
@@ -231,6 +296,8 @@ export function PublicPlanPage() {
             </Card>
           </>
         )}
+
+        {token && data.can_log_food && <FoodLogSection token={token} />}
 
         {token && (data.can_book ? (
           <BookingSection token={token} />

@@ -1,5 +1,5 @@
 import { api } from './client'
-import type { AuditResponse, MealSlot, PlanCreateResponse, PlanRequest, PlanSummary, PlanTemplate } from '../types'
+import type { AuditResponse, MealSlot, MicronutrientResult, PlanCreateResponse, PlanRequest, PlanSummary, PlanTemplate } from '../types'
 
 export async function createPlan(payload: PlanRequest) {
   const { data } = await api.post<PlanCreateResponse>('/plan', payload)
@@ -51,6 +51,15 @@ export function pdfDownloadUrl(planId: number, params: {
   return `/plans/${planId}/pdf${query ? `?${query}` : ''}`
 }
 
+export async function getMicronutrients(planId: number) {
+  const { data } = await api.get<MicronutrientResult>(`/plans/${planId}/menu/micronutrients`)
+  return data
+}
+
+export function micronutrientsXlsxUrl(planId: number) {
+  return `/plans/${planId}/menu/micronutrients/xlsx`
+}
+
 export async function sharePlan(planId: number) {
   const { data } = await api.post<{ public_token: string; url: string }>(`/plans/${planId}/share`)
   return data
@@ -70,6 +79,22 @@ export async function listTemplates() {
 
 export async function deleteTemplate(planId: number) {
   const { data } = await api.delete(`/templates/${planId}`)
+  return data
+}
+
+export interface PlanConfig {
+  idioma: 'es' | 'en' | 'pt'
+  region: string
+  restricted_ingredients: string[]
+}
+
+export async function getPlanConfig(planId: number) {
+  const { data } = await api.get<PlanConfig>(`/plans/${planId}/config`)
+  return data
+}
+
+export async function savePlanConfig(planId: number, config: PlanConfig) {
+  const { data } = await api.put<PlanConfig>(`/plans/${planId}/config`, config)
   return data
 }
 

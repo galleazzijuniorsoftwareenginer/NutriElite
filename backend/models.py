@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Text, JSON
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Text, JSON, Boolean
 from sqlalchemy.sql import func
 from backend.database import Base
 
@@ -88,6 +88,11 @@ class Plan(Base):
     meal_distribution = Column(JSON, nullable=True)
     public_token = Column(String, unique=True, nullable=True, index=True)
     portal_last_accessed_at = Column(DateTime(timezone=True), nullable=True)  # última vez que el paciente abrió su portal
+
+    # Configuración del generador de menú (paso "Distribuye" del wizard)
+    menu_idioma = Column(String, default="es")
+    menu_region = Column(String, default="México")
+    restricted_ingredients = Column(JSON, nullable=True)
 from sqlalchemy import Column, Integer, String, Float
 from backend.database import Base
 
@@ -199,6 +204,11 @@ class Consultation(Base):
     plan_objetivos = Column(Text, nullable=True)
     evolucion = Column(Text, nullable=True)
 
+    # Insumos para la criba de desnutrición GLIM (criterio etiológico) — el
+    # criterio fenotípico se deriva de peso/talla ya capturados arriba.
+    ingesta_reducida = Column(String, nullable=True)  # no|leve|severa
+    carga_enfermedad_aguda = Column(Integer, nullable=True)  # 0/1 — enfermedad aguda/crónica con inflamación
+
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 
@@ -214,6 +224,9 @@ class RenalAssessment(Base):
     dialysis_modality = Column(String, nullable=False, default="none")  # none|hemodialysis|peritoneal
     weight = Column(Float, nullable=False)
     age = Column(Integer, nullable=True)
+    height_cm = Column(Float, nullable=True)
+    gender = Column(String, nullable=True)  # male|female — usado para peso ideal/ajustado (Devine)
+    dosing_weight_kg = Column(Float, nullable=True)  # peso usado en kcal/kg y proteína/kg (ajustado si aplica)
 
     # Laboratorios opcionales que ajustan las metas
     potassium_meq_l = Column(Float, nullable=True)
@@ -253,6 +266,56 @@ class Recipe(Base):
     imagen_url = Column(String, nullable=True)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class IngredientNutrient(Base):
+    """Caché por ingrediente de datos de USDA FoodData Central (valores por
+    100g). Se llena bajo demanda (cache-aside) la primera vez que un
+    ingrediente aparece en un menú — ver micronutrient_service.py. Un registro
+    con matched=False significa que se intentó buscar en USDA y no hubo
+    coincidencia confiable, para no reintentar en cada request."""
+    __tablename__ = "ingredient_nutrients"
+
+    id = Column(Integer, primary_key=True, index=True)
+    alimento_normalizado = Column(String, unique=True, nullable=False, index=True)
+    alimento_original = Column(String, nullable=False)
+    matched = Column(Boolean, nullable=False, default=False)
+    fdc_id = Column(Integer, nullable=True)
+    usda_food_name = Column(String, nullable=True)
+
+    # Valores por 100g. USDA no reporta índice/carga glicémica ni el desglose
+    # hierro hemínico/no hemínico — esos campos quedan fuera a propósito en
+    # vez de inventarlos.
+    kcal = Column(Float, nullable=True)
+    protein_g = Column(Float, nullable=True)
+    carbs_g = Column(Float, nullable=True)
+    fat_g = Column(Float, nullable=True)
+    fiber_g = Column(Float, nullable=True)
+    sugar_g = Column(Float, nullable=True)
+    saturated_fat_g = Column(Float, nullable=True)
+    monounsaturated_fat_g = Column(Float, nullable=True)
+    polyunsaturated_fat_g = Column(Float, nullable=True)
+    cholesterol_mg = Column(Float, nullable=True)
+    calcium_mg = Column(Float, nullable=True)
+    iron_mg = Column(Float, nullable=True)
+    magnesium_mg = Column(Float, nullable=True)
+    phosphorus_mg = Column(Float, nullable=True)
+    potassium_mg = Column(Float, nullable=True)
+    sodium_mg = Column(Float, nullable=True)
+    zinc_mg = Column(Float, nullable=True)
+    copper_mg = Column(Float, nullable=True)
+    selenium_mcg = Column(Float, nullable=True)
+    vitamin_c_mg = Column(Float, nullable=True)
+    thiamin_mg = Column(Float, nullable=True)
+    riboflavin_mg = Column(Float, nullable=True)
+    niacin_mg = Column(Float, nullable=True)
+    vitamin_b6_mg = Column(Float, nullable=True)
+    folate_mcg = Column(Float, nullable=True)
+    vitamin_b12_mcg = Column(Float, nullable=True)
+    vitamin_a_mcg = Column(Float, nullable=True)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
 
 class Classroom(Base):
@@ -340,6 +403,24 @@ class PlanPreferences(Base):
     kcal_adjustment_bulk = Column(Float, default=300)
 
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class FoodLogEntry(Base):
+    """Diario alimentario / recordatorio — el paciente registra lo que comió
+    desde el portal público (sin login), el nutricionista lo ve en la ficha.
+    Texto libre por entrada, sin IA ni banco de alimentos: da visibilidad real
+    de la ingesta entre consultas, que es lo que faltaba frente a Avena/
+    Nutrium/Cronometer Pro (todos tienen diario alimentario del paciente)."""
+    __tablename__ = "food_log_entries"
+
+    id = Column(Integer, primary_key=True, index=True)
+    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False)
+    plan_id = Column(Integer, ForeignKey("plans.id"), nullable=True)
+
+    tiempo_comida = Column(String, nullable=False)  # Desayuno|Colación|Comida|Cena|Otro
+    descripcion = Column(Text, nullable=False)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 
 class NutritionistProfile(Base):

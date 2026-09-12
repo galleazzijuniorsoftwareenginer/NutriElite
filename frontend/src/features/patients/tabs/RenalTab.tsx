@@ -26,6 +26,8 @@ export function RenalTab({ patientId }: { patientId: number }) {
   const [modality, setModality] = useState<DialysisModality>('none')
   const [weight, setWeight] = useState('')
   const [age, setAge] = useState('')
+  const [height, setHeight] = useState('')
+  const [gender, setGender] = useState<'' | 'male' | 'female'>('')
   const [potassium, setPotassium] = useState('')
   const [phosphorus, setPhosphorus] = useState('')
   const [albumin, setAlbumin] = useState('')
@@ -38,6 +40,8 @@ export function RenalTab({ patientId }: { patientId: number }) {
         dialysis_modality: modality,
         weight: parseFloat(weight),
         age: age ? parseInt(age, 10) : null,
+        height_cm: height ? parseFloat(height) : null,
+        gender: gender || null,
         potassium_meq_l: potassium ? parseFloat(potassium) : null,
         phosphorus_mg_dl: phosphorus ? parseFloat(phosphorus) : null,
         albumin_g_dl: albumin ? parseFloat(albumin) : null,
@@ -80,7 +84,21 @@ export function RenalTab({ patientId }: { patientId: number }) {
           <FieldWrap label="Edad">
             <Input type="number" value={age} onChange={(e) => setAge(e.target.value)} />
           </FieldWrap>
+          <FieldWrap label="Talla (cm)">
+            <Input type="number" step="0.1" value={height} onChange={(e) => setHeight(e.target.value)} />
+          </FieldWrap>
+          <FieldWrap label="Sexo">
+            <Select value={gender} onChange={(e) => setGender(e.target.value as '' | 'male' | 'female')}>
+              <option value="">No especificar</option>
+              <option value="male">Masculino</option>
+              <option value="female">Femenino</option>
+            </Select>
+          </FieldWrap>
         </div>
+        <p className="text-[11px] text-text-3">
+          Talla y sexo habilitan el ajuste de peso por obesidad (peso corporal ajustado) para no
+          sobreestimar kcal/proteína en pacientes con peso real ≥125% del ideal.
+        </p>
 
         <p className="text-xs font-medium text-text-2">Laboratorios (opcional, ajustan las metas)</p>
         <div className="grid grid-cols-3 gap-3">
@@ -109,6 +127,12 @@ export function RenalTab({ patientId }: { patientId: number }) {
             <p className="text-xs font-semibold uppercase tracking-wide text-deep-text-2">
               Última evaluación · {STAGE_LABEL[latest.ckd_stage as CkdStage]}
             </p>
+            {latest.dosing_weight_kg != null && latest.dosing_weight_kg !== latest.weight && (
+              <p className="mt-1 text-[11px] text-deep-text-2">
+                Peso ajustado por obesidad usado en los cálculos: {latest.dosing_weight_kg}kg (peso real:{' '}
+                {latest.weight}kg)
+              </p>
+            )}
             <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
               <div>
                 <p className="font-display text-xl font-semibold">{latest.kcal_total.toFixed(0)}</p>

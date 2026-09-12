@@ -20,7 +20,7 @@ export function FieldWrap({ label, hint, error, children }: FieldWrapProps) {
 }
 
 const inputBase =
-  'h-10 w-full rounded-md border border-border bg-surface px-3 text-sm text-text placeholder:text-text-3 outline-none transition-colors focus:border-accent'
+  'h-10 w-full rounded-md border border-border bg-surface px-3 text-sm text-text placeholder:text-text-3 outline-none transition-colors focus:border-accent focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2'
 
 export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(
   ({ className, ...rest }, ref) => (

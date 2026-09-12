@@ -149,6 +149,26 @@ export interface WeeklyMenu {
   semana: MenuDay[]
 }
 
+export interface MicronutrientField {
+  label: string
+  unidad: string
+}
+
+export interface MicronutrientDayResult {
+  dia: string
+  totales: Record<string, number>
+  error?: string
+}
+
+export interface MicronutrientResult {
+  dias: MicronutrientDayResult[]
+  totales_semana: Record<string, number>
+  ingredientes_sin_datos: string[]
+  cobertura: { con_datos: number; total: number }
+  usda_configurado: boolean
+  campos: Record<string, MicronutrientField>
+}
+
 export interface MealSlot {
   tiempo: string
   pct: number

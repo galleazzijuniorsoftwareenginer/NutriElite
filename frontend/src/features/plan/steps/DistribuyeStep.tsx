@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { getMealDistribution, saveMealDistribution, getAudit } from '../../../api/plans'
+import { listFoodGroups } from '../../../api/food'
 import type { MealSlot } from '../../../types'
 import { Card } from '../../../components/Card'
 import { Button } from '../../../components/Button'
 import { Input } from '../../../components/Field'
 import type { WizardPlanData } from '../planTypes'
 import { clampAdjustment, gramsFromPct } from '../planMath'
+import { buildSmaeRows } from '../smaeRows'
 
 /** Reparte `total` porciones enteras entre los pesos dados (%) sin perder ni sumar de más,
  * usando el método de mayores restos: cada celda recibe el piso de su parte proporcional
@@ -57,6 +59,17 @@ export function DistribuyeStep({ plan, carbPct, protPct, fatPct, kcalAdjustment,
     queryKey: ['audit', plan.planId, auditOverride],
     queryFn: () => getAudit(plan.planId, auditOverride),
   })
+
+  const { data: foodGroups } = useQuery({
+    queryKey: ['food-groups'],
+    queryFn: listFoodGroups,
+    staleTime: Infinity,
+  })
+
+  const smaeRows = useMemo(
+    () => (audit && foodGroups ? buildSmaeRows(audit, foodGroups) : []),
+    [audit, foodGroups]
+  )
 
   const { data: loaded } = useQuery({
     queryKey: ['meal-distribution', plan.planId],
@@ -168,7 +181,7 @@ export function DistribuyeStep({ plan, carbPct, protPct, fatPct, kcalAdjustment,
         )}
       </Card>
 
-      {audit && audit.smae_table.length > 0 && (
+      {smaeRows.length > 0 && (
         <Card className="overflow-x-auto lg:col-span-2">
           <h3 className="mb-3 text-sm font-semibold text-text">Porciones SMAE por tiempo de comida</h3>
           <table className="w-full text-left text-xs">
@@ -182,10 +195,10 @@ export function DistribuyeStep({ plan, carbPct, protPct, fatPct, kcalAdjustment,
               </tr>
             </thead>
             <tbody>
-              {audit.smae_table.map((row, ri) => {
+              {smaeRows.map((row, ri) => {
                 const perSlot = distributePortions(row.portions, items.map((s) => s.pct))
                 return (
-                  <tr key={ri} className="border-b border-border/60">
+                  <tr key={ri} className={`border-b border-border/60 ${row.portions === 0 ? 'opacity-50' : ''}`}>
                     <td className="py-2">
                       <span className="rounded bg-accent-light px-1.5 py-0.5 text-[10px] font-medium text-accent">{row.group}</span>
                       {row.subgroup && <span className="ml-1 text-text-3">{row.subgroup}</span>}

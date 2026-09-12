@@ -27,6 +27,33 @@ PROTEIN_G_PER_KG_DIALYSIS = {
 SODIUM_MG = 2300  # KDOQI 2020: <100 mmol/día (~2300 mg) para ERC 1-5D y post-trasplante
 
 
+def calculate_adjusted_body_weight(weight: float, height_cm: float | None, gender: str | None) -> tuple[float, str | None]:
+    """Peso corporal ajustado para obesidad — evita sobreestimar kcal/proteína
+    en pacientes obesos usando el peso real bruto. Fórmula estándar usada en
+    nutrición clínica (KDOQI no fija una única ecuación, pero recomienda
+    ajustar por peso ideal en obesidad): peso ideal por Devine, y si el peso
+    real es ≥125% del ideal, aBW = IBW + 0.25 × (peso real − IBW).
+    Sin talla/sexo no hay forma de calcular IBW, así que se usa el peso real
+    (comportamiento previo, sin cambios) y no se ajusta nada."""
+    if not height_cm or height_cm <= 0 or gender not in ("male", "female"):
+        return weight, None
+
+    height_in = height_cm / 2.54
+    extra_in = max(0.0, height_in - 60)
+    ibw = (50.0 if gender == "male" else 45.5) + 2.3 * extra_in
+
+    if weight >= 1.25 * ibw:
+        adjusted = round(ibw + 0.25 * (weight - ibw), 1)
+        note = (
+            f"Peso corporal ajustado por obesidad: {adjusted}kg (peso ideal {ibw:.1f}kg + 25% del "
+            f"exceso sobre peso real {weight}kg) — se usa este valor para kcal/kg y proteína/kg en "
+            "vez del peso real bruto, evitando sobreestimar necesidades."
+        )
+        return adjusted, note
+
+    return weight, None
+
+
 def calculate_renal_targets(
     ckd_stage: str,
     dialysis_modality: str,
@@ -34,6 +61,8 @@ def calculate_renal_targets(
     age: int | None = None,
     potassium_meq_l: float | None = None,
     phosphorus_mg_dl: float | None = None,
+    height_cm: float | None = None,
+    gender: str | None = None,
 ) -> dict:
     if ckd_stage not in VALID_STAGES:
         raise ValueError(f"Etapa de ERC inválida: {ckd_stage}")
@@ -44,6 +73,10 @@ def calculate_renal_targets(
 
     notes = []
 
+    dosing_weight, adjusted_note = calculate_adjusted_body_weight(weight, height_cm, gender)
+    if adjusted_note:
+        notes.append(adjusted_note)
+
     # ---- Energía (kcal/kg) ----
     # KDOQI 2020: 25-35 kcal/kg/día según edad, sexo, actividad y objetivo de peso.
     kcal_per_kg = 30.0 if (age is not None and age >= 60) else 32.0
@@ -53,7 +86,7 @@ def calculate_renal_targets(
             "absorbida del dializado — considera reducir el aporte calórico de "
             "los alimentos si hay ganancia de peso excesiva."
         )
-    kcal_total = round(kcal_per_kg * weight, 0)
+    kcal_total = round(kcal_per_kg * dosing_weight, 0)
 
     # ---- Proteína (g/kg) ----
     if dialysis_modality in PROTEIN_G_PER_KG_DIALYSIS:
@@ -70,7 +103,7 @@ def calculate_renal_targets(
                 "para retrasar progresión — requiere paciente metabólicamente estable "
                 "y sin desnutrición."
             )
-    protein_g_total = round(protein_g_per_kg * weight, 1)
+    protein_g_total = round(protein_g_per_kg * dosing_weight, 1)
 
     # ---- Sodio ----
     sodium_mg = SODIUM_MG
@@ -128,5 +161,6 @@ def calculate_renal_targets(
         "potassium_mg": potassium_mg,
         "phosphorus_mg": phosphorus_mg,
         "fluid_ml": fluid_ml,
+        "dosing_weight_kg": dosing_weight,
         "notes": " ".join(notes),
     }

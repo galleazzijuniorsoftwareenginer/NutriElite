@@ -44,6 +44,27 @@ export interface Consultation {
   pliegue_muslo: number | null
   grasa_corporal_pct: number | null
   grasa_corporal_metodo: string | null
+  ingesta_reducida: 'no' | 'leve' | 'severa' | null
+  carga_enfermedad_aguda: boolean | null
+}
+
+export interface GlimCriterion {
+  code: string
+  detail: string
+}
+
+export interface GlimAssessment {
+  diagnosed: boolean
+  severity: 'moderada' | 'severa' | null
+  bmi: number | null
+  weight_loss_pct: number | null
+  weight_loss_period_months: number | null
+  phenotypic_criteria: GlimCriterion[]
+  etiologic_criteria: GlimCriterion[]
+  note: string
+  based_on_consultation_id: number
+  age_used: number | null
+  height_cm_used: number | null
 }
 
 export type CkdStage = '1' | '2' | '3a' | '3b' | '4' | '5'
@@ -59,11 +80,14 @@ export interface RenalAssessmentRequest {
   albumin_g_dl?: number | null
   egfr?: number | null
   consultation_id?: number | null
+  height_cm?: number | null
+  gender?: 'male' | 'female' | null
 }
 
 export interface RenalAssessment extends RenalAssessmentRequest {
   id: number
   patient_id: number
+  dosing_weight_kg: number | null
   kcal_per_kg: number
   kcal_total: number
   protein_g_per_kg: number
