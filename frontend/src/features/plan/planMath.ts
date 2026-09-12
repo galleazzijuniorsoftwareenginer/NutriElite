@@ -104,4 +104,6 @@ export const FORMULA_LABEL: Record<string, string> = {
   mifflin: 'Mifflin-St Jeor',
   harris: 'Harris-Benedict',
   schofield: 'Schofield (pediátrica)',
+  katch: 'Katch-McArdle',
+  cunningham: 'Cunningham',
 }
