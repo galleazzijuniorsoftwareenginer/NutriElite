@@ -57,15 +57,17 @@ The frontend's router uses `basename="/app"` in production (`import.meta.env.PRO
 
 7. **AI lab extraction** (`POST /patients/{id}/consultations/extract-labs`): sends a photo of a lab report to Claude (vision) and returns extracted `{nombre, valor, unidad}` values to prefill a consultation's `bioquimicos` — the nutritionist always reviews/edits before saving, this never writes directly to the record. See `lab_extraction_service.py`.
 
-8. **Renal module (KDOQI)** (`POST /patients/{id}/renal-assessment`): `renal_service.calculate_renal_targets()` computes kcal/kg, protein g/kg, sodium/potassium/phosphorus (mg) and fluid (mL) targets from CKD stage (1/2/3a/3b/4/5) + dialysis modality (none/hemodialysis/peritoneal), adjusting potassium/phosphorus by lab values when provided (KDOQI does not recommend a universal restriction — it's individualized by serum level). Results are explicitly framed as starting points requiring clinical judgment, not a diagnosis. Stored as `RenalAssessment` rows (history kept, not overwritten).
+8. **Renal module (KDOQI)** (`POST /patients/{id}/renal-assessment`): `renal_service.calculate_renal_targets()` computes kcal/kg, protein g/kg, sodium/potassium/phosphorus (mg) and fluid (mL) targets from CKD stage (1/2/3a/3b/4/5) + dialysis modality (none/hemodialysis/peritoneal), adjusting potassium/phosphorus by lab values when provided (KDOQI does not recommend a universal restriction — it's individualized by serum level). When optional `height_cm`/`gender` are provided and the patient's actual weight is ≥125% of Devine ideal body weight, kcal/kg and protein/kg use an adjusted body weight instead (avoids overestimating needs in obesity) — unchanged otherwise. Results are explicitly framed as starting points requiring clinical judgment, not a diagnosis. Stored as `RenalAssessment` rows (history kept, not overwritten).
 
 9. **Appointments** (`POST/GET/PUT/DELETE /appointments`, `POST /appointments/{id}/send-reminder`, `GET /appointments/due-reminders`): booking a `patient_id` + `scheduled_at` sends a confirmation email immediately (Resend) if the patient has one. There's no cron/task queue in this project, so reminders are on-demand — the frontend dashboard surfaces appointments due within 24h with a "send reminder" button; `due-reminders` is the endpoint a future scheduled job would poll instead.
 
 10. **Recipes & shopping list** (`GET/POST/DELETE /recipes`, `POST /shopping-list`): `Recipe` rows are either system-seeded (`created_by=null`, see `seed_recipes.py`) or created by a nutritionist (`created_by=user_id`, private to them). The shopping list is **not** recipe-based — `shopping_list_service.build_shopping_list()` aggregates grams per unique food name straight out of a weekly AI menu's `semana` structure (same shape `ai_menu_service` returns), so it stays in sync with whatever the AI actually generated.
 
-11. **Patient portal (public link)** (`POST /plans/{id}/share`, `GET /public/plans/{token}` — no auth): generates a `Plan.public_token` (only on request, not by default) and serves a sanitized read of that plan (first name only, goal, kcal target, weekly menu, shopping list) — no email/phone/clinical data. `Plan.weekly_menu` is persisted server-side whenever the AI menu is generated or a single day is regenerated (sync endpoint, SSE stream, and per-day endpoint all write it), which is also what makes the portal link always reflect the latest menu without the frontend re-sending anything.
+11. **Patient portal (public link)** (`POST /plans/{id}/share`, `GET /public/plans/{token}` — no auth): generates a `Plan.public_token` (only on request, not by default) and serves a sanitized read of that plan (first name only, goal, kcal target, weekly menu, shopping list) — no email/phone/clinical data. `Plan.weekly_menu` is persisted server-side whenever the AI menu is generated or a single day is regenerated (sync endpoint, SSE stream, and per-day endpoint all write it), which is also what makes the portal link always reflect the latest menu without the frontend re-sending anything. The same portal also lets the patient log a free-text food diary entry (`POST/GET /public/plans/{token}/food-log`, no auth, scoped to the plan's linked `Patient`) — the nutritionist reviews it authenticated via `GET /patients/{id}/food-log`.
 
-12. **Student accounts & classrooms** (`User.role`: `professional`|`student`): registering as a student (`POST /register` with `role: "student"`) auto-seeds 3 clearly-labeled fictional practice patients (`student_service.seed_practice_patients`) so they can practice TMB/GET/SMAE calculations without real clinical data. `Classroom`/`ClassroomEnrollment` (`/classrooms*` routes) let a professor create a class with a join code; a professor can only read (never edit) an enrolled student's practice patients/plans, gated by checking both classroom ownership and enrollment on every request.
+12. **GLIM malnutrition screening** (`GET /patients/{id}/glim-assessment`): recomputed on demand from the patient's `Consultation` history — phenotypic criteria (weight loss %, low BMI, age-adjusted cutoffs) come from peso/talla already captured; etiologic criteria (reduced intake, disease burden) come from two fields captured per consultation (`ingesta_reducida`, `carga_enfermedad_aguda`). Muscle-mass phenotypic criterion is intentionally not evaluated (no bioimpedance/DXA data) and the response note says so explicitly — this is a screening aid, not a diagnosis.
+
+13. **Student accounts & classrooms** (`User.role`: `professional`|`student`): registering as a student (`POST /register` with `role: "student"`) auto-seeds 3 clearly-labeled fictional practice patients (`student_service.seed_practice_patients`) so they can practice TMB/GET/SMAE calculations without real clinical data. `Classroom`/`ClassroomEnrollment` (`/classrooms*` routes) let a professor create a class with a join code; a professor can only read (never edit) an enrolled student's practice patients/plans, gated by checking both classroom ownership and enrollment on every request.
 
 ## Code Structure
 
@@ -73,35 +75,36 @@ The frontend's router uses `basename="/app"` in production (`import.meta.env.PRO
 backend/
   main.py                  # App init, route registration, DB seeding + Postgres-only migrations on startup
   database.py              # SQLAlchemy engine + session, env-based DB URL
-  models.py                # ORM: User, Patient, Plan, FoodGroup, FitnessReference, PlanFoodGroup, NutritionistProfile, ClinicalRecord, Consultation, RenalAssessment, Appointment, Recipe, Classroom, ClassroomEnrollment
+  models.py                # ORM: User, Patient, Plan, FoodGroup, FitnessReference, PlanFoodGroup, NutritionistProfile, ClinicalRecord, Consultation, RenalAssessment, Appointment, Recipe, Classroom, ClassroomEnrollment, PathologyTemplate, RecipeFavorite, PlanPreferences, FoodLogEntry
   schemas/
     plan.py                # Pydantic request validation for plans
-    clinical.py            # Pydantic schemas for clinical record, consultations, renal assessment
+    clinical.py            # Pydantic schemas for clinical record, consultations (incl. GLIM inputs), renal assessment
     appointments.py        # Pydantic schemas for appointments
     recipes.py             # Pydantic schemas for recipes + shopping list request
     classroom.py           # Pydantic schemas for classrooms/enrollments
+    food_log.py            # Pydantic schemas for the patient food diary (FoodLogEntry)
   routes/
     auth.py                # Register (role professional|student), login, JWT (verify_token for headers, verify_token_str for SSE query params)
     calculator.py          # Plan CRUD, audit, PDF, AI menu (sync + SSE stream + per-day regen), plan sharing (/plans/{id}/share)
     patients.py            # Patient CRUD + per-patient plan history
-    clinical.py            # Clinical record, consultations, AI lab extraction, renal (KDOQI) assessment
+    clinical.py            # Clinical record, consultations, AI lab extraction, renal (KDOQI) assessment, GLIM malnutrition screening, nutritionist's view of the food diary
     appointments.py        # Appointment CRUD + email reminders
     recipes.py             # Recipe CRUD + shopping list generation
     classroom.py           # Classrooms, join codes, professor's read-only view of student practice data
     reference.py           # Static reference/study content (BMR formulas, activity factors, SMAE guide, KDOQI summary)
-    public.py              # Unauthenticated /public/plans/{token} — patient portal
+    public.py              # Unauthenticated /public/plans/{token} — patient portal, appointment booking, food diary logging
     profile.py             # Nutritionist profile (name, cédula, clínica, logo) used in the PDF header
     stripe_routes.py        # Checkout session, webhook, Pro status
     password_reset.py       # Forgot/reset password via Resend email
-    food.py                # Food group list
-    smae.py                # Legacy nutritional audit endpoint (no auth) — calculator.py's /plans/{id}/audit is the one actually used by the frontend
+    food.py                # Food group list (authenticated)
   services/
-    plan_service.py        # SMAE portion calculation (core business logic)
+    plan_service.py        # SMAE portion calculation (core business logic) — includes an energy-closure step that adjusts cereales/frutas to bring the total within ~3% of the GET target
     metabolic_service.py   # BMR formula implementations
     smae_calculation_service.py  # Energy audit validation + build_override_plan helper
     pdf_service.py         # ReportLab PDF generation
-    ai_menu_service.py     # Parallel Claude API calls for weekly meal plans (sync, streaming, and single-day variants)
-    renal_service.py       # KDOQI 2020-based CKD nutrition target calculations
+    ai_menu_service.py     # Parallel Claude API calls for weekly meal plans (sync, streaming, and single-day variants); validates calorie-density plausibility and item/day kcal consistency before accepting a day
+    renal_service.py       # KDOQI 2020-based CKD nutrition target calculations, incl. adjusted body weight for obesity (Devine IBW + 25% rule) when height/gender are provided
+    glim_service.py        # GLIM malnutrition screening (phenotypic + etiologic criteria, severity staging) from consultation history
     lab_extraction_service.py  # Claude vision call to read lab values from a photo
     email_service.py       # Shared Resend wrapper + branded HTML template (used by appointments; password_reset.py predates it and has its own inline version)
     shopping_list_service.py  # Aggregates a weekly AI menu into a shopping list
