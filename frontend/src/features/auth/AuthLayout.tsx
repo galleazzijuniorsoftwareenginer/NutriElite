@@ -1,21 +1,6 @@
 import type { ReactNode } from 'react'
 import { Logo } from '../../components/Logo'
 
-function CheckIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="mt-0.5 shrink-0" aria-hidden="true">
-      <circle cx="8" cy="8" r="8" fill="var(--color-accent-2)" fillOpacity="0.18" />
-      <path d="M5 8.2l2 2 4-4.4" stroke="var(--color-accent-2)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-}
-
-const FEATURES = [
-  'Cálculo metabólico y distribución SMAE automatizados',
-  'Menús semanales generados por IA, validados nutricionalmente',
-  'Reportes clínicos en PDF listos para entregar',
-]
-
 function PlanPreviewCard() {
   const macros = [
     { key: 'carb', label: 'Carb', grams: 220, pct: 45, color: 'var(--color-carb)' },
@@ -85,18 +70,14 @@ export function AuthLayout({ title, subtitle, children }: { title: string; subti
             Plataforma clínica
           </span>
           <p className="mt-4 font-display text-[2.1rem] font-semibold leading-[1.15] tracking-tight text-deep-text">
-            El cálculo nutricional,
+            Precisión clínica.
             <br />
-            resuelto con precisión.
+            <span style={{ color: 'var(--color-accent-2)' }}>Nutrición inteligente.</span>
           </p>
-          <ul className="mt-6 flex flex-col gap-2.5 text-sm text-deep-text-2">
-            {FEATURES.map((f) => (
-              <li key={f} className="flex items-start gap-2.5">
-                <CheckIcon />
-                {f}
-              </li>
-            ))}
-          </ul>
+          <p className="mt-4 text-sm text-deep-text-2">
+            Cálculo metabólico, distribución SMAE y menús semanales generados por IA en tiempo real — todo en un
+            solo flujo pensado para nutricionistas clínicos.
+          </p>
           <div className="mt-7">
             <PlanPreviewCard />
           </div>
