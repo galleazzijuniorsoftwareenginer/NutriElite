@@ -1,5 +1,5 @@
 import { api } from './client'
-import type { AuditResponse, MealSlot, PlanCreateResponse, PlanRequest, PlanSummary, PlanTemplate } from '../types'
+import type { AuditResponse, MealSlot, MicronutrientResult, PlanCreateResponse, PlanRequest, PlanSummary, PlanTemplate } from '../types'
 
 export async function createPlan(payload: PlanRequest) {
   const { data } = await api.post<PlanCreateResponse>('/plan', payload)
@@ -49,6 +49,15 @@ export function pdfDownloadUrl(planId: number, params: {
   }
   const query = qs.toString()
   return `/plans/${planId}/pdf${query ? `?${query}` : ''}`
+}
+
+export async function getMicronutrients(planId: number) {
+  const { data } = await api.get<MicronutrientResult>(`/plans/${planId}/menu/micronutrients`)
+  return data
+}
+
+export function micronutrientsXlsxUrl(planId: number) {
+  return `/plans/${planId}/menu/micronutrients/xlsx`
 }
 
 export async function sharePlan(planId: number) {

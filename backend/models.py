@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Text, JSON
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Text, JSON, Boolean
 from sqlalchemy.sql import func
 from backend.database import Base
 
@@ -266,6 +266,56 @@ class Recipe(Base):
     imagen_url = Column(String, nullable=True)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class IngredientNutrient(Base):
+    """Caché por ingrediente de datos de USDA FoodData Central (valores por
+    100g). Se llena bajo demanda (cache-aside) la primera vez que un
+    ingrediente aparece en un menú — ver micronutrient_service.py. Un registro
+    con matched=False significa que se intentó buscar en USDA y no hubo
+    coincidencia confiable, para no reintentar en cada request."""
+    __tablename__ = "ingredient_nutrients"
+
+    id = Column(Integer, primary_key=True, index=True)
+    alimento_normalizado = Column(String, unique=True, nullable=False, index=True)
+    alimento_original = Column(String, nullable=False)
+    matched = Column(Boolean, nullable=False, default=False)
+    fdc_id = Column(Integer, nullable=True)
+    usda_food_name = Column(String, nullable=True)
+
+    # Valores por 100g. USDA no reporta índice/carga glicémica ni el desglose
+    # hierro hemínico/no hemínico — esos campos quedan fuera a propósito en
+    # vez de inventarlos.
+    kcal = Column(Float, nullable=True)
+    protein_g = Column(Float, nullable=True)
+    carbs_g = Column(Float, nullable=True)
+    fat_g = Column(Float, nullable=True)
+    fiber_g = Column(Float, nullable=True)
+    sugar_g = Column(Float, nullable=True)
+    saturated_fat_g = Column(Float, nullable=True)
+    monounsaturated_fat_g = Column(Float, nullable=True)
+    polyunsaturated_fat_g = Column(Float, nullable=True)
+    cholesterol_mg = Column(Float, nullable=True)
+    calcium_mg = Column(Float, nullable=True)
+    iron_mg = Column(Float, nullable=True)
+    magnesium_mg = Column(Float, nullable=True)
+    phosphorus_mg = Column(Float, nullable=True)
+    potassium_mg = Column(Float, nullable=True)
+    sodium_mg = Column(Float, nullable=True)
+    zinc_mg = Column(Float, nullable=True)
+    copper_mg = Column(Float, nullable=True)
+    selenium_mcg = Column(Float, nullable=True)
+    vitamin_c_mg = Column(Float, nullable=True)
+    thiamin_mg = Column(Float, nullable=True)
+    riboflavin_mg = Column(Float, nullable=True)
+    niacin_mg = Column(Float, nullable=True)
+    vitamin_b6_mg = Column(Float, nullable=True)
+    folate_mcg = Column(Float, nullable=True)
+    vitamin_b12_mcg = Column(Float, nullable=True)
+    vitamin_a_mcg = Column(Float, nullable=True)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
 
 class Classroom(Base):

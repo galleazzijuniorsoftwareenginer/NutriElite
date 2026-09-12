@@ -26,7 +26,7 @@ docker compose up --build
 python -m backend.scripts.seed_smae
 ```
 
-**Required environment variables**: `ANTHROPIC_API_KEY` (AI menu generation), `JWT_SECRET_KEY` (auth — falls back to an insecure default with a startup warning if unset), `STRIPE_API_KEY`/`STRIPE_PRICE_ID`/`STRIPE_WEBHOOK_SECRET` (billing), `RESEND_API_KEY` (password reset emails), `PUBLIC_BASE_URL` (used to build Stripe checkout/reset-password links — defaults to the production Railway URL if unset).
+**Required environment variables**: `ANTHROPIC_API_KEY` (AI menu generation), `JWT_SECRET_KEY` (auth — falls back to an insecure default with a startup warning if unset), `STRIPE_API_KEY`/`STRIPE_PRICE_ID`/`STRIPE_WEBHOOK_SECRET` (billing), `RESEND_API_KEY` (password reset emails), `PUBLIC_BASE_URL` (used to build Stripe checkout/reset-password links — defaults to the production Railway URL if unset), `USDA_FDC_API_KEY` (optional, free at https://fdc.nal.usda.gov/api-key-signup — powers the micronutrients spreadsheet; without it that feature reports itself as unconfigured instead of failing).
 
 ## Architecture Overview
 
@@ -69,13 +69,15 @@ The frontend's router uses `basename="/app"` in production (`import.meta.env.PRO
 
 13. **Student accounts & classrooms** (`User.role`: `professional`|`student`): registering as a student (`POST /register` with `role: "student"`) auto-seeds 3 clearly-labeled fictional practice patients (`student_service.seed_practice_patients`) so they can practice TMB/GET/SMAE calculations without real clinical data. `Classroom`/`ClassroomEnrollment` (`/classrooms*` routes) let a professor create a class with a join code; a professor can only read (never edit) an enrolled student's practice patients/plans, gated by checking both classroom ownership and enrollment on every request.
 
+14. **Micronutrients spreadsheet** (`GET /plans/{id}/menu/micronutrients`, `GET /plans/{id}/menu/micronutrients/xlsx`): once a weekly menu exists (acervo or AI, same `{alimento, quantidade_g}` item shape either way), `micronutrient_service.calculate_plan_micronutrients()` looks up each ingredient's per-100g values in `IngredientNutrient` — a cache-aside table backed by the USDA FoodData Central public API (`usda_client.py`, needs `USDA_FDC_API_KEY`) — and scales/sums them per day and per week. Ingredients with no confident USDA match are reported in `ingredientes_sin_datos`, never silently zeroed. The JSON endpoint feeds the Resumen step's in-app table; the `/xlsx` endpoint (`micronutrient_xlsx.py`, via openpyxl) generates the downloadable spreadsheet, same pattern as the clinical PDF export.
+
 ## Code Structure
 
 ```
 backend/
   main.py                  # App init, route registration, DB seeding + Postgres-only migrations on startup
   database.py              # SQLAlchemy engine + session, env-based DB URL
-  models.py                # ORM: User, Patient, Plan, FoodGroup, FitnessReference, PlanFoodGroup, NutritionistProfile, ClinicalRecord, Consultation, RenalAssessment, Appointment, Recipe, Classroom, ClassroomEnrollment, PathologyTemplate, RecipeFavorite, PlanPreferences, FoodLogEntry
+  models.py                # ORM: User, Patient, Plan, FoodGroup, FitnessReference, PlanFoodGroup, NutritionistProfile, ClinicalRecord, Consultation, RenalAssessment, Appointment, Recipe, Classroom, ClassroomEnrollment, PathologyTemplate, RecipeFavorite, PlanPreferences, FoodLogEntry, IngredientNutrient
   schemas/
     plan.py                # Pydantic request validation for plans
     clinical.py            # Pydantic schemas for clinical record, consultations (incl. GLIM inputs), renal assessment
@@ -109,6 +111,9 @@ backend/
     email_service.py       # Shared Resend wrapper + branded HTML template (used by appointments; password_reset.py predates it and has its own inline version)
     shopping_list_service.py  # Aggregates a weekly AI menu into a shopping list
     student_service.py     # Seeds fictional practice patients for new student accounts
+    usda_client.py         # Thin USDA FoodData Central API client (per-100g nutrient lookup by food name)
+    micronutrient_service.py  # Cache-aside per-ingredient nutrient lookup + per-plan weekly aggregation
+    micronutrient_xlsx.py  # Builds the downloadable micronutrients spreadsheet (openpyxl)
   scripts/
     seed_smae.py           # Seeds food groups and default admin
     seed_recipes.py        # Seeds the system recipe bank (created_by=null)

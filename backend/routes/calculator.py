@@ -301,6 +301,52 @@ def update_menu_day_manual(
     return day_data
 
 
+# ---------- MICRONUTRIENTES (planilla por ingrediente, datos USDA) ----------
+@router.get("/plans/{plan_id}/menu/micronutrients")
+def get_menu_micronutrients(
+    plan_id: int,
+    db: Session = Depends(get_db),
+    token: dict = Depends(verify_token)
+):
+    from backend.services.micronutrient_service import calculate_plan_micronutrients
+
+    username = token["sub"]
+    db_user = db.query(User).filter(User.username == username).first()
+    plan = db.query(Plan).filter(Plan.id == plan_id, Plan.user_id == db_user.id).first()
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plano não encontrado")
+    if not plan.weekly_menu:
+        raise HTTPException(status_code=400, detail="Este plan aún no tiene un menú generado")
+
+    return calculate_plan_micronutrients(db, plan.weekly_menu)
+
+
+@router.get("/plans/{plan_id}/menu/micronutrients/xlsx")
+def export_menu_micronutrients_xlsx(
+    plan_id: int,
+    db: Session = Depends(get_db),
+    token: dict = Depends(verify_token)
+):
+    from backend.services.micronutrient_service import calculate_plan_micronutrients
+    from backend.services.micronutrient_xlsx import generate_micronutrients_xlsx
+
+    username = token["sub"]
+    db_user = db.query(User).filter(User.username == username).first()
+    plan = db.query(Plan).filter(Plan.id == plan_id, Plan.user_id == db_user.id).first()
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plano não encontrado")
+    if not plan.weekly_menu:
+        raise HTTPException(status_code=400, detail="Este plan aún no tiene un menú generado")
+
+    result = calculate_plan_micronutrients(db, plan.weekly_menu)
+    buffer = generate_micronutrients_xlsx(result)
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename=micronutrientes_plan_{plan_id}.xlsx"}
+    )
+
+
 # ---------- AI MENU GENERATION ----------
 @router.post("/plans/{plan_id}/menu/ai")
 def generate_ai_menu_endpoint(
