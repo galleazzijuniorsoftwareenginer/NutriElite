@@ -212,4 +212,41 @@ def calculate_smae_portions(db, plan):
         portion = to_int(carbs_fruit / frut.carbs)
         portions.append({"group": frut.group_name, "subgroup": None, "portions": portion})
 
+    # 9. Fechamento energético — os passos acima arredondam cada grupo para
+    # cima (to_int/math.ceil) e nunca reavaliam o total contra o GET da meta,
+    # então o plano podia fechar com um gap calórico real de bem mais que 3%
+    # mesmo a documentação prometendo esse ajuste. Cereales e frutas são as
+    # fontes mais elásticas (variar 1 porção afeta menos o restante da
+    # distribuição do que mexer em leche/AOA/leguminosas), então são elas que
+    # absorvem a correção: primeiro cereales, depois frutas para o resto.
+    def find_row(group):
+        for p in portions:
+            if p["group"] == group:
+                return p
+        return None
+
+    total_kcal = sum(
+        p["portions"] * (get_food(p["group"], p["subgroup"]).kcal or 0)
+        for p in portions
+        if get_food(p["group"], p["subgroup"])
+    )
+    tolerance = get * 0.03
+    gap = get - total_kcal
+
+    if abs(gap) > tolerance:
+        cer_row = find_row("Cereales y tuberculos")
+        if cer_row and cer and cer.kcal > 0:
+            delta = round(gap / cer.kcal)
+            new_portions = max(0, cer_row["portions"] + delta)
+            gap -= (new_portions - cer_row["portions"]) * cer.kcal
+            cer_row["portions"] = new_portions
+
+        if abs(gap) > tolerance:
+            frut_row = find_row("Frutas")
+            if frut_row and frut and frut.kcal > 0:
+                delta = round(gap / frut.kcal)
+                new_portions = max(0, frut_row["portions"] + delta)
+                gap -= (new_portions - frut_row["portions"]) * frut.kcal
+                frut_row["portions"] = new_portions
+
     return portions
