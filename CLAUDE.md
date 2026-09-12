@@ -159,3 +159,13 @@ A day that failed to generate carries an `"error"` string field and empty `"comi
 ## CI/CD
 
 GitHub Actions (`.github/workflows/sonar.yml`) runs the backend pytest suite (`backend/tests/`) on every push and pull request, and SonarCloud static analysis on push to `main` only. Run tests locally with `pip install -r requirements-dev.txt && pytest`. Deployment is to Railway via Docker; the multi-stage `Dockerfile` builds the frontend with Node, then copies the output into the Python image, which runs `uvicorn` on `$PORT` (default 8080).
+
+## Agent skills
+
+### Issue tracker
+
+Issues and specs live as GitHub issues (`galleazzijuniorsoftwareenginer/NutriElite`), via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Domain docs
+
+Single-context layout: `CONTEXT.md` + `docs/adr/` at the repo root (created lazily as needed). See `docs/agents/domain.md`.
