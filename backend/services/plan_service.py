@@ -1,6 +1,36 @@
 from backend.models import Plan, FoodGroup
 from backend.services.metabolic_service import calculate_tmb
-from backend.models import Plan, FoodGroup, PlanFoodGroup
+from backend.models import Plan, FoodGroup, PlanFoodGroup, Patient
+
+
+def _resolve_patient_id(db, user_id, explicit_patient_id, name, email, phone):
+    """El wizard 'Nuevo plan' abierto sin partir de una ficha de paciente
+    (patient_id=None) solo mandaba patient_name/email/phone como texto suelto
+    en el Plan — nunca creaba/vinculaba un Patient, por eso el plan no
+    aparecía en Mis pacientes ni en el historial de esa persona. Si no viene
+    un patient_id explícito, se busca (por email o teléfono, para no duplicar
+    en reintentos) o se crea el Patient correspondiente, y el plan siempre
+    queda vinculado."""
+    if explicit_patient_id is not None:
+        return explicit_patient_id
+
+    email = (email or "").strip()
+    phone = (phone or "").strip()
+    query = db.query(Patient).filter(Patient.user_id == user_id)
+    existing = None
+    if email:
+        existing = query.filter(Patient.email == email).first()
+    if not existing and phone:
+        existing = db.query(Patient).filter(Patient.user_id == user_id, Patient.phone == phone).first()
+    if existing:
+        return existing.id
+
+    patient = Patient(name=name, email=email or None, phone=phone or None, user_id=user_id)
+    db.add(patient)
+    db.commit()
+    db.refresh(patient)
+    return patient.id
+
 
 def create_plan(data, db, user_id):
 
@@ -28,6 +58,12 @@ def create_plan(data, db, user_id):
     fats    = round((total_calories * 20 / 100) / 9, 1)
     carbs   = round((total_calories * 55 / 100) / 4, 1)
 
+    patient_id = _resolve_patient_id(
+        db, user_id,
+        data.patient_id if hasattr(data, "patient_id") else None,
+        data.patient_name, data.patient_email, data.patient_phone,
+    )
+
     new_plan = Plan(
         patient_name=data.patient_name,
         patient_email=data.patient_email,
@@ -46,7 +82,7 @@ def create_plan(data, db, user_id):
         carbs=carbs,
         fats=fats,
         user_id=user_id,
-        patient_id=data.patient_id if hasattr(data, "patient_id") else None
+        patient_id=patient_id
     )
 
     db.add(new_plan)
