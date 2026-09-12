@@ -1,26 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import {
-  getMealDistribution,
-  saveMealDistribution,
-  getAudit,
-  getPlanConfig,
-  savePlanConfig,
-  type PlanConfig,
-} from '../../../api/plans'
+import { getMealDistribution, saveMealDistribution, getAudit } from '../../../api/plans'
 import { listFoodGroups } from '../../../api/food'
 import type { MealSlot } from '../../../types'
 import { Card } from '../../../components/Card'
 import { Button } from '../../../components/Button'
-import { Input, Select } from '../../../components/Field'
+import { Input } from '../../../components/Field'
 import type { WizardPlanData } from '../planTypes'
 import { clampAdjustment, gramsFromPct } from '../planMath'
 import { buildSmaeRows } from '../smaeRows'
-
-const REGIONES = [
-  'México', 'España', 'Argentina', 'Colombia', 'Perú', 'Chile',
-  'Estados Unidos', 'Brasil', 'Centroamérica', 'Caribe',
-]
 
 /** Reparte `total` porciones enteras entre los pesos dados (%) sin perder ni sumar de más,
  * usando el método de mayores restos: cada celda recibe el piso de su parte proporcional
@@ -102,40 +90,6 @@ export function DistribuyeStep({ plan, carbPct, protPct, fatPct, kcalAdjustment,
       setTimeout(() => setSaved(false), 2000)
     },
   })
-
-  const { data: loadedConfig } = useQuery({
-    queryKey: ['plan-config', plan.planId],
-    queryFn: () => getPlanConfig(plan.planId),
-  })
-
-  const [config, setConfig] = useState<PlanConfig>({ idioma: 'es', region: 'México', restricted_ingredients: [] })
-  const [restrictedInput, setRestrictedInput] = useState('')
-  const [configSaved, setConfigSaved] = useState(false)
-
-  useEffect(() => {
-    if (loadedConfig) setConfig(loadedConfig)
-  }, [loadedConfig])
-
-  const saveConfigMut = useMutation({
-    mutationFn: () => savePlanConfig(plan.planId, config),
-    onSuccess: () => {
-      setConfigSaved(true)
-      setTimeout(() => setConfigSaved(false), 2000)
-    },
-  })
-
-  function addRestricted() {
-    const value = restrictedInput.trim()
-    if (!value) return
-    if (!config.restricted_ingredients.some((r) => r.toLowerCase() === value.toLowerCase())) {
-      setConfig((prev) => ({ ...prev, restricted_ingredients: [...prev.restricted_ingredients, value] }))
-    }
-    setRestrictedInput('')
-  }
-
-  function removeRestricted(name: string) {
-    setConfig((prev) => ({ ...prev, restricted_ingredients: prev.restricted_ingredients.filter((r) => r !== name) }))
-  }
 
   const sum = items.reduce((acc, i) => acc + i.pct, 0)
   const isValid = Math.round(sum) === 100
@@ -264,121 +218,7 @@ export function DistribuyeStep({ plan, carbPct, protPct, fatPct, kcalAdjustment,
         </Card>
       )}
 
-      {smaeRows.length > 0 && (
-        <Card className="overflow-x-auto lg:col-span-2">
-          <h3 className="mb-3 text-sm font-semibold text-text">Tabla de grupos</h3>
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-border text-text-3">
-                <th className="py-2 font-medium">Grupo</th>
-                <th className="text-center font-medium">Porciones</th>
-                <th className="text-center font-medium">Kcal</th>
-                <th className="text-center font-medium">HCO(g)</th>
-                <th className="text-center font-medium">Prot(g)</th>
-                <th className="text-center font-medium">Grasas(g)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {smaeRows.map((row, ri) => (
-                <tr key={ri} className={`border-b border-border/60 ${row.portions === 0 ? 'opacity-50' : ''}`}>
-                  <td className="py-2">
-                    <span className="rounded bg-accent-light px-1.5 py-0.5 text-[10px] font-medium text-accent">{row.group}</span>
-                    {row.subgroup && <span className="ml-1 text-text-3">{row.subgroup}</span>}
-                  </td>
-                  <td className="text-center text-text-2">{row.portions}</td>
-                  <td className="text-center text-text-2">{Math.round(row.portions * row.unitKcal)}</td>
-                  <td className="text-center text-text-2">{(row.portions * row.unitCarbs).toFixed(1)}</td>
-                  <td className="text-center text-text-2">{(row.portions * row.unitProtein).toFixed(1)}</td>
-                  <td className="text-center text-text-2">{(row.portions * row.unitFats).toFixed(1)}</td>
-                </tr>
-              ))}
-              <tr className="font-semibold text-text">
-                <td className="py-2">TOTAL</td>
-                <td className="text-center">{smaeRows.reduce((a, r) => a + r.portions, 0)}</td>
-                <td className="text-center">{Math.round(smaeRows.reduce((a, r) => a + r.portions * r.unitKcal, 0))}</td>
-                <td className="text-center">{smaeRows.reduce((a, r) => a + r.portions * r.unitCarbs, 0).toFixed(1)}</td>
-                <td className="text-center">{smaeRows.reduce((a, r) => a + r.portions * r.unitProtein, 0).toFixed(1)}</td>
-                <td className="text-center">{smaeRows.reduce((a, r) => a + r.portions * r.unitFats, 0).toFixed(1)}</td>
-              </tr>
-            </tbody>
-          </table>
-        </Card>
-      )}
-
       <div className="flex flex-col gap-4">
-        <Card>
-          <h3 className="mb-2 text-sm font-semibold text-text">Configuración del plan</h3>
-          <div className="flex flex-col gap-3">
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-text-2">Idioma del menú</span>
-              <Select
-                value={config.idioma}
-                onChange={(e) => setConfig((prev) => ({ ...prev, idioma: e.target.value as PlanConfig['idioma'] }))}
-                className="h-8 text-xs"
-              >
-                <option value="es">Español</option>
-                <option value="en">Inglés</option>
-                <option value="pt">Portugués</option>
-              </Select>
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-text-2">Región / cocina</span>
-              <Select
-                value={REGIONES.includes(config.region) ? config.region : 'Otra'}
-                onChange={(e) => setConfig((prev) => ({ ...prev, region: e.target.value }))}
-                className="h-8 text-xs"
-              >
-                {REGIONES.map((r) => (
-                  <option key={r} value={r}>{r}</option>
-                ))}
-                <option value="Otra">Otra…</option>
-              </Select>
-              {!REGIONES.includes(config.region) && (
-                <Input
-                  value={config.region}
-                  onChange={(e) => setConfig((prev) => ({ ...prev, region: e.target.value }))}
-                  placeholder="Escribe la región/cocina"
-                  className="mt-1 h-8 text-xs"
-                />
-              )}
-            </label>
-            <div className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-text-2">Ingredientes restringidos</span>
-              <div className="flex gap-1.5">
-                <Input
-                  value={restrictedInput}
-                  onChange={(e) => setRestrictedInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      addRestricted()
-                    }
-                  }}
-                  placeholder="Ej. Camarón, cacahuate…"
-                  className="h-8 text-xs"
-                />
-                <Button size="sm" variant="secondary" onClick={addRestricted}>+</Button>
-              </div>
-              {config.restricted_ingredients.length > 0 && (
-                <div className="mt-1 flex flex-wrap gap-1.5">
-                  {config.restricted_ingredients.map((ing) => (
-                    <span key={ing} className="flex items-center gap-1 rounded-full bg-danger-light px-2 py-0.5 text-[10px] font-medium text-danger">
-                      {ing}
-                      <button onClick={() => removeRestricted(ing)} className="hover:opacity-70">×</button>
-                    </span>
-                  ))}
-                </div>
-              )}
-              <span className="text-[11px] text-text-3">
-                Alergias, intolerancias o preferencias — el generador de menú (IA o acervo) los excluirá por completo.
-              </span>
-            </div>
-            <Button size="sm" variant="secondary" loading={saveConfigMut.isPending} onClick={() => saveConfigMut.mutate()}>
-              {configSaved ? '✓ Configuración guardada' : '💾 Guardar configuración'}
-            </Button>
-          </div>
-        </Card>
-
         <Card>
           <h3 className="mb-2 text-sm font-semibold text-text">¿Para qué sirve este paso?</h3>
           <p className="text-xs text-text-2">
