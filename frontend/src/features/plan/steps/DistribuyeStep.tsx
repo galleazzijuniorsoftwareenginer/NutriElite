@@ -8,12 +8,14 @@ import {
   savePlanConfig,
   type PlanConfig,
 } from '../../../api/plans'
+import { listFoodGroups } from '../../../api/food'
 import type { MealSlot } from '../../../types'
 import { Card } from '../../../components/Card'
 import { Button } from '../../../components/Button'
 import { Input, Select } from '../../../components/Field'
 import type { WizardPlanData } from '../planTypes'
 import { clampAdjustment, gramsFromPct } from '../planMath'
+import { buildSmaeRows } from '../smaeRows'
 
 const REGIONES = [
   'México', 'España', 'Argentina', 'Colombia', 'Perú', 'Chile',
@@ -69,6 +71,17 @@ export function DistribuyeStep({ plan, carbPct, protPct, fatPct, kcalAdjustment,
     queryKey: ['audit', plan.planId, auditOverride],
     queryFn: () => getAudit(plan.planId, auditOverride),
   })
+
+  const { data: foodGroups } = useQuery({
+    queryKey: ['food-groups'],
+    queryFn: listFoodGroups,
+    staleTime: Infinity,
+  })
+
+  const smaeRows = useMemo(
+    () => (audit && foodGroups ? buildSmaeRows(audit, foodGroups) : []),
+    [audit, foodGroups]
+  )
 
   const { data: loaded } = useQuery({
     queryKey: ['meal-distribution', plan.planId],
@@ -214,7 +227,7 @@ export function DistribuyeStep({ plan, carbPct, protPct, fatPct, kcalAdjustment,
         )}
       </Card>
 
-      {audit && audit.smae_table.length > 0 && (
+      {smaeRows.length > 0 && (
         <Card className="overflow-x-auto lg:col-span-2">
           <h3 className="mb-3 text-sm font-semibold text-text">Porciones SMAE por tiempo de comida</h3>
           <table className="w-full text-left text-xs">
@@ -228,10 +241,10 @@ export function DistribuyeStep({ plan, carbPct, protPct, fatPct, kcalAdjustment,
               </tr>
             </thead>
             <tbody>
-              {audit.smae_table.map((row, ri) => {
+              {smaeRows.map((row, ri) => {
                 const perSlot = distributePortions(row.portions, items.map((s) => s.pct))
                 return (
-                  <tr key={ri} className="border-b border-border/60">
+                  <tr key={ri} className={`border-b border-border/60 ${row.portions === 0 ? 'opacity-50' : ''}`}>
                     <td className="py-2">
                       <span className="rounded bg-accent-light px-1.5 py-0.5 text-[10px] font-medium text-accent">{row.group}</span>
                       {row.subgroup && <span className="ml-1 text-text-3">{row.subgroup}</span>}
@@ -248,6 +261,47 @@ export function DistribuyeStep({ plan, carbPct, protPct, fatPct, kcalAdjustment,
           <p className="mt-2 text-[11px] text-text-3">
             Reparto sugerido de porciones SMAE según el % de cada tiempo de comida — ajusta el % arriba para redistribuir.
           </p>
+        </Card>
+      )}
+
+      {smaeRows.length > 0 && (
+        <Card className="overflow-x-auto lg:col-span-2">
+          <h3 className="mb-3 text-sm font-semibold text-text">Tabla de grupos</h3>
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="border-b border-border text-text-3">
+                <th className="py-2 font-medium">Grupo</th>
+                <th className="text-center font-medium">Porciones</th>
+                <th className="text-center font-medium">Kcal</th>
+                <th className="text-center font-medium">HCO(g)</th>
+                <th className="text-center font-medium">Prot(g)</th>
+                <th className="text-center font-medium">Grasas(g)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {smaeRows.map((row, ri) => (
+                <tr key={ri} className={`border-b border-border/60 ${row.portions === 0 ? 'opacity-50' : ''}`}>
+                  <td className="py-2">
+                    <span className="rounded bg-accent-light px-1.5 py-0.5 text-[10px] font-medium text-accent">{row.group}</span>
+                    {row.subgroup && <span className="ml-1 text-text-3">{row.subgroup}</span>}
+                  </td>
+                  <td className="text-center text-text-2">{row.portions}</td>
+                  <td className="text-center text-text-2">{Math.round(row.portions * row.unitKcal)}</td>
+                  <td className="text-center text-text-2">{(row.portions * row.unitCarbs).toFixed(1)}</td>
+                  <td className="text-center text-text-2">{(row.portions * row.unitProtein).toFixed(1)}</td>
+                  <td className="text-center text-text-2">{(row.portions * row.unitFats).toFixed(1)}</td>
+                </tr>
+              ))}
+              <tr className="font-semibold text-text">
+                <td className="py-2">TOTAL</td>
+                <td className="text-center">{smaeRows.reduce((a, r) => a + r.portions, 0)}</td>
+                <td className="text-center">{Math.round(smaeRows.reduce((a, r) => a + r.portions * r.unitKcal, 0))}</td>
+                <td className="text-center">{smaeRows.reduce((a, r) => a + r.portions * r.unitCarbs, 0).toFixed(1)}</td>
+                <td className="text-center">{smaeRows.reduce((a, r) => a + r.portions * r.unitProtein, 0).toFixed(1)}</td>
+                <td className="text-center">{smaeRows.reduce((a, r) => a + r.portions * r.unitFats, 0).toFixed(1)}</td>
+              </tr>
+            </tbody>
+          </table>
         </Card>
       )}
 

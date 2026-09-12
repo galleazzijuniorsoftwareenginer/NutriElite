@@ -3,12 +3,12 @@ import { useQuery } from '@tanstack/react-query'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 import { getAudit } from '../../../api/plans'
 import { listFoodGroups } from '../../../api/food'
-import type { FoodGroupItem } from '../../../types'
 import { Card } from '../../../components/Card'
 import { Button } from '../../../components/Button'
 import { Input } from '../../../components/Field'
 import type { WizardPlanData } from '../planTypes'
 import { OMS_RANGES, clampAdjustment, gramsFromPct, inRange } from '../planMath'
+import { buildSmaeRows, type SmaeRow } from '../smaeRows'
 
 interface Props {
   plan: WizardPlanData
@@ -20,38 +20,7 @@ interface Props {
   onContinue: () => void
 }
 
-interface EditableRow {
-  group: string
-  subgroup: string | null
-  portions: number
-  unitKcal: number
-  unitProtein: number
-  unitFats: number
-  unitCarbs: number
-}
-
-/** Orden fijo de las 17 variantes SMAE (igual a Avena) — se muestran todas
- * siempre, con 0 porciones en las que el cálculo automático no usó, en vez
- * de solo la variante que el algoritmo eligió según el objetivo. */
-const SMAE_ROW_ORDER: { group: string; subgroup: string | null }[] = [
-  { group: 'Verduras', subgroup: null },
-  { group: 'Frutas', subgroup: null },
-  { group: 'Cereales y tuberculos', subgroup: 'Sin grasa' },
-  { group: 'Cereales y tuberculos', subgroup: 'Con grasa' },
-  { group: 'Leguminosas', subgroup: null },
-  { group: 'Alimentos de origen animal', subgroup: 'Muy bajo aporte grasa' },
-  { group: 'Alimentos de origen animal', subgroup: 'Bajo aporte grasa' },
-  { group: 'Alimentos de origen animal', subgroup: 'Moderado aporte grasa' },
-  { group: 'Alimentos de origen animal', subgroup: 'Alto aporte grasa' },
-  { group: 'Leche', subgroup: 'Descremada' },
-  { group: 'Leche', subgroup: 'Semidescremada' },
-  { group: 'Leche', subgroup: 'Entera' },
-  { group: 'Leche', subgroup: 'Con azucar' },
-  { group: 'Aceites y Grasas', subgroup: 'Sin proteinas' },
-  { group: 'Aceites y Grasas', subgroup: 'Con proteinas' },
-  { group: 'Azucares', subgroup: 'Sin grasa' },
-  { group: 'Azucares', subgroup: 'Con grasa' },
-]
+type EditableRow = SmaeRow
 
 const PIE_COLORS = ['var(--color-carb)', 'var(--color-prot)', 'var(--color-fat)']
 
@@ -98,28 +67,7 @@ export function AuditoriaStep({ plan, carbPct, protPct, fatPct, kcalAdjustment, 
   const [rows, setRows] = useState<EditableRow[]>([])
   useEffect(() => {
     if (!audit || !foodGroups || foodGroups.length === 0) return
-    const auditByKey: Record<string, (typeof audit.smae_table)[number]> = {}
-    for (const r of audit.smae_table) auditByKey[r.group + '|' + (r.subgroup || '')] = r
-    const foodByKey: Record<string, FoodGroupItem> = {}
-    for (const f of foodGroups) foodByKey[f.group_name + '|' + (f.subgroup_name || '')] = f
-
-    setRows(
-      SMAE_ROW_ORDER.map(({ group, subgroup }) => {
-        const key = group + '|' + (subgroup || '')
-        const food = foodByKey[key]
-        const auditRow = auditByKey[key]
-        const portions = auditRow?.portions ?? 0
-        return {
-          group,
-          subgroup,
-          portions,
-          unitKcal: food?.kcal ?? 0,
-          unitProtein: food?.protein ?? 0,
-          unitFats: food?.fats ?? 0,
-          unitCarbs: food?.carbs ?? 0,
-        }
-      })
-    )
+    setRows(buildSmaeRows(audit, foodGroups))
   }, [audit, foodGroups])
 
   function updatePortions(idx: number, newPortions: number) {
