@@ -14,9 +14,12 @@ from backend.schemas.clinical import (
 )
 from backend.services.renal_service import calculate_renal_targets
 from backend.services.anthropometry_service import calculate_body_fat_jp3
+from backend.services.upload_limits import assert_base64_size_ok
 from pydantic import BaseModel
 
 router = APIRouter()
+
+MAX_LAB_IMAGE_MB = 10
 
 
 def _process_consultation_payload(payload: dict) -> dict:
@@ -274,6 +277,7 @@ def extract_labs_from_image(
     token: dict = Depends(verify_token),
 ):
     _get_owned_patient(patient_id, db, token)
+    assert_base64_size_ok(data.image_base64, MAX_LAB_IMAGE_MB, "La imagen")
     from backend.services.lab_extraction_service import extract_lab_values
 
     try:

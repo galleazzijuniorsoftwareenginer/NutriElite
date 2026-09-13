@@ -3,10 +3,13 @@ from sqlalchemy.orm import Session
 from backend.database import SessionLocal
 from backend.models import NutritionistProfile, User
 from backend.routes.auth import verify_token
+from backend.services.upload_limits import assert_base64_size_ok
 from pydantic import BaseModel
 from typing import Optional
 
 router = APIRouter()
+
+MAX_LOGO_MB = 5
 
 def get_db():
     db = SessionLocal()
@@ -46,6 +49,8 @@ def save_profile(data: ProfileData, db: Session = Depends(get_db), token: dict =
     username = token["sub"]
     user = db.query(User).filter(User.username == username).first()
     profile = db.query(NutritionistProfile).filter(NutritionistProfile.user_id == user.id).first()
+    if data.logo_base64:
+        assert_base64_size_ok(data.logo_base64, MAX_LOGO_MB, "El logo")
     if not profile:
         profile = NutritionistProfile(user_id=user.id)
         db.add(profile)
