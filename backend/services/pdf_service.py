@@ -4,7 +4,10 @@ franja de color), pensado para verse bien tanto en pantalla como impreso
 (fondos claros, poco gasto de tinta, buen contraste)."""
 
 import io
+import ipaddress
+import socket
 from datetime import datetime
+from urllib.parse import urlparse
 
 import requests
 from PIL import Image as PILImage
@@ -40,6 +43,25 @@ PAGE_MARGIN = 0.6 * inch
 _IMAGE_CACHE: dict = {}
 
 
+def _is_safe_external_url(url: str) -> bool:
+    """imagen_url viene de un Recipe que cualquier nutricionista puede crear
+    — sin este chequeo, alguien podría apuntarla a una IP interna (metadata
+    de la nube, un servicio de la red local) y hacer que el servidor la
+    consulte al generar el PDF (SSRF). Solo permite http(s) hacia hosts que
+    resuelven a una IP pública."""
+    try:
+        parsed = urlparse(url)
+        if parsed.scheme not in ("http", "https") or not parsed.hostname:
+            return False
+        for info in socket.getaddrinfo(parsed.hostname, None):
+            ip = ipaddress.ip_address(info[4][0])
+            if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved or ip.is_multicast:
+                return False
+        return True
+    except Exception:
+        return False
+
+
 def _fetch_thumbnail(url: str, size: int = 34):
     """Descarga y redimensiona una foto real de plato para el menú semanal.
     Cachea por URL (muchos platos se repiten en la semana) y falla en
@@ -49,6 +71,9 @@ def _fetch_thumbnail(url: str, size: int = 34):
         return None
     if url in _IMAGE_CACHE:
         return _IMAGE_CACHE[url]
+    if not _is_safe_external_url(url):
+        _IMAGE_CACHE[url] = None
+        return None
     try:
         resp = requests.get(url, timeout=4)
         resp.raise_for_status()
