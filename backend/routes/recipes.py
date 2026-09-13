@@ -53,6 +53,20 @@ def list_recipes(
     return result
 
 
+@router.get("/recipes/{recipe_id}", response_model=RecipeResponse)
+def get_recipe(recipe_id: int, db: Session = Depends(get_db), token: dict = Depends(verify_token)):
+    user = db.query(User).filter(User.username == token["sub"]).first()
+    favorite_ids = {f.recipe_id for f in db.query(RecipeFavorite).filter(RecipeFavorite.user_id == user.id).all()}
+    recipe = db.query(Recipe).filter(
+        Recipe.id == recipe_id, or_(Recipe.created_by.is_(None), Recipe.created_by == user.id)
+    ).first()
+    if not recipe:
+        raise HTTPException(status_code=404, detail="Receta no encontrada")
+    item = RecipeResponse.model_validate(recipe)
+    item.favorito = recipe.id in favorite_ids
+    return item
+
+
 @router.post("/recipes/{recipe_id}/favorite")
 def favorite_recipe(recipe_id: int, db: Session = Depends(get_db), token: dict = Depends(verify_token)):
     user = db.query(User).filter(User.username == token["sub"]).first()

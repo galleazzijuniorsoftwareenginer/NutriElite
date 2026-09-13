@@ -16,7 +16,7 @@ DEFAULT_MEAL_DISTRIBUTION = [
 RECIPE_TIEMPOS = ("Desayuno", "Colación", "Comida", "Cena")
 
 
-def _normalize_tiempo(slot_tiempo: str) -> str:
+def normalize_tiempo(slot_tiempo: str) -> str:
     """Mapea el nombre de un tiempo de comida del wizard (que puede tener
     variantes como 'Colación matutina') a una de las categorías fijas que
     usa el acervo de recetas (Recipe.tiempo_comida)."""
@@ -112,7 +112,7 @@ def generate_acervo_menu(plan_data: dict, audit_data: dict, db, user_id: int | N
         comidas = []
         day_kcal = 0.0
         for slot in distribution:
-            tiempo_key = _normalize_tiempo(slot["tiempo"])
+            tiempo_key = normalize_tiempo(slot["tiempo"])
             target_kcal = get * slot["pct"] / 100
             candidates = pool.get(tiempo_key, [])
             recipe = _pick_recipe(candidates, target_kcal, goal, used_ids)

@@ -35,6 +35,11 @@ export async function listRecipes(params?: { tiempo_comida?: string; goal?: stri
   return data
 }
 
+export async function getRecipe(recipeId: number) {
+  const { data } = await api.get<Recipe>(`/recipes/${recipeId}`)
+  return data
+}
+
 export async function createRecipe(payload: RecipeCreate) {
   const { data } = await api.post<Recipe>('/recipes', payload)
   return data

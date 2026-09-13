@@ -178,6 +178,17 @@ export interface RecipeMicronutrientResult {
   campos: Record<string, MicronutrientField>
 }
 
+export interface RecipeMatch {
+  recipe_id: number
+  nombre: string
+  imagen_url: string | null
+  score: number
+}
+
+// { [dia]: { [tiempo]: RecipeMatch } } — un día/tiempo ausente simplemente
+// no tiene sugerencia de receta, ver recipe_match_service.py.
+export type RecipeMatchResult = Record<string, Record<string, RecipeMatch>>
+
 export interface MealSlot {
   tiempo: string
   pct: number

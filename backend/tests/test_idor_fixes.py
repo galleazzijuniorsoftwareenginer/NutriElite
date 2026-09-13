@@ -65,6 +65,27 @@ def test_can_favorite_own_recipe(client):
     assert fav_resp.json()["favorito"] is True
 
 
+def test_cannot_fetch_another_users_private_recipe_by_id(client):
+    owner_headers = _register_and_login(client, "recipe_owner_3")
+    attacker_headers = _register_and_login(client, "recipe_attacker_3")
+
+    resp = client.post("/recipes", json=RECIPE_PAYLOAD, headers=owner_headers)
+    recipe_id = resp.json()["id"]
+
+    get_resp = client.get(f"/recipes/{recipe_id}", headers=attacker_headers)
+    assert get_resp.status_code == 404
+
+
+def test_can_fetch_own_recipe_by_id(client):
+    headers = _register_and_login(client, "recipe_owner_4")
+    resp = client.post("/recipes", json=RECIPE_PAYLOAD, headers=headers)
+    recipe_id = resp.json()["id"]
+
+    get_resp = client.get(f"/recipes/{recipe_id}", headers=headers)
+    assert get_resp.status_code == 200
+    assert get_resp.json()["nombre"] == "Receta privada"
+
+
 def test_cannot_link_consultation_to_another_users_plan(client):
     victim_headers = _register_and_login(client, "consult_victim")
     victim_patient_id = _create_patient(client, victim_headers, "Paciente de victim")

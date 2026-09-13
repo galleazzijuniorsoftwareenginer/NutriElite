@@ -323,6 +323,26 @@ def get_menu_micronutrients(
     return calculate_plan_micronutrients(db, plan.weekly_menu)
 
 
+# ---------- SUGERENCIA DE RECETAS DEL ACERVO PARA EL MENÚ ----------
+@router.get("/plans/{plan_id}/menu/recipe-matches")
+def get_menu_recipe_matches(
+    plan_id: int,
+    db: Session = Depends(get_db),
+    token: dict = Depends(verify_token)
+):
+    from backend.services.recipe_match_service import find_recipe_matches
+
+    username = token["sub"]
+    db_user = db.query(User).filter(User.username == username).first()
+    plan = db.query(Plan).filter(Plan.id == plan_id, Plan.user_id == db_user.id).first()
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plano não encontrado")
+    if not plan.weekly_menu:
+        raise HTTPException(status_code=400, detail="Este plan aún no tiene un menú generado")
+
+    return find_recipe_matches(db, plan.weekly_menu, db_user.id)
+
+
 @router.get("/plans/{plan_id}/menu/micronutrients/xlsx")
 def export_menu_micronutrients_xlsx(
     plan_id: int,

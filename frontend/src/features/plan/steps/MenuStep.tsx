@@ -1,14 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import clsx from 'clsx'
 import { generateAcervoMenu, regenerateDay, streamWeeklyMenu, updateMenuDayManual } from '../../../api/menu'
-import { getPlanConfig, savePlanConfig, type PlanConfig } from '../../../api/plans'
+import { getPlanConfig, getRecipeMatches, savePlanConfig, type PlanConfig } from '../../../api/plans'
+import { getRecipe } from '../../../api/recipes'
 import type { MenuDay, MenuItem, WeeklyMenu } from '../../../types'
 import { Card } from '../../../components/Card'
 import { Button } from '../../../components/Button'
 import { Input, Select } from '../../../components/Field'
 import { Spinner } from '../../../components/Spinner'
 import { LogoMark } from '../../../components/Logo'
+import { Modal } from '../../../components/Modal'
+import { RecipeDetailModal } from '../../../components/RecipeDetailModal'
 import { Tooltip } from '../../../components/Tooltip'
 import type { WizardPlanData } from '../planTypes'
 
@@ -117,6 +120,7 @@ export function MenuStep({ plan, weeklyMenu, onMenuReady, onContinue }: Props) {
       setDays(menu.semana)
       setStatuses(menu.semana.map((d) => (d.error ? 'error' : 'done')))
       onMenuReady(menu)
+      queryClient.invalidateQueries({ queryKey: ['recipe-matches', plan.planId] })
     },
   })
 
@@ -134,11 +138,25 @@ export function MenuStep({ plan, weeklyMenu, onMenuReady, onContinue }: Props) {
         next[idx] = day.error ? 'error' : 'done'
         return next
       })
+      queryClient.invalidateQueries({ queryKey: ['recipe-matches', plan.planId] })
     },
   })
 
   const allDone = statuses.every((s) => s === 'done' || s === 'error')
   const activeMenuDay = days[activeDay]
+
+  const queryClient = useQueryClient()
+  const { data: recipeMatches } = useQuery({
+    queryKey: ['recipe-matches', plan.planId],
+    queryFn: () => getRecipeMatches(plan.planId),
+    enabled: allDone,
+  })
+  const [openRecipeId, setOpenRecipeId] = useState<number | null>(null)
+  const { data: openRecipe } = useQuery({
+    queryKey: ['recipe', openRecipeId],
+    queryFn: () => getRecipe(openRecipeId!),
+    enabled: openRecipeId !== null,
+  })
 
   const [editMode, setEditMode] = useState(false)
   const [draft, setDraft] = useState<MenuDay | null>(null)
@@ -206,6 +224,7 @@ export function MenuStep({ plan, weeklyMenu, onMenuReady, onContinue }: Props) {
       onMenuReady({ semana: next.map((d, i) => d ?? fallbackDay(i)) })
       setEditMode(false)
       setDraft(null)
+      queryClient.invalidateQueries({ queryKey: ['recipe-matches', plan.planId] })
     },
   })
 
@@ -417,6 +436,21 @@ export function MenuStep({ plan, weeklyMenu, onMenuReady, onContinue }: Props) {
                           {editMode ? meal.itens.reduce((a, it) => a + (Number(it.kcal) || 0), 0) : meal.kcal} kcal
                         </span>
                       </div>
+                      {!editMode && recipeMatches?.[displayDay.dia]?.[meal.tiempo] && (
+                        <button
+                          onClick={() => setOpenRecipeId(recipeMatches[displayDay.dia][meal.tiempo].recipe_id)}
+                          className="mb-1.5 flex w-fit items-center gap-1.5 rounded-full border border-border bg-bg px-2 py-1 text-[11px] font-medium text-text-2 hover:border-accent hover:text-accent"
+                        >
+                          {recipeMatches[displayDay.dia][meal.tiempo].imagen_url && (
+                            <img
+                              src={recipeMatches[displayDay.dia][meal.tiempo].imagen_url!}
+                              alt=""
+                              className="h-4 w-4 rounded-full object-cover"
+                            />
+                          )}
+                          📖 Receta similar: {recipeMatches[displayDay.dia][meal.tiempo].nombre}
+                        </button>
+                      )}
                       {editMode ? (
                         <div className="flex flex-col gap-1.5">
                           {meal.itens.map((item, ii) => (
@@ -507,6 +541,10 @@ export function MenuStep({ plan, weeklyMenu, onMenuReady, onContinue }: Props) {
           )}
         </>
       )}
+
+      <Modal open={openRecipeId !== null} onClose={() => setOpenRecipeId(null)} title="Detalle de la receta" width={700}>
+        {openRecipe ? <RecipeDetailModal recipe={openRecipe} onClose={() => setOpenRecipeId(null)} /> : null}
+      </Modal>
     </div>
   )
 }
