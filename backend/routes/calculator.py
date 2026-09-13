@@ -605,6 +605,7 @@ def get_plan(
         "activity_level": plan.activity_level,
         "goal": plan.goal,
         "formula": plan.formula,
+        "use_eta": plan.use_eta,
     }
 
 # ---------- DELETE PLAN ----------

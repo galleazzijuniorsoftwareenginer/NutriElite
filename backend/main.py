@@ -94,6 +94,7 @@ if engine.dialect.name == "postgresql":
         conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS email_reminders_enabled BOOLEAN DEFAULT TRUE"))
         conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS locale VARCHAR DEFAULT 'es'"))
         conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS timezone VARCHAR DEFAULT 'America/Mexico_City'"))
+        conn.execute(text("ALTER TABLE plans ADD COLUMN IF NOT EXISTS use_eta BOOLEAN DEFAULT TRUE"))
         conn.commit()
 
 # Corrige um erro de digitação nos dados de seed (Azucares/Con grasa tinha

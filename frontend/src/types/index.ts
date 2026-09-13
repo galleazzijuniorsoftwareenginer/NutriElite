@@ -15,6 +15,7 @@ export interface PlanRequest {
   goal: Goal
   formula: Formula
   body_fat_percent?: number | null
+  use_eta?: boolean
 }
 
 export interface PlanCreateResponse {

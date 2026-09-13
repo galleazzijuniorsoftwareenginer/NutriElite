@@ -13,6 +13,7 @@ export interface WizardPlanData {
   activityLevel: number
   goal: Goal
   formula: Formula
+  useEta: boolean
   tmb: number
   originalGet: number
 }

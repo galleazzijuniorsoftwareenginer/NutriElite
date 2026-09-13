@@ -71,6 +71,9 @@ export function PlanWizardPage() {
         // tienen guardada del lado del backend — mifflin es el valor por
         // defecto histórico, no una suposición nueva.
         formula: (existingPlan.formula as Formula | null) ?? 'mifflin',
+        // Igual que "formula": planes creados antes de este campo no lo
+        // tienen guardado — true (con ETA) es el comportamiento histórico.
+        useEta: existingPlan.use_eta ?? true,
         tmb: existingPlan.TMB,
         originalGet: existingPlan.GET,
       })

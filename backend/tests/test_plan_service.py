@@ -113,6 +113,33 @@ def test_get_includes_thermic_effect_of_food(db):
     geb = calculate_tmb(65, 165, 28, "female", "mifflin")
     expected_get = geb * 1.55 * 1.10
     assert plan.get == pytest.approx(expected_get, abs=0.5)
+    assert plan.use_eta is True
+
+
+def test_use_eta_false_excludes_thermic_effect_of_food(db):
+    # El ETA es opcional — algunas nutricionistas no lo aplican en su
+    # cálculo, así que con use_eta=False el GET debe quedar como GEB×AF
+    # sin el +10%.
+    user = _make_user(db, "no_eta_user")
+    data = PlanRequest(
+        patient_name="Paciente sin ETA",
+        patient_email="",
+        patient_phone="",
+        weight=65,
+        height=165,
+        age=28,
+        gender="female",
+        activity_level=1.55,
+        goal="maintenance",
+        formula="mifflin",
+        use_eta=False,
+    )
+    plan = create_plan(data, db, user.id)
+
+    geb = calculate_tmb(65, 165, 28, "female", "mifflin")
+    expected_get = geb * 1.55
+    assert plan.get == pytest.approx(expected_get, abs=0.5)
+    assert plan.use_eta is False
 
 
 def test_returns_all_eight_base_groups(db):

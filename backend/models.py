@@ -70,6 +70,7 @@ class Plan(Base):
     goal = Column(String)
     body_fat_percent = Column(Float, nullable=True)  # requerido por las fórmulas Katch-McArdle/Cunningham
     formula = Column(String, nullable=True)
+    use_eta = Column(Boolean, default=True)  # Efecto Térmico de los Alimentos (~10% del GET) — opcional, no todas las nutricionistas lo aplican
 
     tmb = Column(Float)
     get = Column(Float)

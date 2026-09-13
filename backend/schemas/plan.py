@@ -65,6 +65,7 @@ class PlanRequest(BaseModel):
     formula: Literal["mifflin", "harris", "schofield", "katch", "cunningham"]
     body_fat_percent: Optional[float] = None
     patient_id: Optional[int] = None
+    use_eta: bool = True
 
     @field_validator("height")
     @classmethod

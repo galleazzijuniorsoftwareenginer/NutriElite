@@ -75,6 +75,19 @@ def test_get_plan_returns_the_formula_actually_used(client):
     assert detail.json()["formula"] == "harris"
 
 
+def test_get_plan_returns_use_eta_setting(client):
+    headers = _register_and_login(client, "plan_owner_eta")
+    patient_id = _create_patient(client, headers, "Paciente eta")
+
+    payload = {**PLAN_PAYLOAD, "patient_id": patient_id, "use_eta": False}
+    resp = client.post("/plan", json=payload, headers=headers)
+    assert resp.status_code == 200
+
+    detail = client.get(f"/plans/{resp.json()['plan_id']}", headers=headers)
+    assert detail.status_code == 200
+    assert detail.json()["use_eta"] is False
+
+
 def test_plan_rejects_invalid_gender_goal_and_activity_level(client):
     headers = _register_and_login(client, "plan_owner_enum")
     patient_id = _create_patient(client, headers, "Paciente enum")

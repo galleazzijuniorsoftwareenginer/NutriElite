@@ -51,6 +51,7 @@ export function DatosStep({ initial, onCreated }: Props) {
   const [activityLevel, setActivityLevel] = useState('1.55')
   const [goal, setGoal] = useState<Goal>('cut')
   const [formula, setFormula] = useState<Formula>('mifflin')
+  const [useEta, setUseEta] = useState(true)
   const [bodyFatPercent, setBodyFatPercent] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -105,6 +106,7 @@ export function DatosStep({ initial, onCreated }: Props) {
         goal,
         formula,
         body_fat_percent: needsBodyFat ? bf : null,
+        use_eta: useEta,
       })
       onCreated({
         planId: res.plan_id,
@@ -119,6 +121,7 @@ export function DatosStep({ initial, onCreated }: Props) {
         activityLevel: parseFloat(activityLevel),
         goal,
         formula,
+        useEta,
         tmb: res.TMB,
         originalGet: res.GET,
       })
@@ -238,6 +241,16 @@ export function DatosStep({ initial, onCreated }: Props) {
               </Select>
             </FieldWrap>
           </div>
+
+          <FieldWrap
+            label="ETA (Efecto Térmico de los Alimentos)"
+            hint="Energía que el cuerpo gasta en digerir lo que come, ~10% del gasto por actividad."
+          >
+            <Select value={useEta ? 'si' : 'no'} onChange={(e) => setUseEta(e.target.value === 'si')}>
+              <option value="si">Sí (recomendado)</option>
+              <option value="no">No</option>
+            </Select>
+          </FieldWrap>
 
           {error && <p className="text-xs text-danger">{error}</p>}
 
