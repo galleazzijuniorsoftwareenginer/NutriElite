@@ -221,7 +221,7 @@ def delete_account(payload: AccountDeleteConfirm, token: dict = Depends(verify_t
     from backend.models import (
         Patient, Plan, PlanFoodGroup, ClinicalRecord, Consultation, RenalAssessment,
         Appointment, Recipe, RecipeFavorite, Classroom, ClassroomEnrollment,
-        PlanPreferences, NutritionistProfile,
+        PlanPreferences, NutritionistProfile, FoodLogEntry,
     )
 
     user = db.query(User).filter(User.username == token["sub"]).first()
@@ -240,6 +240,7 @@ def delete_account(payload: AccountDeleteConfirm, token: dict = Depends(verify_t
         db.query(Consultation).filter(Consultation.patient_id.in_(patient_ids)).delete(synchronize_session=False)
         db.query(ClinicalRecord).filter(ClinicalRecord.patient_id.in_(patient_ids)).delete(synchronize_session=False)
         db.query(Appointment).filter(Appointment.patient_id.in_(patient_ids)).delete(synchronize_session=False)
+        db.query(FoodLogEntry).filter(FoodLogEntry.patient_id.in_(patient_ids)).delete(synchronize_session=False)
     if plan_ids:
         db.query(PlanFoodGroup).filter(PlanFoodGroup.plan_id.in_(plan_ids)).delete(synchronize_session=False)
 

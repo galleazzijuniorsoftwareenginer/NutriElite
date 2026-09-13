@@ -195,6 +195,8 @@ def delete_patient(patient_id: int, db: Session = Depends(get_db), token: dict =
     patient = db.query(Patient).filter(Patient.id == patient_id, Patient.user_id == user.id).first()
     if not patient:
         raise HTTPException(status_code=404, detail="Paciente não encontrado")
+    from backend.services.cascade_delete import delete_patient_dependents
+    delete_patient_dependents(db, patient_id)
     db.delete(patient)
     db.commit()
     return {"ok": True}

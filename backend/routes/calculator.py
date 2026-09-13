@@ -621,8 +621,8 @@ def delete_plan(
     ).first()
     if not plan:
         raise HTTPException(status_code=404, detail="Plano não encontrado")
-    from backend.models import PlanFoodGroup
-    db.query(PlanFoodGroup).filter(PlanFoodGroup.plan_id == plan_id).delete()
+    from backend.services.cascade_delete import delete_plan_dependents
+    delete_plan_dependents(db, plan_id)
     db.delete(plan)
     # Decrementa contador do mês se o plano foi criado neste mês
     from datetime import datetime
