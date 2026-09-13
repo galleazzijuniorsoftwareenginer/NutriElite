@@ -212,8 +212,10 @@ def generate_plan_pdf(plan, menu_data=None, perfil_data=None, override_plan=None
 
     from backend.database import SessionLocal
     db = SessionLocal()
-    audit = SMAECalculationService.calculate(plan.id, db, override_plan=override_plan)
-    db.close()
+    try:
+        audit = SMAECalculationService.calculate(plan.id, db, override_plan=override_plan)
+    finally:
+        db.close()
 
     has_menu = bool(menu_data and menu_data.get("semana"))
     was_overridden = override_plan is not None

@@ -61,6 +61,18 @@ def _get_owned_patient(patient_id: int, db: Session, token: dict) -> Patient:
     return patient
 
 
+def _validate_plan_ownership(plan_id: int | None, user_id: int, db: Session) -> None:
+    """El plan_id de una Consultation es opcional (solo referencia informativa
+    de qué plan estaba vigente), pero sin esta validación cualquier usuario
+    podía ligar su consulta al plan_id de OTRO nutricionista con solo
+    adivinar/probar IDs consecutivos."""
+    if plan_id is None:
+        return
+    owned = db.query(Plan.id).filter(Plan.id == plan_id, Plan.user_id == user_id).first()
+    if not owned:
+        raise HTTPException(status_code=404, detail="Plan não encontrado")
+
+
 # ---------- FICHA CLÍNICA ----------
 @router.get("/patients/{patient_id}/clinical-record", response_model=ClinicalRecordResponse)
 def get_clinical_record(patient_id: int, db: Session = Depends(get_db), token: dict = Depends(verify_token)):
@@ -112,8 +124,9 @@ def create_consultation(
     db: Session = Depends(get_db),
     token: dict = Depends(verify_token),
 ):
-    _get_owned_patient(patient_id, db, token)
+    patient = _get_owned_patient(patient_id, db, token)
     payload = data.model_dump()
+    _validate_plan_ownership(payload.get("plan_id"), patient.user_id, db)
     bioquimicos = payload.pop("bioquimicos", None)
     signos_vitales = payload.pop("signos_vitales", None)
     payload = _process_consultation_payload(payload)
@@ -149,6 +162,7 @@ def update_consultation(
     if not consultation:
         raise HTTPException(status_code=404, detail="Consulta não encontrada")
     payload = data.model_dump()
+    _validate_plan_ownership(payload.get("plan_id"), user.id, db)
     payload["bioquimicos"] = payload.get("bioquimicos") or []
     payload = _process_consultation_payload(payload)
     if payload.get("carga_enfermedad_aguda") is not None:

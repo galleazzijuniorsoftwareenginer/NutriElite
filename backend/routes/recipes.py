@@ -56,7 +56,9 @@ def list_recipes(
 @router.post("/recipes/{recipe_id}/favorite")
 def favorite_recipe(recipe_id: int, db: Session = Depends(get_db), token: dict = Depends(verify_token)):
     user = db.query(User).filter(User.username == token["sub"]).first()
-    recipe = db.query(Recipe).filter(Recipe.id == recipe_id).first()
+    recipe = db.query(Recipe).filter(
+        Recipe.id == recipe_id, or_(Recipe.created_by.is_(None), Recipe.created_by == user.id)
+    ).first()
     if not recipe:
         raise HTTPException(status_code=404, detail="Receta no encontrada")
     exists = db.query(RecipeFavorite).filter(RecipeFavorite.user_id == user.id, RecipeFavorite.recipe_id == recipe_id).first()
