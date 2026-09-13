@@ -126,11 +126,9 @@ def seed():
     print(f"Seed concluído — {len(SMAE_DATA)} grupos alimentares inseridos.")
 
 
-if __name__ == "__main__":
-    seed()
-
-
 def seed_default_user():
+    import os
+    import logging
     from backend.models import User
     from backend.routes.auth import hash_password
     db = SessionLocal()
@@ -139,12 +137,23 @@ def seed_default_user():
         print("Usuário admin já existe. Pulando.")
         db.close()
         return
-    user = User(username="admin", password=hash_password("nutrielite2024"))
+    password = os.getenv("ADMIN_PASSWORD")
+    if not password:
+        password = "nutrielite2024"
+        logging.getLogger("uvicorn.error").warning(
+            "ADMIN_PASSWORD não configurado — usuário 'admin' criado com a senha "
+            "padrão pública (documentada no repositório). Defina a env var "
+            "ADMIN_PASSWORD e troque a senha desse usuário antes de expor esta "
+            "instância a dados reais de pacientes."
+        )
+    user = User(username="admin", password=hash_password(password))
     db.add(user)
     db.commit()
     db.close()
-    print("Usuário padrão criado: admin / nutrielite2024")
+    print("Usuário padrão criado: admin" + (" / nutrielite2024" if password == "nutrielite2024" else " (senha definida via ADMIN_PASSWORD)"))
+
 
 if __name__ == "__main__":
     seed()
+    seed_default_user()
     seed_default_user()

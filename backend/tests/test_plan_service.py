@@ -1,5 +1,9 @@
-from backend.models import FoodGroup
-from backend.services.plan_service import calculate_smae_portions
+import pytest
+from fastapi import HTTPException
+
+from backend.models import FoodGroup, Patient, User
+from backend.routes.auth import hash_password
+from backend.services.plan_service import _resolve_patient_id, calculate_smae_portions
 
 
 class _FakePlan:
@@ -45,6 +49,43 @@ def test_energy_closure_within_reasonable_tolerance(db):
         total_kcal = _total_kcal(db, portions)
         gap_pct = abs(total_kcal - plan.get) / plan.get * 100
         assert gap_pct < 10, f"{plan.goal}/{plan.get}kcal: gap={gap_pct:.1f}% (total={total_kcal})"
+
+
+def _make_user(db, username):
+    user = User(username=username, password=hash_password("x"))
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+def test_resolve_patient_id_rejects_patient_owned_by_another_user(db):
+    # Regresión: _resolve_patient_id devolvía explicit_patient_id sin
+    # verificar que el paciente fuera del usuario autenticado — un
+    # nutricionista podía vincular su plan al paciente de otro (ids
+    # secuenciales, adivinables) y luego leer su historial clínico vía
+    # /plans/{id}/pdf. Debe rechazar con 404 en vez de aceptarlo.
+    owner = _make_user(db, "owner_a")
+    attacker = _make_user(db, "attacker_b")
+    victim_patient = Patient(name="Paciente de owner_a", user_id=owner.id)
+    db.add(victim_patient)
+    db.commit()
+    db.refresh(victim_patient)
+
+    with pytest.raises(HTTPException) as exc_info:
+        _resolve_patient_id(db, attacker.id, victim_patient.id, "x", "x@x.com", "555")
+    assert exc_info.value.status_code == 404
+
+
+def test_resolve_patient_id_accepts_own_patient(db):
+    owner = _make_user(db, "owner_c")
+    patient = Patient(name="Paciente propio", user_id=owner.id)
+    db.add(patient)
+    db.commit()
+    db.refresh(patient)
+
+    resolved = _resolve_patient_id(db, owner.id, patient.id, "x", "x@x.com", "555")
+    assert resolved == patient.id
 
 
 def test_returns_all_eight_base_groups(db):

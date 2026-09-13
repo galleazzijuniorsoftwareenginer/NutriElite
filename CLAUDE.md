@@ -26,7 +26,7 @@ docker compose up --build
 python -m backend.scripts.seed_smae
 ```
 
-**Required environment variables**: `ANTHROPIC_API_KEY` (AI menu generation), `JWT_SECRET_KEY` (auth — falls back to an insecure default with a startup warning if unset), `STRIPE_API_KEY`/`STRIPE_PRICE_ID`/`STRIPE_WEBHOOK_SECRET` (billing), `RESEND_API_KEY` (password reset emails), `PUBLIC_BASE_URL` (used to build Stripe checkout/reset-password links — defaults to the production Railway URL if unset), `USDA_FDC_API_KEY` (optional, free at https://fdc.nal.usda.gov/api-key-signup — powers the micronutrients spreadsheet; without it that feature reports itself as unconfigured instead of failing).
+**Required environment variables**: `ANTHROPIC_API_KEY` (AI menu generation), `JWT_SECRET_KEY` (auth — falls back to an insecure default with a startup warning if unset), `STRIPE_API_KEY`/`STRIPE_PRICE_ID`/`STRIPE_WEBHOOK_SECRET` (billing), `RESEND_API_KEY` (password reset emails), `PUBLIC_BASE_URL` (used to build Stripe checkout/reset-password links — defaults to the production Railway URL if unset), `USDA_FDC_API_KEY` (optional, free at https://fdc.nal.usda.gov/api-key-signup — powers the micronutrients spreadsheet; without it that feature reports itself as unconfigured instead of failing), `ADMIN_PASSWORD` (optional — sets the password for the auto-seeded `admin` user; falls back to a publicly-documented default with a startup warning if unset, same pattern as `JWT_SECRET_KEY` — **set this and rotate the password on any deployment that will hold real patient data**).
 
 ## Architecture Overview
 

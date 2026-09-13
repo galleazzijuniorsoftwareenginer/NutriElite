@@ -156,7 +156,9 @@ def export_plan_pdf(
     patient_data = None
     if plan.patient_id:
         from backend.models import Consultation, Patient
-        patient = db.query(Patient).filter(Patient.id == plan.patient_id).first()
+        # user_id en la query: plan.patient_id nunca debe dejar leer el
+        # historial clínico de un paciente que no es del usuario autenticado.
+        patient = db.query(Patient).filter(Patient.id == plan.patient_id, Patient.user_id == db_user.id).first()
         if patient:
             patient_data = {
                 "emergency_contact_name": patient.emergency_contact_name,
@@ -166,22 +168,22 @@ def export_plan_pdf(
                 "activity_category": patient.activity_category,
                 "activity_type": patient.activity_type,
             }
-        rows = (
-            db.query(Consultation)
-            .filter(Consultation.patient_id == plan.patient_id, Consultation.peso.isnot(None))
-            .order_by(Consultation.fecha.asc())
-            .all()
-        )
-        if rows:
-            consultations = [
-                {
-                    "fecha": r.fecha,
-                    "peso": r.peso,
-                    "grasa_corporal_pct": r.grasa_corporal_pct,
-                    "grasa_corporal_metodo": r.grasa_corporal_metodo,
-                }
-                for r in rows
-            ]
+            rows = (
+                db.query(Consultation)
+                .filter(Consultation.patient_id == plan.patient_id, Consultation.peso.isnot(None))
+                .order_by(Consultation.fecha.asc())
+                .all()
+            )
+            if rows:
+                consultations = [
+                    {
+                        "fecha": r.fecha,
+                        "peso": r.peso,
+                        "grasa_corporal_pct": r.grasa_corporal_pct,
+                        "grasa_corporal_metodo": r.grasa_corporal_metodo,
+                    }
+                    for r in rows
+                ]
 
     pdf_buffer = generate_plan_pdf(plan, menu_data, perfil_data, override_plan=override_plan, consultations=consultations, patient_data=patient_data)
 

@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 from backend.models import Plan, FoodGroup
 from backend.services.metabolic_service import calculate_tmb
 from backend.models import Plan, FoodGroup, PlanFoodGroup, Patient
@@ -12,6 +13,13 @@ def _resolve_patient_id(db, user_id, explicit_patient_id, name, email, phone):
     en reintentos) o se crea el Patient correspondiente, y el plan siempre
     queda vinculado."""
     if explicit_patient_id is not None:
+        # El patient_id viene del cliente — sin este chequeo, cualquier
+        # nutricionista podría vincular su plan al paciente de otro
+        # (patient_id es un entero adivinable) y luego leer los datos
+        # clínicos de ese paciente vía /plans/{id}/pdf.
+        owned = db.query(Patient).filter(Patient.id == explicit_patient_id, Patient.user_id == user_id).first()
+        if not owned:
+            raise HTTPException(status_code=404, detail="Paciente no encontrado")
         return explicit_patient_id
 
     email = (email or "").strip()
