@@ -134,7 +134,16 @@ def seed_default_user():
     db = SessionLocal()
     existing = db.query(User).filter(User.username == "admin").first()
     if existing:
-        print("Usuário admin já existe. Pulando.")
+        # El admin es la cuenta de referencia/demo del propio proyecto — nunca
+        # debe quedar atada al límite de 3 planes/semana del plan Free. Se
+        # corrige aquí (no solo al crearlo) para que una instancia ya existente
+        # también quede Pro al reiniciar, sin tocar la base a mano.
+        if not existing.is_pro:
+            existing.is_pro = 1
+            db.commit()
+            print("Usuário admin marcado como Pro (plano ilimitado).")
+        else:
+            print("Usuário admin já existe. Pulando.")
         db.close()
         return
     password = os.getenv("ADMIN_PASSWORD")
@@ -146,14 +155,13 @@ def seed_default_user():
             "ADMIN_PASSWORD e troque a senha desse usuário antes de expor esta "
             "instância a dados reais de pacientes."
         )
-    user = User(username="admin", password=hash_password(password))
+    user = User(username="admin", password=hash_password(password), is_pro=1)
     db.add(user)
     db.commit()
     db.close()
-    print("Usuário padrão criado: admin" + (" / nutrielite2024" if password == "nutrielite2024" else " (senha definida via ADMIN_PASSWORD)"))
+    print("Usuário padrão criado: admin" + (" / nutrielite2024" if password == "nutrielite2024" else " (senha definida via ADMIN_PASSWORD)") + " — plano Pro (ilimitado)")
 
 
 if __name__ == "__main__":
     seed()
-    seed_default_user()
     seed_default_user()
