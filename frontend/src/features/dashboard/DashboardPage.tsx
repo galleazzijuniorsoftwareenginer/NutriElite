@@ -165,6 +165,7 @@ function AppointmentCalendar({ appointments }: { appointments: Appointment[] }) 
                     <Button
                       size="sm"
                       variant="ghost"
+                      aria-label="Enviar recordatorio"
                       loading={reminderMut.isPending && reminderMut.variables === a.id}
                       onClick={() => reminderMut.mutate(a.id)}
                     >
