@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { getMicronutrients, micronutrientsXlsxUrl, pdfDownloadUrl, saveAsTemplate, sharePlan } from '../../../api/plans'
+import { pdfDownloadUrl, saveAsTemplate, sharePlan } from '../../../api/plans'
 import { getProfile } from '../../../api/profile'
 import { Card } from '../../../components/Card'
 import { Button } from '../../../components/Button'
@@ -30,14 +30,7 @@ export function ResumenStep({ plan, carbPct, protPct, fatPct, kcalAdjustment, we
   const [copiedBooking, setCopiedBooking] = useState(false)
   const [templateName, setTemplateName] = useState('')
   const [templateSaved, setTemplateSaved] = useState(false)
-  const [showUnmatched, setShowUnmatched] = useState(false)
-  const [downloadingXlsx, setDownloadingXlsx] = useState(false)
 
-  const { data: micros, isLoading: microsLoading, isError: microsError } = useQuery({
-    queryKey: ['micronutrients', plan.planId],
-    queryFn: () => getMicronutrients(plan.planId),
-    enabled: !!weeklyMenu,
-  })
   const templateMut = useMutation({
     mutationFn: () => saveAsTemplate(plan.planId, templateName || 'Mi plantilla'),
     onSuccess: () => {
@@ -89,22 +82,6 @@ export function ResumenStep({ plan, carbPct, protPct, fatPct, kcalAdjustment, we
     window.URL.revokeObjectURL(objectUrl)
   }
 
-  async function handleDownloadXlsx() {
-    setDownloadingXlsx(true)
-    try {
-      const res = await fetch(micronutrientsXlsxUrl(plan.planId), { headers: { Authorization: `Bearer ${token}` } })
-      const blob = await res.blob()
-      const objectUrl = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = objectUrl
-      a.download = `micronutrientes_plan_${plan.planId}.xlsx`
-      a.click()
-      window.URL.revokeObjectURL(objectUrl)
-    } finally {
-      setDownloadingXlsx(false)
-    }
-  }
-
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
       <Card className="lg:col-span-2">
@@ -149,80 +126,6 @@ export function ResumenStep({ plan, carbPct, protPct, fatPct, kcalAdjustment, we
           ⬇ Descargar PDF
         </Button>
       </Card>
-
-      {weeklyMenu && (
-        <Card className="flex flex-col gap-3 lg:col-span-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h3 className="text-sm font-semibold text-text">Micronutrientes de la semana</h3>
-            {micros && (
-              <Button size="sm" variant="secondary" loading={downloadingXlsx} onClick={handleDownloadXlsx}>
-                ⬇ Descargar planilla (XLSX)
-              </Button>
-            )}
-          </div>
-
-          {microsLoading && <p className="text-xs text-text-3">Calculando…</p>}
-          {microsError && (
-            <p className="text-xs text-danger">No se pudo calcular la planilla de micronutrientes.</p>
-          )}
-
-          {micros && !micros.usda_configurado && (
-            <p className="rounded-md bg-warn-light px-3 py-2 text-xs text-warn">
-              Esta función necesita una clave de USDA FoodData Central configurada en el servidor
-              (variable de entorno <code>USDA_FDC_API_KEY</code>, gratuita) para poder buscar los datos.
-            </p>
-          )}
-
-          {micros && micros.usda_configurado && (
-            <>
-              <p className="text-xs text-text-2">
-                Valores estimados a partir de datos públicos de USDA FoodData Central por ingrediente —
-                cobertura: {micros.cobertura.con_datos}/{micros.cobertura.total} ingredientes con dato disponible.
-                Son valores de referencia, no un análisis de laboratorio.
-              </p>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead>
-                    <tr className="border-b border-border text-text-3">
-                      <th className="py-2 font-medium">Nutriente</th>
-                      <th className="text-right font-medium">Total semana</th>
-                      <th className="text-right font-medium">Promedio diario</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {Object.entries(micros.campos).map(([field, info]) => (
-                      <tr key={field} className="border-b border-border/60">
-                        <td className="py-1.5 text-text-2">{info.label}</td>
-                        <td className="text-right text-text">
-                          {micros.totales_semana[field]?.toFixed(1) ?? '—'} {info.unidad}
-                        </td>
-                        <td className="text-right text-text-3">
-                          {((micros.totales_semana[field] ?? 0) / 7).toFixed(1)} {info.unidad}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {micros.ingredientes_sin_datos.length > 0 && (
-                <div className="text-[11px] text-text-3">
-                  <button onClick={() => setShowUnmatched((v) => !v)} className="font-medium text-accent hover:underline">
-                    {showUnmatched ? 'Ocultar' : 'Ver'} {micros.ingredientes_sin_datos.length} ingrediente(s) sin dato disponible en USDA
-                  </button>
-                  {showUnmatched && (
-                    <ul className="mt-1.5 flex flex-wrap gap-1.5">
-                      {micros.ingredientes_sin_datos.map((ing) => (
-                        <li key={ing} className="rounded-full bg-bg px-2 py-0.5 text-text-2">{ing}</li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              )}
-            </>
-          )}
-        </Card>
-      )}
 
       <Card className="flex flex-col gap-3">
         <h3 className="text-sm font-semibold text-text">Guardar como plantilla</h3>

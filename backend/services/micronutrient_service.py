@@ -205,6 +205,41 @@ NUTRIENT_LABELS: dict[str, tuple[str, str]] = {
 }
 
 
+def _campos_dict() -> dict:
+    return {f: {"label": label, "unidad": unit} for f, (label, unit) in NUTRIENT_LABELS.items()}
+
+
+def _sum_items(db: Session, items: list[tuple[str, float]]) -> dict:
+    """Shared summation core: looks up each (alimento, gramos) pair, scales
+    its per-100g values, and sums. Used by both the per-plan (weekly menu)
+    and per-recipe entry points below so they can never drift apart."""
+    totals: dict = {f: 0.0 for f in NUTRIENT_FIELDS}
+    unmatched: set[str] = set()
+    matched_count = 0
+    total_count = 0
+
+    for alimento, grams in items:
+        if not alimento or not grams or grams <= 0:
+            continue
+        total_count += 1
+        row = get_or_fetch(db, alimento)
+        if not row.matched:
+            unmatched.add(alimento)
+            continue
+        matched_count += 1
+        factor = grams / 100.0
+        for field in NUTRIENT_FIELDS:
+            value = getattr(row, field)
+            if value is not None:
+                totals[field] += value * factor
+
+    return {
+        "totales": totals,
+        "ingredientes_sin_datos": sorted(unmatched),
+        "cobertura": {"con_datos": matched_count, "total": total_count},
+    }
+
+
 def calculate_plan_micronutrients(db: Session, weekly_menu: dict) -> dict:
     """Walks a Plan.weekly_menu JSON blob (the `{"semana": [...]}` shape) and
     returns per-day + week-total micronutrient sums, scaled by each item's
@@ -217,29 +252,21 @@ def calculate_plan_micronutrients(db: Session, weekly_menu: dict) -> dict:
     total_count = 0
 
     for day in weekly_menu.get("semana", []):
-        day_totals: dict = {f: 0.0 for f in NUTRIENT_FIELDS}
         if day.get("error"):
-            days_out.append({"dia": day.get("dia"), "totales": day_totals, "error": day["error"]})
+            days_out.append({"dia": day.get("dia"), "totales": {f: 0.0 for f in NUTRIENT_FIELDS}, "error": day["error"]})
             continue
-        for comida in day.get("comidas", []):
-            for item in comida.get("itens", []):
-                alimento = item.get("alimento") or ""
-                grams = item.get("quantidade_g") or 0
-                if not alimento or grams <= 0:
-                    continue
-                total_count += 1
-                row = get_or_fetch(db, alimento)
-                if not row.matched:
-                    unmatched.add(alimento)
-                    continue
-                matched_count += 1
-                factor = grams / 100.0
-                for field in NUTRIENT_FIELDS:
-                    value = getattr(row, field)
-                    if value is not None:
-                        day_totals[field] += value * factor
-                        week_totals[field] += value * factor
-        days_out.append({"dia": day.get("dia"), "totales": day_totals})
+        items = [
+            (item.get("alimento") or "", item.get("quantidade_g") or 0)
+            for comida in day.get("comidas", [])
+            for item in comida.get("itens", [])
+        ]
+        day_result = _sum_items(db, items)
+        days_out.append({"dia": day.get("dia"), "totales": day_result["totales"]})
+        unmatched.update(day_result["ingredientes_sin_datos"])
+        matched_count += day_result["cobertura"]["con_datos"]
+        total_count += day_result["cobertura"]["total"]
+        for field in NUTRIENT_FIELDS:
+            week_totals[field] += day_result["totales"][field]
 
     return {
         "dias": days_out,
@@ -247,5 +274,23 @@ def calculate_plan_micronutrients(db: Session, weekly_menu: dict) -> dict:
         "ingredientes_sin_datos": sorted(unmatched),
         "cobertura": {"con_datos": matched_count, "total": total_count},
         "usda_configurado": bool(usda_client.get_api_key()),
-        "campos": {f: {"label": label, "unidad": unit} for f, (label, unit) in NUTRIENT_LABELS.items()},
+        "campos": _campos_dict(),
+    }
+
+
+def calculate_recipe_micronutrients(db: Session, recipe) -> dict:
+    """Same lookup/scaling logic as calculate_plan_micronutrients, but for a
+    single Recipe's own ingredientes ([{alimento, cantidad_g}]) — powers the
+    per-recipe "Micros" panel shown when browsing/selecting a recipe."""
+    items = [
+        (ing.get("alimento") or "", ing.get("cantidad_g") or 0)
+        for ing in (recipe.ingredientes or [])
+    ]
+    result = _sum_items(db, items)
+    return {
+        "totales": result["totales"],
+        "ingredientes_sin_datos": result["ingredientes_sin_datos"],
+        "cobertura": result["cobertura"],
+        "usda_configurado": bool(usda_client.get_api_key()),
+        "campos": _campos_dict(),
     }

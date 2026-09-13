@@ -6,6 +6,7 @@ from backend.models import Recipe, RecipeFavorite, User
 from backend.routes.auth import verify_token
 from backend.schemas.recipes import RecipeCreate, RecipeResponse, ShoppingListRequest
 from backend.services.shopping_list_service import build_shopping_list
+from backend.services.micronutrient_service import calculate_recipe_micronutrients
 
 router = APIRouter()
 
@@ -89,6 +90,17 @@ def create_recipe(data: RecipeCreate, db: Session = Depends(get_db), token: dict
     db.commit()
     db.refresh(recipe)
     return recipe
+
+
+@router.get("/recipes/{recipe_id}/micronutrients")
+def get_recipe_micronutrients(recipe_id: int, db: Session = Depends(get_db), token: dict = Depends(verify_token)):
+    user = db.query(User).filter(User.username == token["sub"]).first()
+    recipe = db.query(Recipe).filter(
+        Recipe.id == recipe_id, or_(Recipe.created_by.is_(None), Recipe.created_by == user.id)
+    ).first()
+    if not recipe:
+        raise HTTPException(status_code=404, detail="Receta no encontrada")
+    return calculate_recipe_micronutrients(db, recipe)
 
 
 @router.delete("/recipes/{recipe_id}")

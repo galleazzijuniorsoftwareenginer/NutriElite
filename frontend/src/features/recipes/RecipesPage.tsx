@@ -6,6 +6,7 @@ import { Button } from '../../components/Button'
 import { Input } from '../../components/Field'
 import { Modal } from '../../components/Modal'
 import { CategoryTile } from '../../components/CategoryTile'
+import { RecipeMicrosPanel } from '../../components/RecipeMicrosPanel'
 
 const CATEGORY_ICON: Record<string, string> = {
   Navidad: '🌲',
@@ -52,47 +53,53 @@ function RecipeDetailModal({ recipe, onClose }: { recipe: Recipe; onClose: () =>
   const { gradient, image, icon } = recipeVisuals(recipe)
 
   return (
-    <div className="flex flex-col gap-4 max-h-[75vh] overflow-y-auto scrollbar-thin">
-      <div className="flex gap-4">
-        <div className="h-24 w-24 shrink-0 overflow-hidden rounded-lg">
-          <CategoryTile imageUrl={image} gradient={gradient} icon={icon} alt={recipe.nombre} height={96} iconSize="text-2xl" />
+    <div className="grid max-h-[75vh] grid-cols-1 gap-4 overflow-y-auto scrollbar-thin sm:grid-cols-[1fr_200px]">
+      <div className="flex flex-col gap-4">
+        <div className="flex gap-4">
+          <div className="h-24 w-24 shrink-0 overflow-hidden rounded-lg">
+            <CategoryTile imageUrl={image} gradient={gradient} icon={icon} alt={recipe.nombre} height={96} iconSize="text-2xl" />
+          </div>
+          <div>
+            <span className="inline-flex w-fit items-center rounded-full bg-bg px-2 py-0.5 text-[10px] font-semibold text-text-2">
+              {recipe.tiempo_comida}
+            </span>
+            <h3 className="mt-1 font-display text-lg font-bold text-text">{recipe.nombre}</h3>
+            <p className="mt-1 text-xs text-text-3">{recipe.kcal_aprox ? `${Math.round(recipe.kcal_aprox)} kcal` : ''}</p>
+          </div>
         </div>
+
         <div>
-          <span className="inline-flex w-fit items-center rounded-full bg-bg px-2 py-0.5 text-[10px] font-semibold text-text-2">
-            {recipe.tiempo_comida}
-          </span>
-          <h3 className="mt-1 font-display text-lg font-bold text-text">{recipe.nombre}</h3>
-          <p className="mt-1 text-xs text-text-3">{recipe.kcal_aprox ? `${Math.round(recipe.kcal_aprox)} kcal` : ''}</p>
+          <h4 className="mb-2 text-sm font-semibold text-text">Ingredientes</h4>
+          <ul className="flex flex-col gap-1">
+            {recipe.ingredientes.map((i, idx) => (
+              <li key={idx} className="flex items-center justify-between text-sm text-text-2">
+                <span>{i.alimento}</span>
+                <span className="text-text-3">{i.cantidad_g} g</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {recipe.instrucciones && (
+          <div>
+            <h4 className="mb-2 text-sm font-semibold text-text">Preparación</h4>
+            <p className="text-sm text-text-2 leading-relaxed">{recipe.instrucciones}</p>
+          </div>
+        )}
+
+        <div className="mt-auto flex items-center justify-between pt-2">
+          <button
+            onClick={() => toggleFav.mutate()}
+            className={`flex items-center gap-1 text-sm font-semibold ${recipe.favorito ? 'text-accent' : 'text-text-3 hover:text-accent'}`}
+          >
+            {recipe.favorito ? '★ Guardada' : '☆ Guardar'}
+          </button>
+          <Button variant="ghost" onClick={onClose}>Cerrar</Button>
         </div>
       </div>
 
-      <div>
-        <h4 className="mb-2 text-sm font-semibold text-text">Ingredientes</h4>
-        <ul className="flex flex-col gap-1">
-          {recipe.ingredientes.map((i, idx) => (
-            <li key={idx} className="flex items-center justify-between text-sm text-text-2">
-              <span>{i.alimento}</span>
-              <span className="text-text-3">{i.cantidad_g} g</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {recipe.instrucciones && (
-        <div>
-          <h4 className="mb-2 text-sm font-semibold text-text">Preparación</h4>
-          <p className="text-sm text-text-2 leading-relaxed">{recipe.instrucciones}</p>
-        </div>
-      )}
-
-      <div className="flex items-center justify-between pt-2">
-        <button
-          onClick={() => toggleFav.mutate()}
-          className={`flex items-center gap-1 text-sm font-semibold ${recipe.favorito ? 'text-accent' : 'text-text-3 hover:text-accent'}`}
-        >
-          {recipe.favorito ? '★ Guardada' : '☆ Guardar'}
-        </button>
-        <Button variant="ghost" onClick={onClose}>Cerrar</Button>
+      <div className="rounded-lg bg-bg p-3 sm:border sm:border-border">
+        <RecipeMicrosPanel recipeId={recipe.id} />
       </div>
     </div>
   )
@@ -226,7 +233,7 @@ export function RecipesPage() {
         </div>
       )}
 
-      <Modal open={openRecipeId !== null} onClose={() => setOpenRecipeId(null)} title="Detalle de la receta" width={520}>
+      <Modal open={openRecipeId !== null} onClose={() => setOpenRecipeId(null)} title="Detalle de la receta" width={700}>
         {(() => {
           const openRecipe = recipes?.find((r) => r.id === openRecipeId)
           return openRecipe ? <RecipeDetailModal recipe={openRecipe} onClose={() => setOpenRecipeId(null)} /> : null

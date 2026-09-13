@@ -76,6 +76,29 @@ def test_get_or_fetch_transient_failure_is_not_cached(db):
         assert mock_search.call_count == 1
 
 
+def test_calculate_recipe_micronutrients_scales_by_grams(db):
+    db.query(IngredientNutrient).delete()
+    db.commit()
+
+    class FakeRecipe:
+        ingredientes = [
+            {"alimento": "Clara de huevo", "cantidad_g": 200},
+            {"alimento": "Ingrediente sin dato", "cantidad_g": 50},
+        ]
+
+    def fake_search(query):
+        return _fake_usda_food() if "egg" in query else None
+
+    with patch.object(ms.usda_client, "search_food", side_effect=fake_search):
+        result = ms.calculate_recipe_micronutrients(db, FakeRecipe())
+
+    assert result["totales"]["kcal"] == 104.0
+    assert result["totales"]["sodium_mg"] == 332.0
+    assert "Ingrediente sin dato" in result["ingredientes_sin_datos"]
+    assert result["cobertura"] == {"con_datos": 1, "total": 2}
+    assert "campos" in result
+
+
 def test_descriptor_suffixes_are_stripped_before_translation():
     assert ms._to_search_query(ms.normalize_ingredient("Pechuga de pollo a la plancha")) == "chicken breast"
     assert ms._to_search_query(ms.normalize_ingredient("Zanahoria cruda")) == "carrot"

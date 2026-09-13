@@ -1,4 +1,5 @@
 import { api } from './client'
+import type { RecipeMicronutrientResult } from '../types'
 
 export interface Ingredient {
   alimento: string
@@ -51,6 +52,11 @@ export async function favoriteRecipe(recipeId: number) {
 
 export async function unfavoriteRecipe(recipeId: number) {
   const { data } = await api.delete<{ ok: boolean; favorito: boolean }>(`/recipes/${recipeId}/favorite`)
+  return data
+}
+
+export async function getRecipeMicronutrients(recipeId: number) {
+  const { data } = await api.get<RecipeMicronutrientResult>(`/recipes/${recipeId}/micronutrients`)
   return data
 }
 

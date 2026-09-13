@@ -169,6 +169,14 @@ export interface MicronutrientResult {
   campos: Record<string, MicronutrientField>
 }
 
+export interface RecipeMicronutrientResult {
+  totales: Record<string, number>
+  ingredientes_sin_datos: string[]
+  cobertura: { con_datos: number; total: number }
+  usda_configurado: boolean
+  campos: Record<string, MicronutrientField>
+}
+
 export interface MealSlot {
   tiempo: string
   pct: number
