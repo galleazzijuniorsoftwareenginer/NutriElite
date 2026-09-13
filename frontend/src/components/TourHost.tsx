@@ -35,33 +35,46 @@ export function TourHost() {
       return
     }
 
-    function measure() {
+    let cancelled = false
+    let attempts = 0
+    let retryTimer: number | undefined
+
+    function tryResolve() {
       const el = step && resolveTarget(step.target)
-      if (!el) {
-        setRect(null)
-        return
-      }
+      if (!el) return false
       const r = el.getBoundingClientRect()
-      setRect({ top: r.top, left: r.left, width: r.width, height: r.height })
+      if (!cancelled) setRect({ top: r.top, left: r.left, width: r.width, height: r.height })
+      return true
     }
 
-    measure()
-    window.addEventListener('resize', measure)
-    window.addEventListener('scroll', measure, true)
+    // El elemento puede tardar en montarse (dato aún cargando) — reintenta
+    // un rato antes de rendirse. Si nunca aparece (p.ej. el paso apunta a
+    // una fila de una lista vacía), avanza solo en vez de dejar al usuario
+    // con la pantalla oscurecida y sin ningún botón para continuar.
+    function attemptWithRetry() {
+      if (tryResolve()) return
+      attempts += 1
+      if (attempts >= 8) {
+        if (!cancelled) useTourStore.getState().next()
+        return
+      }
+      retryTimer = window.setTimeout(attemptWithRetry, 150)
+    }
+
+    attemptWithRetry()
+    window.addEventListener('resize', tryResolve)
+    window.addEventListener('scroll', tryResolve, true)
     return () => {
-      window.removeEventListener('resize', measure)
-      window.removeEventListener('scroll', measure, true)
+      cancelled = true
+      if (retryTimer) window.clearTimeout(retryTimer)
+      window.removeEventListener('resize', tryResolve)
+      window.removeEventListener('scroll', tryResolve, true)
     }
   }, [step])
 
-  if (!tourId || !step) return null
+  if (!tourId || !step || !rect) return null
 
   const isLast = stepIndex === steps.length - 1
-
-  // Si el elemento objetivo no está visible (ruta distinta, breakpoint
-  // distinto, etc.), no bloqueamos la pantalla con un overlay sin sentido —
-  // simplemente se salta el tour.
-  if (!rect) return null
 
   const spotlightRect: Rect = {
     top: rect.top - PADDING,
