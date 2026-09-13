@@ -62,6 +62,19 @@ def test_can_link_a_plan_to_own_patient(client):
     assert pdf_resp.headers["content-type"] == "application/pdf"
 
 
+def test_get_plan_returns_the_formula_actually_used(client):
+    headers = _register_and_login(client, "plan_owner_formula")
+    patient_id = _create_patient(client, headers, "Paciente formula")
+
+    payload = {**PLAN_PAYLOAD, "patient_id": patient_id, "formula": "harris"}
+    resp = client.post("/plan", json=payload, headers=headers)
+    assert resp.status_code == 200
+
+    detail = client.get(f"/plans/{resp.json()['plan_id']}", headers=headers)
+    assert detail.status_code == 200
+    assert detail.json()["formula"] == "harris"
+
+
 def test_plan_rejects_invalid_gender_goal_and_activity_level(client):
     headers = _register_and_login(client, "plan_owner_enum")
     patient_id = _create_patient(client, headers, "Paciente enum")

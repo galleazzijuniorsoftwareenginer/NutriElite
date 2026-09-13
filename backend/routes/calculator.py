@@ -604,6 +604,7 @@ def get_plan(
         "gender": plan.gender,
         "activity_level": plan.activity_level,
         "goal": plan.goal,
+        "formula": plan.formula,
     }
 
 # ---------- DELETE PLAN ----------

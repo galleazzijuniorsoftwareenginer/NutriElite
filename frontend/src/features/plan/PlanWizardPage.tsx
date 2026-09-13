@@ -10,7 +10,7 @@ import { DistribuyeStep } from './steps/DistribuyeStep'
 import { MenuStep } from './steps/MenuStep'
 import { ResumenStep } from './steps/ResumenStep'
 import { DEFAULT_PCT, type WizardPlanData } from './planTypes'
-import type { WeeklyMenu } from '../../types'
+import type { Formula, WeeklyMenu } from '../../types'
 import { useTourStore } from '../../store/tourStore'
 import { PLAN_WIZARD_TOUR_ID, planWizardTourSteps } from '../../tours/planWizardTour'
 
@@ -67,7 +67,10 @@ export function PlanWizardPage() {
         gender: existingPlan.gender,
         activityLevel: existingPlan.activity_level,
         goal: existingPlan.goal,
-        formula: 'mifflin',
+        // Planes creados antes de que /plans/{id} devolviera "formula" no la
+        // tienen guardada del lado del backend — mifflin es el valor por
+        // defecto histórico, no una suposición nueva.
+        formula: (existingPlan.formula as Formula | null) ?? 'mifflin',
         tmb: existingPlan.TMB,
         originalGet: existingPlan.GET,
       })
