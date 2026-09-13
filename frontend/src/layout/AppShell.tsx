@@ -6,15 +6,18 @@ import { Logo } from '../components/Logo'
 import { Badge } from '../components/Badge'
 import { NavIcon, type NavIconName } from '../components/NavIcon'
 import { OnboardingModal } from '../components/OnboardingModal'
+import { TourHost } from '../components/TourHost'
 import { useAuthStore } from '../store/authStore'
+import { useTourStore } from '../store/tourStore'
+import { APP_SHELL_TOUR_ID, appShellTourSteps } from '../tours/appShellTour'
 
-const NAV_ITEMS: { to: string; label: string; end: boolean; icon: NavIconName }[] = [
-  { to: '/', label: 'Inicio', end: true, icon: 'home' },
-  { to: '/pacientes', label: 'Pacientes', end: false, icon: 'users' },
-  { to: '/agenda', label: 'Agenda', end: false, icon: 'calendar' },
-  { to: '/plantillas', label: 'Plantillas', end: false, icon: 'clipboard' },
-  { to: '/recetas', label: 'Recetas', end: false, icon: 'cooking' },
-  { to: '/referencia', label: 'Referencia', end: false, icon: 'book' },
+const NAV_ITEMS: { to: string; label: string; end: boolean; icon: NavIconName; tour: string }[] = [
+  { to: '/', label: 'Inicio', end: true, icon: 'home', tour: 'nav-inicio' },
+  { to: '/pacientes', label: 'Pacientes', end: false, icon: 'users', tour: 'nav-pacientes' },
+  { to: '/agenda', label: 'Agenda', end: false, icon: 'calendar', tour: 'nav-agenda' },
+  { to: '/plantillas', label: 'Plantillas', end: false, icon: 'clipboard', tour: 'nav-plantillas' },
+  { to: '/recetas', label: 'Recetas', end: false, icon: 'cooking', tour: 'nav-recetas' },
+  { to: '/referencia', label: 'Referencia', end: false, icon: 'book', tour: 'nav-referencia' },
 ]
 
 export function AppShell() {
@@ -37,7 +40,7 @@ export function AppShell() {
           <Logo size={24} />
         </div>
         <div className="px-3 pt-3">
-          <NavLink to="/plan/nuevo" className="block">
+          <NavLink to="/plan/nuevo" className="block" data-tour="nav-nuevo-plan">
             <Button variant="ai" className="w-full justify-center gap-1.5">
               <NavIcon name="sparkles" size={15} />
               Nuevo plan
@@ -50,6 +53,7 @@ export function AppShell() {
               key={item.to}
               to={item.to}
               end={item.end}
+              data-tour={item.tour}
               className={({ isActive }) =>
                 clsx(
                   'flex items-center gap-2.5 rounded-md px-3 py-2 text-[13px] font-medium transition-colors',
@@ -79,6 +83,7 @@ export function AppShell() {
           </NavLink>
           <NavLink
             to="/configuracion?tab=perfil"
+            data-tour="nav-configuracion"
             className={({ isActive }) =>
               clsx(
                 'flex items-center gap-2.5 rounded-md px-3 py-2 text-[13px] font-medium transition-colors',
@@ -89,6 +94,13 @@ export function AppShell() {
             <NavIcon name="settings" />
             Configuración
           </NavLink>
+          <button
+            onClick={() => useTourStore.getState().start(APP_SHELL_TOUR_ID, appShellTourSteps)}
+            className="flex items-center gap-2.5 rounded-md px-3 py-2 text-left text-[13px] font-medium text-text-2 transition-colors hover:bg-bg hover:text-text"
+          >
+            <NavIcon name="book" />
+            Ver tutorial
+          </button>
           {role === 'student' && (
             <div className="px-3 pt-1.5">
               <Badge tone="blue">ESTUDIANTE</Badge>
@@ -158,6 +170,7 @@ export function AppShell() {
         <nav className="flex items-center gap-1 overflow-x-auto border-b border-border bg-surface px-3 py-1.5 md:hidden">
           <NavLink
             to="/plan/nuevo"
+            data-tour="nav-nuevo-plan"
             className={({ isActive }) =>
               clsx(
                 'flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold',
@@ -173,6 +186,7 @@ export function AppShell() {
               key={item.to}
               to={item.to}
               end={item.end}
+              data-tour={item.tour}
               className={({ isActive }) =>
                 clsx(
                   'flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium',
@@ -197,7 +211,13 @@ export function AppShell() {
           setOnboardingOpen(false)
           setProfile(isPro, false)
         }}
+        onStartTour={() => {
+          setOnboardingOpen(false)
+          setProfile(isPro, false)
+          useTourStore.getState().start(APP_SHELL_TOUR_ID, appShellTourSteps)
+        }}
       />
+      <TourHost />
     </div>
   )
 }

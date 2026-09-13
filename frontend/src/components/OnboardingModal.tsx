@@ -8,7 +8,15 @@ const STEPS = [
   { title: 'Genera el menú con IA', desc: 'Un cardápio semanal completo con platillos mexicanos, listo para exportar en PDF con tu marca.' },
 ]
 
-export function OnboardingModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function OnboardingModal({
+  open,
+  onClose,
+  onStartTour,
+}: {
+  open: boolean
+  onClose: () => void
+  onStartTour?: () => void
+}) {
   return (
     <Modal open={open} onClose={onClose} width={520}>
       <div className="flex flex-col items-center gap-1 pb-2 text-center">
@@ -29,9 +37,16 @@ export function OnboardingModal({ open, onClose }: { open: boolean; onClose: () 
           </div>
         ))}
       </div>
-      <Button onClick={onClose} className="mt-5 w-full">
-        Empezar
-      </Button>
+      <div className="mt-5 flex flex-col gap-2">
+        {onStartTour && (
+          <Button onClick={onStartTour} className="w-full">
+            Hacer un tour rápido (1 min)
+          </Button>
+        )}
+        <Button onClick={onClose} variant={onStartTour ? 'secondary' : 'primary'} className="w-full">
+          Explorar por mi cuenta
+        </Button>
+      </div>
     </Modal>
   )
 }
