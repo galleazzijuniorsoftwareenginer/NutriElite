@@ -11,8 +11,11 @@ import { MenuStep } from './steps/MenuStep'
 import { ResumenStep } from './steps/ResumenStep'
 import { DEFAULT_PCT, type WizardPlanData } from './planTypes'
 import type { WeeklyMenu } from '../../types'
+import { useTourStore } from '../../store/tourStore'
+import { PLAN_WIZARD_TOUR_ID, planWizardTourSteps } from '../../tours/planWizardTour'
 
 const STEPS = ['Datos', 'Dietocálculo', 'Auditoría SMAE', 'Distribuye', 'Menú IA', 'Resumen y PDF']
+const STEP_TOUR_IDS = ['wizard-step-datos', 'wizard-step-dietocalculo', 'wizard-step-auditoria', 'wizard-step-distribuye', 'wizard-step-menu', 'wizard-step-resumen']
 
 export function PlanWizardPage() {
   const { planId: planIdParam } = useParams()
@@ -94,16 +97,23 @@ export function PlanWizardPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <div>
+      <div className="flex items-center justify-between">
         <h1 className="font-display text-2xl font-semibold text-text">
           {plan ? `Plan de ${plan.patientName}` : 'Nuevo plan'}
         </h1>
+        <button
+          onClick={() => useTourStore.getState().start(PLAN_WIZARD_TOUR_ID, planWizardTourSteps)}
+          className="text-xs font-medium text-accent hover:underline"
+        >
+          Ver tutorial del asistente
+        </button>
       </div>
 
       <div className="flex items-center gap-1.5 overflow-x-auto rounded-lg border border-border bg-surface p-1.5">
         {STEPS.map((label, i) => (
           <button
             key={label}
+            data-tour={STEP_TOUR_IDS[i]}
             onClick={() => goToStep(i)}
             disabled={i > maxStep}
             className={clsx(
