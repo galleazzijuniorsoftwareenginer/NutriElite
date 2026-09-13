@@ -37,6 +37,11 @@ export const appShellTourSteps: TourStep[] = [
     body: 'Consulta fórmulas metabólicas, la guía SMAE y el resumen KDOQI cuando lo necesites.',
   },
   {
+    target: '[data-tour="nav-salon"]',
+    title: 'Salón de clase',
+    body: 'Si eres profesor, crea una clase con código de acceso. Si eres estudiante, únete con el código y practica con pacientes ficticios.',
+  },
+  {
     target: '[data-tour="nav-configuracion"]',
     title: 'Configuración',
     body: 'Ajusta tu perfil profesional, el logo que aparece en tus PDFs y tu suscripción.',

@@ -18,6 +18,7 @@ const NAV_ITEMS: { to: string; label: string; end: boolean; icon: NavIconName; t
   { to: '/plantillas', label: 'Plantillas', end: false, icon: 'clipboard', tour: 'nav-plantillas' },
   { to: '/recetas', label: 'Recetas', end: false, icon: 'cooking', tour: 'nav-recetas' },
   { to: '/referencia', label: 'Referencia', end: false, icon: 'book', tour: 'nav-referencia' },
+  { to: '/salon', label: 'Salón de clase', end: false, icon: 'graduation', tour: 'nav-salon' },
 ]
 
 export function AppShell() {
