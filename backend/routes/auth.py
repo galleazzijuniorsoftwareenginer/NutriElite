@@ -10,6 +10,7 @@ router = APIRouter()
 from sqlalchemy.orm import Session
 from backend.database import SessionLocal
 from backend.models import User
+from backend.services.rate_limit import rate_limit
 def get_db():
     db = SessionLocal()
     try:
@@ -17,16 +18,16 @@ def get_db():
     finally:
         db.close()
 import os
-import logging
 
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "supersecretkey")
-ALGORITHM = "HS256"
-
-if SECRET_KEY == "supersecretkey":
-    logging.getLogger("uvicorn.error").warning(
-        "JWT_SECRET_KEY não configurado — usando valor default inseguro. "
-        "Defina a env var JWT_SECRET_KEY em produção."
+SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+if not SECRET_KEY:
+    raise RuntimeError(
+        "JWT_SECRET_KEY não está definida. Essa chave assina os tokens de sessão — "
+        "sem ela (ou com um valor previsível), qualquer pessoa poderia forjar um "
+        "token válido para qualquer usuário. Defina a env var JWT_SECRET_KEY antes "
+        "de iniciar o backend (veja CLAUDE.md)."
     )
+ALGORITHM = "HS256"
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -91,7 +92,7 @@ def verify_token_str(token: str) -> dict:
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-@router.post("/register")
+@router.post("/register", dependencies=[Depends(rate_limit("register", max_attempts=5, window_seconds=600))])
 def register(user: UserRegister, db: Session = Depends(get_db)):
 
     existing_user = db.query(User).filter(User.username == user.username).first()
@@ -140,7 +141,7 @@ def get_me(token: dict = Depends(verify_token), db: Session = Depends(get_db)):
         "timezone": user.timezone or "America/Mexico_City",
     }
 
-@router.post("/login")
+@router.post("/login", dependencies=[Depends(rate_limit("login", max_attempts=10, window_seconds=300))])
 def login(user: UserLogin, db: Session = Depends(get_db)):
 
     db_user = db.query(User).filter(User.username == user.username).first()

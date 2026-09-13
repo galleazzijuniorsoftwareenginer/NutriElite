@@ -1,19 +1,15 @@
-import resend
-import os
 import jwt
-import bcrypt
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from backend.database import SessionLocal
 from backend.models import User
+from backend.routes.auth import SECRET_KEY
+from backend.services.email_service import is_valid_email, render_branded_email, send_email, PUBLIC_BASE_URL
+from backend.services.rate_limit import rate_limit
 from datetime import datetime, timedelta
 
 router = APIRouter()
-
-resend.api_key = os.getenv("RESEND_API_KEY")
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "supersecretkey")
-PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "https://nutrielite-production-e88f.up.railway.app").rstrip("/")
 
 def get_db():
     db = SessionLocal()
@@ -29,49 +25,42 @@ class ResetRequest(BaseModel):
     token: str
     password: str
 
-@router.post("/forgot-password")
+@router.post("/forgot-password", dependencies=[Depends(rate_limit("forgot-password", max_attempts=5, window_seconds=900))])
 def forgot_password(data: ForgotRequest, db: Session = Depends(get_db)):
+    # Siempre la misma respuesta genérica, sin importar si el email existe,
+    # tiene formato válido, o si el envío falla — cualquier diferencia (un
+    # 500 vs este 200, por ejemplo) sería un canal para enumerar usuarios.
     from sqlalchemy import or_
     user = db.query(User).filter(
         or_(User.username == data.email, User.email == data.email)
     ).first()
-    if not user:
-        # Não revela se email existe ou não
-        return {"ok": True}
-    
-    token = jwt.encode(
-        {"sub": user.username, "exp": datetime.utcnow() + timedelta(hours=1), "type": "reset"},
-        SECRET_KEY, algorithm="HS256"
-    )
-    
-    reset_url = f"{PUBLIC_BASE_URL}/app/?reset={token}"
-    
-    resend.Emails.send({
-        "from": "NutriElite <onboarding@resend.dev>",
-        "to": data.email,
-        "subject": "Recuperación de contraseña — NutriElite",
-        "html": f"""
-        <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;">
-          <div style="margin-bottom:24px;">
-            <span style="font-size:18px;font-weight:700;color:#1a6b4a;">Nutri</span>
-            <span style="font-size:18px;font-weight:700;color:#1a1916;">Elite</span>
-          </div>
-          <h2 style="font-size:20px;font-weight:700;margin-bottom:8px;">Recupera tu contraseña</h2>
-          <p style="color:#6b6860;font-size:14px;margin-bottom:24px;">
-            Recibimos una solicitud para restablecer tu contraseña. El enlace expira en 1 hora.
-          </p>
-          <a href="{reset_url}" style="display:inline-block;background:#1a6b4a;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">
-            Restablecer contraseña
-          </a>
-          <p style="color:#9e9b95;font-size:12px;margin-top:24px;">
-            Si no solicitaste esto, ignora este mensaje.
-          </p>
-        </div>
-        """
-    })
+    if user and is_valid_email(user.email):
+        token = jwt.encode(
+            {"sub": user.username, "exp": datetime.utcnow() + timedelta(hours=1), "type": "reset"},
+            SECRET_KEY, algorithm="HS256"
+        )
+        reset_url = f"{PUBLIC_BASE_URL}/app/?reset={token}"
+        send_email(
+            user.email,
+            "Recuperación de contraseña — NutriElite",
+            render_branded_email(
+                "Recupera tu contraseña",
+                f"""
+                <p style="color:#6b6860;font-size:14px;margin-bottom:24px;">
+                  Recibimos una solicitud para restablecer tu contraseña. El enlace expira en 1 hora.
+                </p>
+                <a href="{reset_url}" style="display:inline-block;background:#6d5bff;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">
+                  Restablecer contraseña
+                </a>
+                <p style="color:#9e9b95;font-size:12px;margin-top:24px;">
+                  Si no solicitaste esto, ignora este mensaje.
+                </p>
+                """,
+            ),
+        )
     return {"ok": True}
 
-@router.post("/reset-password")
+@router.post("/reset-password", dependencies=[Depends(rate_limit("reset-password", max_attempts=10, window_seconds=900))])
 def reset_password(data: ResetRequest, db: Session = Depends(get_db)):
     try:
         payload = jwt.decode(data.token, SECRET_KEY, algorithms=["HS256"])
@@ -92,29 +81,17 @@ def reset_password(data: ResetRequest, db: Session = Depends(get_db)):
     user.password = pwd_context.hash(data.password[:72])
     db.commit()
 
-    # Envia email de confirmação
-    try:
-        import re
-        if user.email and re.match(r"[^@]+@[^@]+\.[^@]+", user.email):
-            resend.Emails.send({
-                "from": "NutriElite <onboarding@resend.dev>",
-                "to": user.email,
-                "subject": "Tu contraseña fue cambiada — NutriElite",
-                "html": """
-                <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;">
-                  <div style="margin-bottom:24px;">
-                    <span style="font-size:18px;font-weight:700;color:#1a6b4a;">Nutri</span>
-                    <span style="font-size:18px;font-weight:700;color:#1a1916;">Elite</span>
-                  </div>
-                  <h2 style="font-size:20px;font-weight:700;margin-bottom:8px;">✅ Contraseña actualizada</h2>
-                  <p style="color:#6b6860;font-size:14px;margin-bottom:24px;">
-                    Tu contraseña fue cambiada exitosamente. Si no realizaste este cambio, contáctanos de inmediato.
-                  </p>
-                  <p style="color:#9e9b95;font-size:12px;">NutriElite · Precisión clínica. Nutrición inteligente.</p>
-                </div>
-                """
-            })
-    except Exception:
-        pass
+    send_email(
+        user.email,
+        "Tu contraseña fue cambiada — NutriElite",
+        render_branded_email(
+            "✅ Contraseña actualizada",
+            """
+            <p style="color:#6b6860;font-size:14px;margin-bottom:24px;">
+              Tu contraseña fue cambiada exitosamente. Si no realizaste este cambio, contáctanos de inmediato.
+            </p>
+            """,
+        ),
+    )
 
     return {"ok": True}

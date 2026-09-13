@@ -30,3 +30,14 @@ def db():
         yield session
     finally:
         session.close()
+
+
+@pytest.fixture
+def client():
+    """TestClient contra la app real — para pruebas de integración de rutas
+    (auth, ownership, borrados en cascada) que las pruebas de servicio puro
+    no cubren."""
+    from fastapi.testclient import TestClient
+    from backend.main import app
+
+    return TestClient(app)
