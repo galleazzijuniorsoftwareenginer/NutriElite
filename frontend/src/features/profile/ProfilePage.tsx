@@ -49,6 +49,10 @@ export function ProfileForm() {
       setTimeout(() => setSaved(false), 2000)
     },
   })
+  const saveError = saveMut.isError
+    ? (saveMut.error as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
+      'No se pudo guardar el perfil. Intenta de nuevo.'
+    : ''
 
   function set<K extends keyof NutritionistProfile>(key: K, value: NutritionistProfile[K]) {
     setForm((f) => ({ ...f, [key]: value }))
@@ -139,6 +143,7 @@ export function ProfileForm() {
             Guardar cambios
           </Button>
           {saved && <span className="text-xs font-medium text-accent">✓ Guardado</span>}
+          {saveError && <span className="text-xs font-medium text-danger">{saveError}</span>}
         </div>
       </form>
     </Card>

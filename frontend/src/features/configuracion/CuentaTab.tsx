@@ -151,9 +151,11 @@ function ChangePasswordCard() {
 
 function ExportDataCard() {
   const [downloading, setDownloading] = useState(false)
+  const [error, setError] = useState('')
 
   async function handleExport() {
     setDownloading(true)
+    setError('')
     try {
       const data = await exportData()
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
@@ -165,6 +167,9 @@ function ExportDataCard() {
       a.click()
       a.remove()
       URL.revokeObjectURL(url)
+    } catch (err) {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+      setError(detail || 'No se pudieron exportar tus datos. Intenta de nuevo.')
     } finally {
       setDownloading(false)
     }
@@ -179,6 +184,7 @@ function ExportDataCard() {
       <Button variant="secondary" loading={downloading} onClick={handleExport}>
         ⬇ Descargar mis datos
       </Button>
+      {error && <p className="mt-2 text-xs text-danger">{error}</p>}
     </Card>
   )
 }

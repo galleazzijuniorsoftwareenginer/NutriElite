@@ -20,12 +20,17 @@ const PRO_FEATURES = [
 export function BillingContent() {
   const isPro = useAuthStore((s) => s.isPro)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   async function handleUpgrade() {
     setLoading(true)
+    setError('')
     try {
       const { url } = await startCheckout()
       window.location.href = url
+    } catch (err) {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+      setError(detail || 'No se pudo iniciar el pago. Intenta de nuevo en unos minutos.')
     } finally {
       setLoading(false)
     }
@@ -76,6 +81,7 @@ export function BillingContent() {
               Suscribirme a Pro
             </Button>
           )}
+          {error && <p className="mt-2 text-xs text-danger">{error}</p>}
         </Card>
       </div>
     </div>

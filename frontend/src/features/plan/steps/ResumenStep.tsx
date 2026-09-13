@@ -23,10 +23,17 @@ export function ResumenStep({ plan, carbPct, protPct, fatPct, kcalAdjustment, we
   const queryClient = useQueryClient()
   const [shareUrl, setShareUrl] = useState('')
   const [sharing, setSharing] = useState(false)
+  const [shareError, setShareError] = useState('')
   const [copied, setCopied] = useState(false)
   const [copiedBooking, setCopiedBooking] = useState(false)
   const [templateName, setTemplateName] = useState('')
   const [templateSaved, setTemplateSaved] = useState(false)
+  const [downloadError, setDownloadError] = useState('')
+
+  function extractErrorDetail(err: unknown, fallback: string) {
+    const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+    return detail || fallback
+  }
 
   const templateMut = useMutation({
     mutationFn: () => saveAsTemplate(plan.planId, templateName || 'Mi plantilla'),
@@ -36,15 +43,19 @@ export function ResumenStep({ plan, carbPct, protPct, fatPct, kcalAdjustment, we
       setTimeout(() => setTemplateSaved(false), 2000)
     },
   })
+  const templateError = templateMut.isError ? extractErrorDetail(templateMut.error, 'No se pudo guardar la plantilla.') : ''
 
   const get = plan.originalGet + clampAdjustment(kcalAdjustment)
   const { carbG, protG, fatG } = gramsFromPct(get, carbPct, protPct, fatPct)
 
   async function handleShare() {
     setSharing(true)
+    setShareError('')
     try {
       const { url } = await sharePlan(plan.planId)
       setShareUrl(url)
+    } catch (err) {
+      setShareError(extractErrorDetail(err, 'No se pudo generar el enlace. Intenta de nuevo.'))
     } finally {
       setSharing(false)
     }
@@ -63,20 +74,28 @@ export function ResumenStep({ plan, carbPct, protPct, fatPct, kcalAdjustment, we
   }
 
   async function handleDownload() {
+    setDownloadError('')
     // No pasamos "perfil" por query string: el backend ya busca los datos del
     // nutricionista (incluido el logo) directo en la base cuando no se pasa.
     const url = pdfDownloadUrl(plan.planId, {
       menu: weeklyMenu ?? undefined,
       override: { protein_g: protG, carbs_g: carbG, fats_g: fatG },
     })
-    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } })
-    const blob = await res.blob()
-    const objectUrl = window.URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = objectUrl
-    a.download = `nutrielite_${plan.planId}.pdf`
-    a.click()
-    window.URL.revokeObjectURL(objectUrl)
+    try {
+      const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+      if (!res.ok) {
+        throw new Error(res.status === 404 ? 'Plan no encontrado.' : 'No se pudo generar el PDF.')
+      }
+      const blob = await res.blob()
+      const objectUrl = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = objectUrl
+      a.download = `nutrielite_${plan.planId}.pdf`
+      a.click()
+      window.URL.revokeObjectURL(objectUrl)
+    } catch (err) {
+      setDownloadError(err instanceof Error ? err.message : 'No se pudo descargar el PDF. Intenta de nuevo.')
+    }
   }
 
   return (
@@ -122,6 +141,7 @@ export function ResumenStep({ plan, carbPct, protPct, fatPct, kcalAdjustment, we
         <Button onClick={handleDownload} className="w-full">
           ⬇ Descargar PDF
         </Button>
+        {downloadError && <p className="text-[11px] font-medium text-danger">{downloadError}</p>}
       </Card>
 
       <Card className="flex flex-col gap-3">
@@ -141,6 +161,7 @@ export function ResumenStep({ plan, carbPct, protPct, fatPct, kcalAdjustment, we
           </Button>
         </div>
         {templateSaved && <p className="text-[11px] font-medium text-accent">✓ Plantilla guardada</p>}
+        {templateError && <p className="text-[11px] font-medium text-danger">{templateError}</p>}
       </Card>
 
       <Card className="flex flex-col gap-3 lg:col-span-3">
@@ -171,9 +192,12 @@ export function ResumenStep({ plan, carbPct, protPct, fatPct, kcalAdjustment, we
             </div>
           </div>
         ) : (
-          <Button variant="secondary" loading={sharing} onClick={handleShare} className="w-fit">
-            🔗 Generar enlace para el paciente
-          </Button>
+          <div className="flex w-fit flex-col gap-1.5">
+            <Button variant="secondary" loading={sharing} onClick={handleShare} className="w-fit">
+              🔗 Generar enlace para el paciente
+            </Button>
+            {shareError && <p className="text-[11px] font-medium text-danger">{shareError}</p>}
+          </div>
         )}
       </Card>
     </div>
