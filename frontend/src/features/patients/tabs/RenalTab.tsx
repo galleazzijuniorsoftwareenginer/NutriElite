@@ -17,7 +17,11 @@ const STAGE_LABEL: Record<CkdStage, string> = {
 
 export function RenalTab({ patientId }: { patientId: number }) {
   const queryClient = useQueryClient()
-  const { data: history } = useQuery({
+  const {
+    data: history,
+    isError: historyError,
+    refetch: refetchHistory,
+  } = useQuery({
     queryKey: ['renal-assessments', patientId],
     queryFn: () => listRenalAssessments(patientId),
   })
@@ -49,6 +53,10 @@ export function RenalTab({ patientId }: { patientId: number }) {
       }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['renal-assessments', patientId] }),
   })
+  const mutError = mut.isError
+    ? (mut.error as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
+      'No se pudo calcular las metas renales. Intenta de nuevo.'
+    : ''
 
   const latest = history?.[0]
 
@@ -119,10 +127,18 @@ export function RenalTab({ patientId }: { patientId: number }) {
         <Button onClick={() => mut.mutate()} loading={mut.isPending} disabled={!weight}>
           Calcular metas renales
         </Button>
+        {mutError && <p className="text-xs text-danger">{mutError}</p>}
       </Card>
 
       <div className="flex flex-col gap-4">
-        {latest ? (
+        {historyError ? (
+          <Card className="flex flex-col items-center gap-3 py-10 text-center">
+            <p className="text-sm text-danger">No se pudo cargar el historial renal.</p>
+            <Button size="sm" variant="secondary" onClick={() => refetchHistory()}>
+              Reintentar
+            </Button>
+          </Card>
+        ) : latest ? (
           <Card variant="deep">
             <p className="text-xs font-semibold uppercase tracking-wide text-deep-text-2">
               Última evaluación · {STAGE_LABEL[latest.ckd_stage as CkdStage]}

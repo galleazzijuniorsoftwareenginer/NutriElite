@@ -53,12 +53,20 @@ export function AuditoriaStep({ plan, carbPct, protPct, fatPct, kcalAdjustment, 
     return { protein_g: g.protG, carbs_g: g.carbG, fats_g: g.fatG }
   }, [get, carbPct, protPct, fatPct])
 
-  const { data: audit } = useQuery({
+  const {
+    data: audit,
+    isError: auditError,
+    refetch: refetchAudit,
+  } = useQuery({
     queryKey: ['audit', plan.planId, override],
     queryFn: () => getAudit(plan.planId, override),
   })
 
-  const { data: foodGroups } = useQuery({
+  const {
+    data: foodGroups,
+    isError: foodGroupsError,
+    refetch: refetchFoodGroups,
+  } = useQuery({
     queryKey: ['food-groups'],
     queryFn: listFoodGroups,
     staleTime: Infinity,
@@ -107,6 +115,24 @@ export function AuditoriaStep({ plan, carbPct, protPct, fatPct, kcalAdjustment, 
     const newProt = Math.round(realProtPct)
     const newFat = 100 - newCarb - newProt
     onAdjustPct({ carbPct: newCarb, protPct: newProt, fatPct: newFat })
+  }
+
+  if (auditError || foodGroupsError) {
+    return (
+      <Card className="flex flex-col items-center gap-3 py-16 text-center">
+        <p className="text-sm text-danger">No se pudo calcular la auditoría nutricional.</p>
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={() => {
+            if (auditError) refetchAudit()
+            if (foodGroupsError) refetchFoodGroups()
+          }}
+        >
+          Reintentar
+        </Button>
+      </Card>
+    )
   }
 
   if (!audit || !foodGroups || rows.length === 0) {

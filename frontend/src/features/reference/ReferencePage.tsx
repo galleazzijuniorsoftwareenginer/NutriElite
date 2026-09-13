@@ -2,9 +2,21 @@ import { useQuery } from '@tanstack/react-query'
 import { getReferenceGuide } from '../../api/reference'
 import { Card } from '../../components/Card'
 import { Spinner } from '../../components/Spinner'
+import { Button } from '../../components/Button'
 
 export function ReferencePage() {
-  const { data, isLoading } = useQuery({ queryKey: ['reference-guide'], queryFn: getReferenceGuide })
+  const { data, isLoading, isError, refetch } = useQuery({ queryKey: ['reference-guide'], queryFn: getReferenceGuide })
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center gap-3 py-16 text-center">
+        <p className="text-sm text-danger">No se pudo cargar la central de referencia.</p>
+        <Button size="sm" variant="secondary" onClick={() => refetch()}>
+          Reintentar
+        </Button>
+      </div>
+    )
+  }
 
   if (isLoading || !data) {
     return (

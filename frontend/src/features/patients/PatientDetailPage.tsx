@@ -73,7 +73,12 @@ export function PatientDetailPage() {
   const [searchParams] = useSearchParams()
   const initialTab = TABS.find((t) => t === searchParams.get('tab')) ?? 'Planes'
   const [tab, setTab] = useState<Tab>(initialTab)
-  const { data, isLoading } = useQuery<PatientPlansResponse>({
+  const {
+    data,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery<PatientPlansResponse>({
     queryKey: ['patient', id],
     queryFn: () => getPatientPlans(Number(id)),
     enabled: !!id,
@@ -146,6 +151,16 @@ export function PatientDetailPage() {
   }
 
   if (isLoading) return <p className="text-sm text-text-3">Cargando…</p>
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center gap-3 py-16 text-center">
+        <p className="text-sm text-danger">No se pudo cargar el paciente.</p>
+        <Button size="sm" variant="secondary" onClick={() => refetch()}>
+          Reintentar
+        </Button>
+      </div>
+    )
+  }
   if (!data) return <p className="text-sm text-text-3">Paciente no encontrado.</p>
 
   const patientId = data.patient.id
@@ -290,6 +305,9 @@ export function PatientDetailPage() {
             >
               {insight ? '↺ Regenerar' : 'Generar insight'}
             </Button>
+            {insightsMut.isError && (
+              <p className="mt-2 text-[11px] font-medium text-danger">No se pudo generar el insight. Intenta de nuevo.</p>
+            )}
           </Card>
 
           <Card>
