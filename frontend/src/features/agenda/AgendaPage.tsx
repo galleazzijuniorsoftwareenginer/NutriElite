@@ -9,6 +9,8 @@ import { Badge } from '../../components/Badge'
 import { Modal } from '../../components/Modal'
 import { FieldWrap, Input, Select } from '../../components/Field'
 import { confirmAction } from '../../store/confirmStore'
+import { useTourStore } from '../../store/tourStore'
+import { AGENDA_TOUR_ID, agendaTourSteps } from '../../tours/agendaTour'
 
 const GRID_START_HOUR = 8
 const GRID_END_HOUR = 17
@@ -361,14 +363,20 @@ export function AgendaPage() {
         <div>
           <h1 className="font-display text-2xl font-semibold text-text">Agenda</h1>
           <p className="text-sm text-text-2">Todas tus citas en un solo lugar.</p>
+          <button
+            onClick={() => useTourStore.getState().start(AGENDA_TOUR_ID, agendaTourSteps)}
+            className="mt-1 text-xs font-medium text-accent hover:underline"
+          >
+            Ver tutorial de agenda
+          </button>
         </div>
         <div className="flex items-center gap-2">
-          <Button size="sm" variant="secondary" onClick={() => setNewConsultaOpen(true)}>+ Nueva consulta</Button>
-          <Button size="sm" onClick={() => setNewApptOpen(true)}>📅 Agendar cita</Button>
+          <Button size="sm" variant="secondary" data-tour="agenda-nueva-consulta" onClick={() => setNewConsultaOpen(true)}>+ Nueva consulta</Button>
+          <Button size="sm" data-tour="agenda-agendar-cita" onClick={() => setNewApptOpen(true)}>📅 Agendar cita</Button>
         </div>
       </div>
 
-      <div className="inline-flex self-start gap-0.5 rounded-full border border-border bg-bg p-1">
+      <div className="inline-flex self-start gap-0.5 rounded-full border border-border bg-bg p-1" data-tour="agenda-vista">
         {([['lista', 'Lista'], ['grid', 'Grid semanal']] as const).map(([key, label]) => (
           <button
             key={key}

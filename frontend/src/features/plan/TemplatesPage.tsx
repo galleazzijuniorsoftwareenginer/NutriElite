@@ -8,6 +8,8 @@ import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { Modal } from '../../components/Modal'
 import { Select } from '../../components/Field'
+import { useTourStore } from '../../store/tourStore'
+import { TEMPLATES_TOUR_ID, templatesTourSteps } from '../../tours/templatesTour'
 import { CategoryTile } from '../../components/CategoryTile'
 import { confirmAction } from '../../store/confirmStore'
 
@@ -356,11 +358,18 @@ export function TemplatesPage() {
       <div>
         <h1 className="font-display text-2xl font-semibold text-text">Plantillas</h1>
         <p className="text-sm text-text-2">Planes guardados o prediseñados, listos para reutilizar con nuevos pacientes.</p>
+        <button
+          onClick={() => useTourStore.getState().start(TEMPLATES_TOUR_ID, templatesTourSteps)}
+          className="mt-1 text-xs font-medium text-accent hover:underline"
+        >
+          Ver tutorial de plantillas
+        </button>
       </div>
 
       <div className="inline-flex self-start gap-0.5 rounded-full border border-border bg-bg p-1">
         <button
           onClick={() => setTab('mias')}
+          data-tour="templates-mias"
           className={`rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
             tab === 'mias' ? 'bg-surface text-accent shadow-card' : 'text-text-2'
           }`}
@@ -369,6 +378,7 @@ export function TemplatesPage() {
         </button>
         <button
           onClick={() => setTab('biblioteca')}
+          data-tour="templates-biblioteca"
           className={`rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
             tab === 'biblioteca' ? 'bg-surface text-accent shadow-card' : 'text-text-2'
           }`}

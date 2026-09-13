@@ -7,6 +7,8 @@ import { Input } from '../../components/Field'
 import { Modal } from '../../components/Modal'
 import { CategoryTile } from '../../components/CategoryTile'
 import { RecipeMicrosPanel } from '../../components/RecipeMicrosPanel'
+import { useTourStore } from '../../store/tourStore'
+import { RECIPES_TOUR_ID, recipesTourSteps } from '../../tours/recipesTour'
 
 const CATEGORY_ICON: Record<string, string> = {
   Navidad: '🌲',
@@ -166,10 +168,16 @@ export function RecipesPage() {
       <div>
         <h1 className="font-display text-2xl font-semibold text-text">Recetas</h1>
         <p className="text-sm text-text-2">Guarda tus recetas favoritas y úsalas en el próximo cardápio de un paciente.</p>
+        <button
+          onClick={() => useTourStore.getState().start(RECIPES_TOUR_ID, recipesTourSteps)}
+          className="mt-1 text-xs font-medium text-accent hover:underline"
+        >
+          Ver tutorial de recetas
+        </button>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="inline-flex gap-0.5 rounded-full border border-border bg-bg p-1">
+        <div className="inline-flex gap-0.5 rounded-full border border-border bg-bg p-1" data-tour="recipes-tabs">
           <button
             onClick={() => setTab('todas')}
             className={`rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
@@ -188,6 +196,7 @@ export function RecipesPage() {
           </button>
         </div>
         <Input
+          data-tour="recipes-search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Buscar receta…"
