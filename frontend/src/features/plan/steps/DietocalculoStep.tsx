@@ -180,7 +180,7 @@ export function DietocalculoStep({
         <Card>
           <div className="mb-4 grid grid-cols-3 gap-3 text-center">
             <div>
-              <p className="text-xs text-text-2">TMB</p>
+              <p className="text-xs text-text-2">GEB</p>
               <p className="font-display text-xl font-semibold text-text">{plan.tmb != null ? plan.tmb.toFixed(0) : '—'}</p>
             </div>
             <div>

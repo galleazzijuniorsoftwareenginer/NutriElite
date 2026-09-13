@@ -17,9 +17,15 @@ def test_mifflin_female_reference_value():
 
 
 def test_harris_benedict_male_reference_value():
-    # 88.362+(13.397*80)+(4.799*180)-(5.677*30)
+    # 66.473+(13.752*80)+(5.003*180)-(6.775*30)
     tmb = calculate_tmb(80, 180, 30, "male", "harris")
-    assert tmb == pytest.approx(1853.632, abs=0.5)
+    assert tmb == pytest.approx(1863.923, abs=0.5)
+
+
+def test_harris_benedict_female_reference_value():
+    # 655.1+(9.563*65)+(1.85*165)-(4.676*28)
+    tmb = calculate_tmb(65, 165, 28, "female", "harris")
+    assert tmb == pytest.approx(1451.017, abs=0.5)
 
 
 def test_schofield_adult_uses_15_30_band():

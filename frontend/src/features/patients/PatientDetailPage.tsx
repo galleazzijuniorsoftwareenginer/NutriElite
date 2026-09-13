@@ -223,7 +223,7 @@ export function PatientDetailPage() {
             </span>
           </Card>
           <Card className="flex flex-col gap-0.5 py-3">
-            <span className="text-[11px] font-medium text-text-2">TMB actual</span>
+            <span className="text-[11px] font-medium text-text-2">GEB actual</span>
             <span className="font-display text-xl font-semibold text-accent-2">{Math.round(latestPlan.tmb)} kcal</span>
           </Card>
           <Card className="flex flex-col gap-0.5 py-3">
@@ -269,7 +269,7 @@ export function PatientDetailPage() {
                           {GOAL_LABEL[p.goal] || p.goal} · {Math.round(p.get)} kcal
                         </p>
                         <p className="text-xs text-text-3">
-                          {new Date(p.created_at).toLocaleDateString()} · TMB {Math.round(p.tmb)} kcal · {p.weight} kg
+                          {new Date(p.created_at).toLocaleDateString()} · GEB {Math.round(p.tmb)} kcal · {p.weight} kg
                         </p>
                       </div>
                       <Link to={`/plan/${p.id}`}>

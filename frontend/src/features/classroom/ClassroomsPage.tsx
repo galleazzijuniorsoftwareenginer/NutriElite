@@ -110,7 +110,7 @@ function ProfessorView() {
                     <ul className="mt-1.5 flex flex-col gap-1">
                       {p.plans.map((pl) => (
                         <li key={pl.id} className="text-xs text-text-2">
-                          {GOAL_LABEL[pl.goal] || pl.goal} · TMB {Math.round(pl.tmb)} · GET {Math.round(pl.get)} kcal · {pl.weight}kg
+                          {GOAL_LABEL[pl.goal] || pl.goal} · GEB {Math.round(pl.tmb)} · GET {Math.round(pl.get)} kcal · {pl.weight}kg
                         </li>
                       ))}
                     </ul>

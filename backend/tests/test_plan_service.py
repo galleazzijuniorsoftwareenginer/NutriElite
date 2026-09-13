@@ -3,7 +3,9 @@ from fastapi import HTTPException
 
 from backend.models import FoodGroup, Patient, User
 from backend.routes.auth import hash_password
-from backend.services.plan_service import _resolve_patient_id, calculate_smae_portions
+from backend.schemas.plan import PlanRequest
+from backend.services.metabolic_service import calculate_tmb
+from backend.services.plan_service import _resolve_patient_id, calculate_smae_portions, create_plan
 
 
 class _FakePlan:
@@ -86,6 +88,31 @@ def test_resolve_patient_id_accepts_own_patient(db):
 
     resolved = _resolve_patient_id(db, owner.id, patient.id, "x", "x@x.com", "555")
     assert resolved == patient.id
+
+
+def test_get_includes_thermic_effect_of_food(db):
+    # GET debe incluir el ETA (efecto térmico de los alimentos, +10% fijo)
+    # aplicado sobre GEB×AF, antes del ajuste por objetivo — regresión de
+    # las planillas clínicas de referencia del proyecto, que siempre lo
+    # incluyen y antes no se aplicaba en absoluto.
+    user = _make_user(db, "eta_user")
+    data = PlanRequest(
+        patient_name="Paciente ETA",
+        patient_email="",
+        patient_phone="",
+        weight=65,
+        height=165,
+        age=28,
+        gender="female",
+        activity_level=1.55,
+        goal="maintenance",
+        formula="mifflin",
+    )
+    plan = create_plan(data, db, user.id)
+
+    geb = calculate_tmb(65, 165, 28, "female", "mifflin")
+    expected_get = geb * 1.55 * 1.10
+    assert plan.get == pytest.approx(expected_get, abs=0.5)
 
 
 def test_returns_all_eight_base_groups(db):

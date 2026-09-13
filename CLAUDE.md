@@ -43,7 +43,7 @@ The frontend's router uses `basename="/app"` in production (`import.meta.env.PRO
 
 ## Key Data Flow
 
-1. **Plan creation** (`POST /plan`): Receives patient anthropometrics → calculates BMR (3 formula options: Mifflin, Harris-Benedict, Schofield) → computes TDEE via activity multiplier → applies goal adjustment (cut: −300 kcal, bulk: +300 kcal) → distributes macros using a default 25/20/55 (protein/fat/carb) % split → calculates SMAE food group portions and persists them as `PlanFoodGroup` rows.
+1. **Plan creation** (`POST /plan`): Receives patient anthropometrics → calculates GEB/BMR (formula options: Mifflin, Harris-Benedict [original 1919 rounded coefficients, not the 1984 revision — matches the clinical reference spreadsheets the project's nutritionists use], Schofield, Katch-McArdle, Cunningham) → computes GET via activity multiplier × 1.10 (fixed +10% for ETA, the thermic effect of food — always included, not optional) → applies goal adjustment (cut: −300 kcal, bulk: +300 kcal) → distributes macros using a default 25/20/55 (protein/fat/carb) % split → calculates SMAE food group portions and persists them as `PlanFoodGroup` rows. The UI labels this value "GEB" (not "TMB") to match current clinical terminology, though the API/DB field is still named `tmb` for backward compatibility.
 
 2. **Dietocálculo / custom macros** (frontend-only step, no persistence until audit/PDF are requested): the nutritionist adjusts the kcal target (±500) and the macro % split in the wizard. These are sent as `protein_g`/`carbs_g`/`fats_g` **query params**, not stored on the `Plan` row.
 

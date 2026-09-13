@@ -13,13 +13,16 @@ def calculate_tmb(weight, height, age, gender, formula, body_fat_percent=None):
             return (10 * weight) + (6.25 * height) - (5 * age) - 161
 
     # =========================
-    # Harris-Benedict (adultos)
+    # Harris-Benedict (adultos) — coeficientes de la versión original 1919
+    # (redondeada, la misma que usan las planillas clínicas de referencia del
+    # proyecto), no la revisión de 1984 — dan una GEB consistentemente más
+    # alta para el mismo paciente.
     # =========================
     elif formula == "harris":
         if gender == "male":
-            return 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age)
+            return 66.473 + (13.752 * weight) + (5.003 * height) - (6.775 * age)
         else:
-            return 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age)
+            return 655.1 + (9.563 * weight) + (1.85 * height) - (4.676 * age)
 
     # =========================
     # Schofield (peso) — WHO/FAO/UNU 1985, las 6 franjas etarias completas

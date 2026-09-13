@@ -8,7 +8,7 @@ export const patientDetailTourSteps: TourStep[] = [
   {
     target: '[data-tour="patient-tab-planes"]',
     title: 'Planes',
-    body: 'El historial de planes generados para este paciente, con su evolución de peso y TMB.',
+    body: 'El historial de planes generados para este paciente, con su evolución de peso y GEB.',
   },
   {
     target: '[data-tour="patient-tab-clinica"]',

@@ -8,7 +8,7 @@ import { Badge } from '../../components/Badge'
 import { useAuthStore } from '../../store/authStore'
 import { PreferenciasForm } from '../configuracion/PreferenciasForm'
 
-const FREE_FEATURES = ['3 planes por semana', 'Cálculo TMB/GET/SMAE', 'Exportación PDF básica']
+const FREE_FEATURES = ['3 planes por semana', 'Cálculo GEB/GET/SMAE', 'Exportación PDF básica']
 const PRO_FEATURES = [
   'Planes ilimitados',
   'Generador de menú semanal con IA',

@@ -49,7 +49,7 @@ export function checkClinicalAlerts(params: {
   if (tmb > 0 && get < tmb) {
     alerts.push({
       type: 'danger',
-      message: `GET (${get.toFixed(0)} kcal) está abajo del TMB (${tmb.toFixed(0)} kcal) — riesgo metabólico`,
+      message: `GET (${get.toFixed(0)} kcal) está abajo del GEB (${tmb.toFixed(0)} kcal) — riesgo metabólico`,
     })
   }
 

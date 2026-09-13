@@ -51,7 +51,12 @@ def create_plan(data, db, user_id):
         body_fat_percent=getattr(data, "body_fat_percent", None)
     )
 
-    total_calories = tmb * data.activity_level
+    # ETA (Efecto Térmico de los Alimentos) — energía que el propio cuerpo
+    # gasta en digerir/absorber lo que come, ~10% del gasto por actividad.
+    # Antes el GET no lo incluía; las planillas clínicas de referencia del
+    # proyecto sí lo aplican siempre, por eso el GEB×AF solo se completa
+    # aquí antes de aplicar el ajuste por objetivo.
+    total_calories = tmb * data.activity_level * 1.10
 
     if data.goal.lower() == "cut":
         total_calories -= 300

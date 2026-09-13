@@ -34,7 +34,7 @@ export function ReferencePage() {
       </div>
 
       <Card>
-        <h2 className="mb-3 text-sm font-semibold text-text">Fórmulas de TMB</h2>
+        <h2 className="mb-3 text-sm font-semibold text-text">Fórmulas de GEB</h2>
         <div className="flex flex-col gap-4">
           {data.bmr_formulas.map((f) => (
             <div key={f.nombre} className="rounded-md border border-border p-3">
