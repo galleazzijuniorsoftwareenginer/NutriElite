@@ -1,15 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useMutation, useQuery } from '@tanstack/react-query'
-import { getMealDistribution, saveMealDistribution, getAudit } from '../../../api/plans'
+import { useQuery } from '@tanstack/react-query'
+import { getAudit } from '../../../api/plans'
 import { listFoodGroups } from '../../../api/food'
-import type { MealSlot } from '../../../types'
 import { Card } from '../../../components/Card'
 import { Button } from '../../../components/Button'
 import { Input } from '../../../components/Field'
-import { Tooltip } from '../../../components/Tooltip'
 import type { WizardPlanData } from '../planTypes'
 import { clampAdjustment, gramsFromPct } from '../planMath'
 import { buildSmaeRows } from '../smaeRows'
+import { DEFAULT_MEAL_SCHEDULE } from '../mealSchedule'
 
 /** Reparte `total` porciones enteras entre los pesos dados (%) sin perder ni sumar de más,
  * usando el método de mayores restos: cada celda recibe el piso de su parte proporcional
@@ -39,15 +38,6 @@ interface Props {
   onContinue: () => void
 }
 
-const DEFAULT_ITEMS: MealSlot[] = [
-  { tiempo: 'Desayuno', pct: 25, horario: '08:00' },
-  { tiempo: 'Colación matutina', pct: 10, horario: '11:00' },
-  { tiempo: 'Comida', pct: 30, horario: '14:00' },
-  { tiempo: 'Colación vespertina', pct: 10, horario: '17:00' },
-  { tiempo: 'Cena', pct: 20, horario: '20:00' },
-  { tiempo: 'Colación nocturna', pct: 5, horario: '22:00' },
-]
-
 export function DistribuyeStep({ plan, carbPct, protPct, fatPct, kcalAdjustment, onContinue }: Props) {
   const get = plan.originalGet + clampAdjustment(kcalAdjustment)
   const { carbG, protG, fatG } = gramsFromPct(get, carbPct, protPct, fatPct)
@@ -72,151 +62,75 @@ export function DistribuyeStep({ plan, carbPct, protPct, fatPct, kcalAdjustment,
     [audit, foodGroups]
   )
 
-  const { data: loaded } = useQuery({
-    queryKey: ['meal-distribution', plan.planId],
-    queryFn: () => getMealDistribution(plan.planId),
-  })
+  const weights = DEFAULT_MEAL_SCHEDULE.map((s) => s.pct)
 
-  const [items, setItems] = useState<MealSlot[]>(DEFAULT_ITEMS)
-  const [saved, setSaved] = useState(false)
+  // Porciones por grupo x tiempo de comida, editables a mano — se inicializan
+  // con el reparto sugerido (distributePortions) pero el nutricionista puede
+  // ajustar cualquier celda. Es una referencia de planeación (no se persiste
+  // en el backend, que solo guarda el total de porciones por grupo del plan).
+  const [cellOverrides, setCellOverrides] = useState<number[][]>([])
 
   useEffect(() => {
-    if (loaded && loaded.length > 0) setItems(loaded)
-  }, [loaded])
+    setCellOverrides(smaeRows.map((row) => distributePortions(row.portions, weights)))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [smaeRows])
 
-  const saveMut = useMutation({
-    mutationFn: () => saveMealDistribution(plan.planId, items),
-    onSuccess: () => {
-      setSaved(true)
-      setTimeout(() => setSaved(false), 2000)
-    },
-  })
-
-  const sum = items.reduce((acc, i) => acc + i.pct, 0)
-  const isValid = Math.round(sum) === 100
-
-  function update(idx: number, field: keyof MealSlot, value: string | number) {
-    setItems((prev) => prev.map((it, i) => (i === idx ? { ...it, [field]: value } : it)))
-  }
-
-  function addSlot() {
-    setItems((prev) => [...prev, { tiempo: 'Nueva colación', pct: 0, horario: '' }])
-  }
-
-  function removeSlot(idx: number) {
-    setItems((prev) => prev.filter((_, i) => i !== idx))
+  function updateCell(ri: number, si: number, value: number) {
+    setCellOverrides((prev) => prev.map((row, r) => (r === ri ? row.map((v, s) => (s === si ? value : v)) : row)))
   }
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-      <Card className="overflow-x-auto lg:col-span-2">
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-text">Distribuye {get.toFixed(0)} kcal por tiempo de comida</h3>
-          <Button size="sm" variant="secondary" onClick={addSlot}>+ Agregar tiempo</Button>
-        </div>
-        <table className="w-full text-left text-xs">
-          <thead>
-            <tr className="border-b border-border text-text-3">
-              <th className="py-2 font-medium">Tiempo</th>
-              <th className="font-medium">Horario</th>
-              <th className="font-medium">%</th>
-              <th className="font-medium">Kcal</th>
-              <th className="font-medium">Prot</th>
-              <th className="font-medium">Carb</th>
-              <th className="font-medium">Grasa</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((slot, i) => {
-              const slotKcal = (get * slot.pct) / 100
-              const factor = slot.pct / 100
-              return (
-                <tr key={i} className="border-b border-border/60">
-                  <td className="py-2">
-                    <Input
-                      value={slot.tiempo}
-                      onChange={(e) => update(i, 'tiempo', e.target.value)}
-                      className="h-7 w-36 text-xs"
-                    />
-                  </td>
-                  <td>
-                    <Input
-                      type="time"
-                      value={slot.horario || ''}
-                      onChange={(e) => update(i, 'horario', e.target.value)}
-                      className="h-7 w-24 text-xs"
-                    />
-                  </td>
-                  <td>
-                    <Input
-                      type="number"
-                      min={0}
-                      max={100}
-                      value={slot.pct}
-                      onChange={(e) => update(i, 'pct', parseFloat(e.target.value) || 0)}
-                      className="h-7 w-16 text-center text-xs"
-                    />
-                  </td>
-                  <td className="text-text-2">{slotKcal.toFixed(0)}</td>
-                  <td className="text-text-2">{(protG * factor).toFixed(1)}g</td>
-                  <td className="text-text-2">{(carbG * factor).toFixed(1)}g</td>
-                  <td className="text-text-2">{(fatG * factor).toFixed(1)}g</td>
-                  <td>
-                    <Tooltip label="Quitar fila">
-                      <button onClick={() => removeSlot(i)} aria-label="Quitar fila" className="text-danger hover:opacity-70">×</button>
-                    </Tooltip>
-                  </td>
-                </tr>
-              )
-            })}
-            <tr className="font-semibold text-text">
-              <td className="py-2" colSpan={2}>TOTAL</td>
-              <td className={isValid ? 'text-accent' : 'text-warn'}>{sum.toFixed(0)}%</td>
-              <td colSpan={4} />
-            </tr>
-          </tbody>
-        </table>
-        {!isValid && (
-          <p className="mt-2 text-xs font-medium text-warn">
-            Los porcentajes deben sumar 100% (van {sum.toFixed(0)}%) para poder guardar y continuar.
-          </p>
-        )}
-      </Card>
-
       {smaeRows.length > 0 && (
         <Card className="overflow-x-auto lg:col-span-2">
-          <h3 className="mb-3 text-sm font-semibold text-text">Porciones SMAE por tiempo de comida</h3>
+          <h3 className="mb-1 text-sm font-semibold text-text">Porciones SMAE por tiempo de comida</h3>
+          <p className="mb-3 text-[11px] text-text-3">
+            Horario sugerido: {DEFAULT_MEAL_SCHEDULE.map((s) => `${s.tiempo} ${s.horario}`).join(' · ')}
+          </p>
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-border text-text-3">
                 <th className="py-2 font-medium">Grupo</th>
-                {items.map((slot, i) => (
-                  <th key={i} className="text-center font-medium">{slot.tiempo}</th>
+                {DEFAULT_MEAL_SCHEDULE.map((slot) => (
+                  <th key={slot.tiempo} className="text-center font-medium">{slot.tiempo}</th>
                 ))}
                 <th className="text-center font-medium">Total</th>
               </tr>
             </thead>
             <tbody>
               {smaeRows.map((row, ri) => {
-                const perSlot = distributePortions(row.portions, items.map((s) => s.pct))
+                const rowCells = cellOverrides[ri] ?? weights.map(() => 0)
+                const rowTotal = rowCells.reduce((a, b) => a + b, 0)
+                const mismatch = rowTotal !== row.portions
                 return (
                   <tr key={ri} className={`border-b border-border/60 ${row.portions === 0 ? 'opacity-50' : ''}`}>
                     <td className="py-2">
                       <span className="rounded bg-accent-light px-1.5 py-0.5 text-[10px] font-medium text-accent">{row.group}</span>
                       {row.subgroup && <span className="ml-1 text-text-3">{row.subgroup}</span>}
                     </td>
-                    {perSlot.map((p, si) => (
-                      <td key={si} className="text-center text-text-2">{p || '—'}</td>
+                    {rowCells.map((v, si) => (
+                      <td key={si} className="text-center">
+                        <Input
+                          type="number"
+                          min={0}
+                          value={v}
+                          onChange={(e) => updateCell(ri, si, Math.max(0, parseFloat(e.target.value) || 0))}
+                          className="h-7 w-14 text-center text-xs"
+                        />
+                      </td>
                     ))}
-                    <td className="text-center font-semibold text-text">{row.portions}</td>
+                    <td className={`text-center font-semibold ${mismatch ? 'text-warn' : 'text-text'}`}>
+                      {rowTotal}
+                      {mismatch && <span className="ml-0.5 text-[10px] font-normal">/{row.portions}</span>}
+                    </td>
                   </tr>
                 )
               })}
             </tbody>
           </table>
           <p className="mt-2 text-[11px] text-text-3">
-            Reparto sugerido de porciones SMAE según el % de cada tiempo de comida — ajusta el % arriba para redistribuir.
+            Reparto sugerido de porciones SMAE según el horario de cada tiempo de comida — ajusta cualquier celda a
+            mano. Cuando el total de una fila no coincide con las porciones del plan, se muestra en naranja.
           </p>
         </Card>
       )}
@@ -225,25 +139,13 @@ export function DistribuyeStep({ plan, carbPct, protPct, fatPct, kcalAdjustment,
         <Card>
           <h3 className="mb-2 text-sm font-semibold text-text">¿Para qué sirve este paso?</h3>
           <p className="text-xs text-text-2">
-            Define cuánta energía va en cada tiempo de comida y a qué hora se sugiere tomarlo. El generador de menú con
-            IA respetará esta distribución en vez de un reparto genérico — y puedes seguir ajustándola manualmente
-            en cualquier momento antes de generar el menú.
+            Reparte visualmente las porciones SMAE del plan entre los tiempos de comida y horarios fijos que también
+            verás en el menú generado — ajusta cualquier celda si quieres cambiar cuánto va en cada tiempo antes de
+            generar el menú con IA o desde tu acervo.
           </p>
         </Card>
 
-        <Button variant="secondary" loading={saveMut.isPending} disabled={!isValid} onClick={() => saveMut.mutate()} className="w-full">
-          {saved ? '✓ Distribución guardada' : '💾 Guardar distribución'}
-        </Button>
-
-        <Button
-          onClick={async () => {
-            if (!isValid) return
-            await saveMut.mutateAsync()
-            onContinue()
-          }}
-          disabled={!isValid}
-          className="w-full"
-        >
+        <Button onClick={onContinue} className="w-full">
           Continuar a Menú IA →
         </Button>
       </div>

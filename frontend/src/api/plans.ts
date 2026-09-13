@@ -1,5 +1,5 @@
 import { api } from './client'
-import type { AuditResponse, MealSlot, MicronutrientResult, PlanCreateResponse, PlanRequest, PlanSummary, PlanTemplate, RecipeMatchResult } from '../types'
+import type { AuditResponse, MicronutrientResult, PlanCreateResponse, PlanRequest, PlanSummary, PlanTemplate, RecipeMatchResult } from '../types'
 
 export async function createPlan(payload: PlanRequest) {
   const { data } = await api.post<PlanCreateResponse>('/plan', payload)
@@ -101,14 +101,4 @@ export async function getPlanConfig(planId: number) {
 export async function savePlanConfig(planId: number, config: PlanConfig) {
   const { data } = await api.put<PlanConfig>(`/plans/${planId}/config`, config)
   return data
-}
-
-export async function getMealDistribution(planId: number) {
-  const { data } = await api.get<{ items: MealSlot[] }>(`/plans/${planId}/meal-distribution`)
-  return data.items
-}
-
-export async function saveMealDistribution(planId: number, items: MealSlot[]) {
-  const { data } = await api.put<{ items: MealSlot[] }>(`/plans/${planId}/meal-distribution`, { items })
-  return data.items
 }
