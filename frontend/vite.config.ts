@@ -29,6 +29,8 @@ export default defineConfig(({ command }) => ({
       '/plan-preferences': 'http://127.0.0.1:8000',
       '/reference': 'http://127.0.0.1:8000',
       '/public': 'http://127.0.0.1:8000',
+      '/change-password': 'http://127.0.0.1:8000',
+      '/account': 'http://127.0.0.1:8000',
     },
   },
   build: {
