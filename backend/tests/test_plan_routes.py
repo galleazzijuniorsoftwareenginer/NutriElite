@@ -62,6 +62,16 @@ def test_can_link_a_plan_to_own_patient(client):
     assert pdf_resp.headers["content-type"] == "application/pdf"
 
 
+def test_plan_rejects_invalid_gender_goal_and_activity_level(client):
+    headers = _register_and_login(client, "plan_owner_enum")
+    patient_id = _create_patient(client, headers, "Paciente enum")
+
+    for field, bad_value in [("gender", "other"), ("goal", "shred"), ("activity_level", 3.5)]:
+        payload = {**PLAN_PAYLOAD, "patient_id": patient_id, field: bad_value}
+        resp = client.post("/plan", json=payload, headers=headers)
+        assert resp.status_code == 422, f"{field}={bad_value!r} debería ser rechazado"
+
+
 def test_delete_account_cascades_patient_data(client, db):
     from backend.models import Appointment, ClinicalRecord, Patient, User
 

@@ -42,6 +42,11 @@ def test_login_rate_limited_after_repeated_attempts(client):
     assert resp.status_code == 429
 
 
+def test_register_rejects_short_password(client):
+    resp = client.post("/register", json={"username": "route_user_short", "password": "abc12"})
+    assert resp.status_code == 422
+
+
 def test_forgot_password_same_response_for_real_and_fake_email(client):
     client.post("/register", json={"username": "route_user_d", "password": "supersecret1", "email": "route_user_d@example.com"})
 

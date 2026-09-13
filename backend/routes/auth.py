@@ -1,6 +1,6 @@
 from typing import Optional
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from passlib.context import CryptContext
 import jwt
 from datetime import datetime, timedelta
@@ -37,6 +37,13 @@ class UserRegister(BaseModel):
     password: str
     email: str = None
     role: str = "professional"  # professional|student
+
+    @field_validator("password")
+    @classmethod
+    def password_min_length(cls, v: str) -> str:
+        if len(v) < 6:
+            raise ValueError("La contraseña debe tener al menos 6 caracteres")
+        return v
 
 class UserLogin(BaseModel):
     username: str

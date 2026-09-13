@@ -59,9 +59,9 @@ class PlanRequest(BaseModel):
     weight: float
     height: float
     age: int
-    gender: str
-    activity_level: float
-    goal: str
+    gender: Literal["male", "female"]
+    activity_level: Literal[1.2, 1.375, 1.55, 1.725, 1.9]
+    goal: Literal["cut", "maintenance", "bulk"]
     formula: Literal["mifflin", "harris", "schofield", "katch", "cunningham"]
     body_fat_percent: Optional[float] = None
     patient_id: Optional[int] = None
