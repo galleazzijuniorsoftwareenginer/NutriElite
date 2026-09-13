@@ -70,9 +70,15 @@ def search_food(query: str) -> dict | None:
     found nothing (or no API key is configured — same as "nothing to look
     up"). Raises USDALookupError if the request itself failed, so callers
     can tell "confirmed absent" apart from "couldn't check right now"."""
-    api_key = get_api_key()
-    if not api_key or not query.strip():
+    if not query.strip():
         return None
+    api_key = get_api_key()
+    if not api_key:
+        # Not configured is not the same as "confirmed absent from USDA" —
+        # raise so callers don't cache this as a permanent non-match. Without
+        # this, an ingredient looked up before USDA_FDC_API_KEY was set would
+        # stay incorrectly blacklisted forever, even after the key is added.
+        raise USDALookupError("USDA_FDC_API_KEY no configurada")
     try:
         resp = requests.get(
             FDC_SEARCH_URL,

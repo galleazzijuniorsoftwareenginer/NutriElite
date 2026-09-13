@@ -11,7 +11,7 @@ const HIGHLIGHT_FIELDS = [
 ]
 
 export function RecipeMicrosPanel({ recipeId }: { recipeId: number }) {
-  const [showAll, setShowAll] = useState(false)
+  const [showAll, setShowAll] = useState(true)
   const { data: micros, isLoading, isError } = useQuery({
     queryKey: ['recipe-micronutrients', recipeId],
     queryFn: () => getRecipeMicronutrients(recipeId),
