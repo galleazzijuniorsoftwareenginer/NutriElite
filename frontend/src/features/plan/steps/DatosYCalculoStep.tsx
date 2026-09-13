@@ -310,7 +310,7 @@ export function DatosYCalculoStep({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
       {!plan && (
         <Card>
           <h2 className="mb-4 text-sm font-semibold text-text">Datos del paciente</h2>

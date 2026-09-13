@@ -3,8 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useParams, useSearchParams } from 'react-router-dom'
 import clsx from 'clsx'
 import { getPlan, listTemplates } from '../../api/plans'
-import { DatosStep } from './steps/DatosStep'
-import { DietocalculoStep } from './steps/DietocalculoStep'
+import { DatosYCalculoStep } from './steps/DatosYCalculoStep'
 import { AuditoriaStep } from './steps/AuditoriaStep'
 import { DistribuyeStep } from './steps/DistribuyeStep'
 import { MenuStep } from './steps/MenuStep'
@@ -14,8 +13,8 @@ import type { Formula, WeeklyMenu } from '../../types'
 import { useTourStore } from '../../store/tourStore'
 import { PLAN_WIZARD_TOUR_ID, planWizardTourSteps } from '../../tours/planWizardTour'
 
-const STEPS = ['Datos', 'Dietocálculo', 'Auditoría SMAE', 'Distribuye', 'Menú IA', 'Resumen y PDF']
-const STEP_TOUR_IDS = ['wizard-step-datos', 'wizard-step-dietocalculo', 'wizard-step-auditoria', 'wizard-step-distribuye', 'wizard-step-menu', 'wizard-step-resumen']
+const STEPS = ['Datos y Cálculo', 'Auditoría SMAE', 'Distribuye', 'Menú IA', 'Resumen y PDF']
+const STEP_TOUR_IDS = ['wizard-step-datos', 'wizard-step-auditoria', 'wizard-step-distribuye', 'wizard-step-menu', 'wizard-step-resumen']
 
 export function PlanWizardPage() {
   const { planId: planIdParam } = useParams()
@@ -82,11 +81,11 @@ export function PlanWizardPage() {
       // regenerarlo desde cero al reabrir el plan.
       if (existingPlan.weekly_menu?.semana?.length) {
         setWeeklyMenu(existingPlan.weekly_menu)
-        setMaxStep(5)
-        setStep(4)
+        setMaxStep(4)
+        setStep(3)
       } else {
-        setMaxStep(2)
-        setStep(1)
+        setMaxStep(1)
+        setStep(0)
       }
     }
   }, [existingPlan])
@@ -97,8 +96,6 @@ export function PlanWizardPage() {
 
   function handlePlanCreated(p: WizardPlanData) {
     setPlan(p)
-    setMaxStep(1)
-    setStep(1)
   }
 
   return (
@@ -141,34 +138,29 @@ export function PlanWizardPage() {
       </div>
 
       {step === 0 && (
-        <DatosStep
+        <DatosYCalculoStep
           initial={{
             patientId: searchParams.get('patientId') ? Number(searchParams.get('patientId')) : null,
             patientName: searchParams.get('name') || '',
             patientEmail: searchParams.get('email') || '',
             patientPhone: searchParams.get('phone') || '',
           }}
-          onCreated={handlePlanCreated}
-        />
-      )}
-
-      {step === 1 && plan && (
-        <DietocalculoStep
           plan={plan}
           carbPct={pct.carbPct}
           protPct={pct.protPct}
           fatPct={pct.fatPct}
           kcalAdjustment={kcalAdjustment}
+          onCreated={handlePlanCreated}
           onChangePct={(p) => setPct((prev) => ({ ...prev, ...p }))}
           onChangeAdjustment={setKcalAdjustment}
           onContinue={() => {
-            setMaxStep((m) => Math.max(m, 2))
-            setStep(2)
+            setMaxStep((m) => Math.max(m, 1))
+            setStep(1)
           }}
         />
       )}
 
-      {step === 2 && plan && (
+      {step === 1 && plan && (
         <AuditoriaStep
           plan={plan}
           carbPct={pct.carbPct}
@@ -177,13 +169,13 @@ export function PlanWizardPage() {
           kcalAdjustment={kcalAdjustment}
           onAdjustPct={setPct}
           onContinue={() => {
-            setMaxStep((m) => Math.max(m, 3))
-            setStep(3)
+            setMaxStep((m) => Math.max(m, 2))
+            setStep(2)
           }}
         />
       )}
 
-      {step === 3 && plan && (
+      {step === 2 && plan && (
         <DistribuyeStep
           plan={plan}
           carbPct={pct.carbPct}
@@ -191,25 +183,25 @@ export function PlanWizardPage() {
           fatPct={pct.fatPct}
           kcalAdjustment={kcalAdjustment}
           onContinue={() => {
-            setMaxStep((m) => Math.max(m, 4))
-            setStep(4)
+            setMaxStep((m) => Math.max(m, 3))
+            setStep(3)
           }}
         />
       )}
 
-      {step === 4 && plan && (
+      {step === 3 && plan && (
         <MenuStep
           plan={plan}
           weeklyMenu={weeklyMenu}
           onMenuReady={(menu) => {
             setWeeklyMenu(menu)
-            setMaxStep((m) => Math.max(m, 5))
+            setMaxStep((m) => Math.max(m, 4))
           }}
-          onContinue={() => setStep(5)}
+          onContinue={() => setStep(4)}
         />
       )}
 
-      {step === 5 && plan && (
+      {step === 4 && plan && (
         <ResumenStep
           plan={plan}
           carbPct={pct.carbPct}
