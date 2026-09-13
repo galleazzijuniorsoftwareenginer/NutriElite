@@ -1,8 +1,6 @@
 import { useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { pdfDownloadUrl, saveAsTemplate, sharePlan } from '../../../api/plans'
-import { getProfile } from '../../../api/profile'
 import { Card } from '../../../components/Card'
 import { Button } from '../../../components/Button'
 import { Input } from '../../../components/Field'
@@ -23,7 +21,6 @@ interface Props {
 export function ResumenStep({ plan, carbPct, protPct, fatPct, kcalAdjustment, weeklyMenu }: Props) {
   const token = useAuthStore((s) => s.token)
   const queryClient = useQueryClient()
-  const { data: profile } = useQuery({ queryKey: ['profile'], queryFn: getProfile })
   const [shareUrl, setShareUrl] = useState('')
   const [sharing, setSharing] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -144,29 +141,6 @@ export function ResumenStep({ plan, carbPct, protPct, fatPct, kcalAdjustment, we
           </Button>
         </div>
         {templateSaved && <p className="text-[11px] font-medium text-accent">✓ Plantilla guardada</p>}
-      </Card>
-
-      <Card className="flex flex-col gap-3">
-        <h3 className="text-sm font-semibold text-text">Logo de marca</h3>
-        <p className="text-xs text-text-2">
-          {profile?.logo_base64
-            ? 'Tu logo aparece en el encabezado del PDF.'
-            : 'Sube tu logo en el perfil para que aparezca en el encabezado del PDF.'}
-        </p>
-        <div className="flex items-center gap-3">
-          {profile?.logo_base64 ? (
-            <img src={profile.logo_base64} alt="Logo" className="h-12 w-12 rounded-full border border-border object-cover" />
-          ) : (
-            <div className="flex h-12 w-12 items-center justify-center rounded-full border border-dashed border-border-strong text-[9px] text-text-3">
-              Sin logo
-            </div>
-          )}
-          <Link to="/configuracion?tab=perfil" className="flex-1">
-            <Button variant="secondary" className="w-full">
-              {profile?.logo_base64 ? 'Cambiar logo →' : 'Configurar mi logo →'}
-            </Button>
-          </Link>
-        </div>
       </Card>
 
       <Card className="flex flex-col gap-3 lg:col-span-3">
