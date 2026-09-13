@@ -77,7 +77,7 @@ The frontend's router uses `basename="/app"` in production (`import.meta.env.PRO
 backend/
   main.py                  # App init, route registration, DB seeding + Postgres-only migrations on startup
   database.py              # SQLAlchemy engine + session, env-based DB URL
-  models.py                # ORM: User, Patient, Plan, FoodGroup, FitnessReference, PlanFoodGroup, NutritionistProfile, ClinicalRecord, Consultation, RenalAssessment, Appointment, Recipe, Classroom, ClassroomEnrollment, PathologyTemplate, RecipeFavorite, PlanPreferences, FoodLogEntry, IngredientNutrient
+  models.py                # ORM: User (incl. email_reminders_enabled/locale/timezone account settings), Patient, Plan, FoodGroup, FitnessReference, PlanFoodGroup, NutritionistProfile, ClinicalRecord, Consultation, RenalAssessment, Appointment, Recipe, Classroom, ClassroomEnrollment, PathologyTemplate, RecipeFavorite, PlanPreferences, FoodLogEntry, IngredientNutrient
   schemas/
     plan.py                # Pydantic request validation for plans
     clinical.py            # Pydantic schemas for clinical record, consultations (incl. GLIM inputs), renal assessment
@@ -86,7 +86,7 @@ backend/
     classroom.py           # Pydantic schemas for classrooms/enrollments
     food_log.py            # Pydantic schemas for the patient food diary (FoodLogEntry)
   routes/
-    auth.py                # Register (role professional|student), login, JWT (verify_token for headers, verify_token_str for SSE query params)
+    auth.py                # Register (role professional|student), login, JWT (verify_token for headers, verify_token_str for SSE query params), account settings (email reminders toggle, locale, timezone), change password, export data, delete account
     calculator.py          # Plan CRUD, audit, PDF, AI menu (sync + SSE stream + per-day regen), plan sharing (/plans/{id}/share)
     patients.py            # Patient CRUD + per-patient plan history
     clinical.py            # Clinical record, consultations, AI lab extraction, renal (KDOQI) assessment, GLIM malnutrition screening, nutritionist's view of the food diary

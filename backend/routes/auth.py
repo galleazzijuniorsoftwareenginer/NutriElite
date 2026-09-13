@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from passlib.context import CryptContext
@@ -46,6 +47,11 @@ class ChangePassword(BaseModel):
 
 class AccountDeleteConfirm(BaseModel):
     password: str
+
+class AccountSettingsUpdate(BaseModel):
+    email_reminders_enabled: Optional[bool] = None
+    locale: Optional[str] = None
+    timezone: Optional[str] = None
 
 def hash_password(password: str):
     password = password[:72]
@@ -129,6 +135,9 @@ def get_me(token: dict = Depends(verify_token), db: Session = Depends(get_db)):
         "is_pro": bool(user.is_pro),
         "first_login": first,
         "role": user.role or "professional",
+        "email_reminders_enabled": user.email_reminders_enabled if user.email_reminders_enabled is not None else True,
+        "locale": user.locale or "es",
+        "timezone": user.timezone or "America/Mexico_City",
     }
 
 @router.post("/login")
@@ -159,6 +168,21 @@ def change_password(payload: ChangePassword, token: dict = Depends(verify_token)
     user.password = hash_password(payload.new_password)
     db.commit()
     return {"message": "Contraseña actualizada"}
+
+
+@router.put("/account/settings")
+def update_account_settings(payload: AccountSettingsUpdate, token: dict = Depends(verify_token), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == token["sub"]).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    for field, value in payload.model_dump(exclude_unset=True).items():
+        setattr(user, field, value)
+    db.commit()
+    return {
+        "email_reminders_enabled": user.email_reminders_enabled,
+        "locale": user.locale,
+        "timezone": user.timezone,
+    }
 
 
 @router.get("/export-data")

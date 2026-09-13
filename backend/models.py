@@ -16,6 +16,9 @@ class User(Base):
     plans_this_month = Column(Integer, default=0)
     plans_month_reset = Column(String, nullable=True)
     role = Column(String, default="professional")  # professional|student
+    email_reminders_enabled = Column(Boolean, default=True)
+    locale = Column(String, default="es")  # es|en|pt
+    timezone = Column(String, default="America/Mexico_City")
 
 
 

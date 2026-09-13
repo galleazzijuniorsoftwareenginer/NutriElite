@@ -64,7 +64,7 @@ def create_appointment(data: AppointmentCreate, db: Session = Depends(get_db), t
     db.commit()
     db.refresh(appt)
 
-    if patient.email:
+    if patient.email and user.email_reminders_enabled is not False:
         _send_appointment_email(
             patient.email,
             "Cita confirmada — NutriElite",

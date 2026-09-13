@@ -6,6 +6,15 @@ export interface MeResponse {
   is_pro: boolean
   first_login: boolean
   role: UserRole
+  email_reminders_enabled: boolean
+  locale: string
+  timezone: string
+}
+
+export interface AccountSettings {
+  email_reminders_enabled: boolean
+  locale: string
+  timezone: string
 }
 
 export async function login(username: string, password: string) {
@@ -40,6 +49,11 @@ export async function changePassword(currentPassword: string, newPassword: strin
 
 export async function exportData() {
   const { data } = await api.get('/export-data')
+  return data
+}
+
+export async function updateAccountSettings(payload: Partial<AccountSettings>) {
+  const { data } = await api.put<AccountSettings>('/account/settings', payload)
   return data
 }
 
