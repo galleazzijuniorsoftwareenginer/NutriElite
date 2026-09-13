@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Logo } from '../../components/Logo'
+import { LanguageSelector } from '../../components/LanguageSelector'
 
 function PlanPreviewCard() {
   const macros = [
@@ -62,7 +63,10 @@ export function AuthLayout({ title, subtitle, children }: { title: string; subti
             backgroundSize: '48px 48px',
           }}
         />
-        <Logo size={30} dark />
+        <div className="relative flex items-center justify-between">
+          <Logo size={30} dark />
+          <LanguageSelector dark />
+        </div>
 
         <div className="relative max-w-md">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-[11px] font-medium tracking-wide text-deep-text-2">
@@ -88,8 +92,9 @@ export function AuthLayout({ title, subtitle, children }: { title: string; subti
 
       <div className="flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-sm">
-          <div className="mb-8 lg:hidden">
+          <div className="mb-8 flex items-center justify-between lg:hidden">
             <Logo size={28} />
+            <LanguageSelector />
           </div>
           <h1 className="text-balance font-display text-[1.75rem] font-semibold tracking-tight text-text">{title}</h1>
           <p className="mt-1.5 text-sm text-text-2">{subtitle}</p>
