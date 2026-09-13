@@ -2,55 +2,6 @@ import type { ReactNode } from 'react'
 import { Logo } from '../../components/Logo'
 import { LanguageSelector } from '../../components/LanguageSelector'
 
-function PlanPreviewCard() {
-  const macros = [
-    { key: 'carb', label: 'Carb', grams: 220, pct: 45, color: 'var(--color-carb)' },
-    { key: 'prot', label: 'Prot', grams: 145, pct: 30, color: 'var(--color-prot)' },
-    { key: 'fat', label: 'Grasa', grams: 55, pct: 25, color: 'var(--color-fat)' },
-  ]
-  const rows = [
-    { group: 'Cereales y tubérculos', portions: '6 porciones' },
-    { group: 'Alimentos de origen animal', portions: '5 porciones' },
-  ]
-
-  return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 shadow-float backdrop-blur-sm">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <p className="text-xs text-deep-text-2/80">Plan activo</p>
-          <p className="mt-0.5 font-display text-sm font-semibold text-deep-text">Paciente · Pérdida de peso</p>
-        </div>
-        <span className="shrink-0 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-deep-text">
-          1,840&nbsp;kcal
-        </span>
-      </div>
-
-      <div className="mt-4 flex h-2 gap-[2px] overflow-hidden rounded-full bg-white/10">
-        {macros.map((m) => (
-          <div key={m.key} className="rounded-full" style={{ width: `${m.pct}%`, background: m.color }} />
-        ))}
-      </div>
-      <div className="mt-2 flex justify-between text-[11px] text-deep-text-2">
-        {macros.map((m) => (
-          <span key={m.key} className="flex items-center gap-1.5">
-            <span className="h-1.5 w-1.5 rounded-full" style={{ background: m.color }} />
-            {m.label} {m.grams}g
-          </span>
-        ))}
-      </div>
-
-      <div className="mt-4 flex flex-col gap-1.5 border-t border-white/10 pt-3.5">
-        {rows.map((row) => (
-          <div key={row.group} className="flex items-center justify-between text-xs">
-            <span className="text-deep-text-2">{row.group}</span>
-            <span className="font-medium text-deep-text">{row.portions}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
 export function AuthLayout({ title, subtitle, children }: { title: string; subtitle: string; children: ReactNode }) {
   return (
     <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
@@ -82,9 +33,6 @@ export function AuthLayout({ title, subtitle, children }: { title: string; subti
             Cálculo metabólico, distribución SMAE y menús semanales generados por IA en tiempo real — todo en un
             solo flujo pensado para nutricionistas clínicos.
           </p>
-          <div className="mt-7">
-            <PlanPreviewCard />
-          </div>
         </div>
 
         <p className="relative text-xs text-deep-text-2/70">© {new Date().getFullYear()} NutriElite</p>

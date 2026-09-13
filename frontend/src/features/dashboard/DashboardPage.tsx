@@ -255,9 +255,6 @@ export function DashboardPage() {
               : 'Empieza generando tu primer plan — el cardápio semanal con IA se genera en segundos.'}
           </p>
         </div>
-        <Link to="/plan/nuevo" className="relative">
-          <Button variant="ai">✨ Nuevo plan con IA</Button>
-        </Link>
       </Card>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
