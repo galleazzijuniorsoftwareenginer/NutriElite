@@ -42,6 +42,8 @@ ES_EN_FOOD_TERMS = {
     "pan integral": "whole wheat bread", "pan blanco": "white bread",
     "tortilla": "tortilla", "tortilla de maiz": "corn tortilla",
     "tortilla de harina": "flour tortilla", "pasta": "pasta",
+    "pasta integral": "whole wheat pasta", "avena en hojuelas": "rolled oats",
+    "lechuga romana": "romaine lettuce", "miel de abeja": "honey",
     "papa": "potato", "camote": "sweet potato", "elote": "corn",
     "maiz": "corn", "quinoa": "quinoa",
     "manzana": "apple", "platano": "banana", "fresas": "strawberries",
@@ -49,6 +51,8 @@ ES_EN_FOOD_TERMS = {
     "papaya": "papaya", "melon": "melon", "sandia": "watermelon",
     "uvas": "grapes", "pina": "pineapple", "kiwi": "kiwi",
     "aguacate": "avocado", "limon": "lime", "toronja": "grapefruit",
+    "guayaba": "guava", "aceitunas": "olives", "esparragos": "asparagus",
+    "nopal": "nopales", "nopales": "nopales",
     "jitomate": "tomato", "tomate": "tomato", "cebolla": "onion",
     "lechuga": "lettuce", "espinaca": "spinach", "espinacas": "spinach",
     "brocoli": "broccoli", "zanahoria": "carrot", "pepino": "cucumber",
@@ -56,7 +60,8 @@ ES_EN_FOOD_TERMS = {
     "calabacita": "zucchini", "calabaza": "squash", "champinones": "mushrooms",
     "ajo": "garlic", "apio": "celery", "col": "cabbage",
     "aceite de oliva": "olive oil", "aceite vegetal": "vegetable oil",
-    "aceite de coco": "coconut oil", "almendras": "almonds", "nueces": "walnuts",
+    "aceite de coco": "coconut oil", "almendras": "almonds", "almendra": "almond",
+    "nueces": "walnuts", "nuez": "walnut",
     "cacahuate": "peanuts", "cacahuates": "peanuts",
     "crema de cacahuate": "peanut butter", "chia": "chia seeds",
     "linaza": "flaxseed", "ajonjoli": "sesame seeds",
@@ -64,6 +69,29 @@ ES_EN_FOOD_TERMS = {
     "salsa de soya": "soy sauce", "vinagre": "vinegar",
     "cafe": "coffee", "te": "tea", "canela": "cinnamon",
 }
+
+
+# Cooking/preparation descriptors that Recipe/AI-menu ingredient names often
+# append (e.g. "Pechuga de pollo a la plancha", "Zanahoria cruda") — stripped
+# before dict lookup so the base food still matches. This only changes what
+# text we search USDA with, never the nutrient values themselves.
+DESCRIPTOR_SUFFIXES = [
+    "a la plancha", "a la parrilla", "a la mexicana", "al vapor", "al horno",
+    "en agua", "en su jugo", "en polvo", "en trozos", "en cubos", "en rodajas",
+    "en tiras", "en rebanadas",
+    "cocido", "cocida", "cocidos", "cocidas",
+    "asado", "asada", "asados", "asadas",
+    "salteado", "salteada", "salteados", "salteadas",
+    "frito", "frita", "fritos", "fritas",
+    "horneado", "horneada", "horneados", "horneadas",
+    "crudo", "cruda", "crudos", "crudas",
+    "picado", "picada", "picados", "picadas",
+    "rallado", "rallada", "rallados", "ralladas",
+    "molido", "molida", "molidos", "molidas",
+    "descremada", "descremado", "deslactosada", "deslactosado",
+    "light", "natural",
+    "roja", "rojo", "verde", "amarilla", "amarillo",
+]
 
 
 def normalize_ingredient(name: str) -> str:
@@ -76,22 +104,48 @@ def normalize_ingredient(name: str) -> str:
     return re.sub(r"\s+", " ", text).strip()
 
 
+def _strip_descriptors(normalized: str) -> str:
+    """Repeatedly strips a trailing known cooking/prep descriptor, so
+    "pechuga de pollo a la plancha" reduces to "pechuga de pollo" before we
+    try to translate/search it."""
+    result = normalized
+    changed = True
+    while changed:
+        changed = False
+        for suffix in DESCRIPTOR_SUFFIXES:
+            if result != suffix and result.endswith(" " + suffix):
+                result = result[: -(len(suffix) + 1)].strip()
+                changed = True
+                break
+    return result
+
+
 def _to_search_query(normalized: str) -> str:
-    return ES_EN_FOOD_TERMS.get(normalized, normalized)
+    if normalized in ES_EN_FOOD_TERMS:
+        return ES_EN_FOOD_TERMS[normalized]
+    stripped = _strip_descriptors(normalized)
+    return ES_EN_FOOD_TERMS.get(stripped, stripped)
 
 
 def get_or_fetch(db: Session, alimento: str) -> IngredientNutrient:
     """Cache-aside lookup: returns the cached row if present, otherwise
     queries USDA once, stores the result (matched or not) and returns it.
-    A stored matched=False row means "we looked, no confident match" — it's
-    cached too, so a genuinely-unmatched ingredient isn't re-queried on
-    every single request."""
+    A stored matched=False row means "we looked, USDA responded, no
+    confident match" — cached so a genuinely-unmatched ingredient isn't
+    re-queried on every request. A *transient* failure (timeout, rate limit,
+    network error) is deliberately NOT cached as a non-match — see
+    usda_client.USDALookupError — so a temporary hiccup doesn't permanently
+    blacklist a perfectly common ingredient; the next call just retries."""
     normalized = normalize_ingredient(alimento)
     existing = db.query(IngredientNutrient).filter_by(alimento_normalizado=normalized).first()
     if existing:
         return existing
 
-    food = usda_client.search_food(_to_search_query(normalized))
+    try:
+        food = usda_client.search_food(_to_search_query(normalized))
+    except usda_client.USDALookupError:
+        return IngredientNutrient(alimento_normalizado=normalized, alimento_original=alimento, matched=False)
+
     if food is None:
         row = IngredientNutrient(
             alimento_normalizado=normalized,

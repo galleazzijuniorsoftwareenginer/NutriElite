@@ -57,6 +57,31 @@ def test_get_or_fetch_unmatched_is_cached_as_such(db):
         assert mock_search.call_count == 1
 
 
+def test_get_or_fetch_transient_failure_is_not_cached(db):
+    from backend.services.usda_client import USDALookupError
+
+    db.query(IngredientNutrient).delete()
+    db.commit()
+
+    with patch.object(ms.usda_client, "search_food", side_effect=USDALookupError("timeout")) as mock_search:
+        row1 = ms.get_or_fetch(db, "Aceite de oliva")
+        assert row1.matched is False
+        assert row1.id is None  # never persisted
+
+    # A later, successful lookup for the same ingredient must actually hit
+    # USDA again — proving the transient failure did not poison the cache.
+    with patch.object(ms.usda_client, "search_food", return_value=_fake_usda_food(description="Olive oil")) as mock_search:
+        row2 = ms.get_or_fetch(db, "Aceite de oliva")
+        assert row2.matched is True
+        assert mock_search.call_count == 1
+
+
+def test_descriptor_suffixes_are_stripped_before_translation():
+    assert ms._to_search_query(ms.normalize_ingredient("Pechuga de pollo a la plancha")) == "chicken breast"
+    assert ms._to_search_query(ms.normalize_ingredient("Zanahoria cruda")) == "carrot"
+    assert ms._to_search_query(ms.normalize_ingredient("Arroz integral cocido")) == "brown rice"
+
+
 def test_calculate_plan_micronutrients_scales_by_grams_and_reports_gaps(db):
     db.query(IngredientNutrient).delete()
     db.commit()
