@@ -60,3 +60,20 @@ def test_day_total_inconsistent_with_macros_kcal_total_raises():
     day = _day(comida_kcal=300, item_kcal=300, item_qty=80, kcal_total=1500)
     with pytest.raises(ValueError, match="del día"):
         _validate_day_json(day)
+
+
+def test_restricted_ingredient_raises():
+    day = _day(300, 300, item_qty=80)
+    with pytest.raises(ValueError, match="restringido"):
+        _validate_day_json(day, restricted_ingredients=["avena"])
+
+
+def test_restricted_ingredient_matches_as_substring_case_insensitive():
+    day = _day(300, 300, item_qty=80)
+    day["comidas"][0]["itens"][0]["alimento"] = "Avena con frutas tropicales"
+    with pytest.raises(ValueError, match="restringido"):
+        _validate_day_json(day, restricted_ingredients=["AVENA"])
+
+
+def test_unrelated_restriction_does_not_raise():
+    _validate_day_json(_day(300, 300, item_qty=80), restricted_ingredients=["camarón"])

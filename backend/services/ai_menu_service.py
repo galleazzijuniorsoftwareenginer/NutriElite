@@ -228,13 +228,28 @@ KCAL_SUM_TOLERANCE_PCT = 0.35
 KCAL_SUM_TOLERANCE_ABS = 80
 
 
-def _validate_day_json(parsed: dict) -> None:
+def _find_restricted_ingredient(alimento: str, restricted_ingredients: list) -> str | None:
+    """Coincidencia por substring, insensible a mayúsculas/acentos simples —
+    el modelo puede nombrar el alimento con variaciones ('Jitomate' vs
+    'jitomates picados'), así que una comparación exacta dejaría pasar
+    restricciones reales."""
+    lower = alimento.lower()
+    for ingredient in restricted_ingredients:
+        if ingredient and ingredient.lower() in lower:
+            return ingredient
+    return None
+
+
+def _validate_day_json(parsed: dict, restricted_ingredients: list | None = None) -> None:
     """El modelo a veces omite quantidade_g en algún alimento (JSON válido
     pero incompleto) — eso pasaba silenciosamente y el PDF mostraba "—g".
     También valida plausibilidad nutricional básica: densidad calórica
     físicamente imposible por alimento, y consistencia entre la suma de los
     itens y el kcal declarado por tiempo de comida y por día — antes de esto
-    solo se validaba la forma del JSON, nunca si los números tenían sentido."""
+    solo se validaba la forma del JSON, nunca si los números tenían sentido.
+    También aplica como filtro duro los ingredientes restringidos del paciente
+    (alergia/intolerancia): antes solo se le pedía al modelo por prompt que
+    los evitara, sin verificar que realmente lo hiciera."""
     comidas = parsed.get("comidas")
     if not comidas:
         raise ValueError("Respuesta sin comidas")
@@ -252,8 +267,13 @@ def _validate_day_json(parsed: dict) -> None:
             qty = item.get("quantidade_g")
             if not isinstance(qty, (int, float)) or qty <= 0:
                 raise ValueError(f"Alimento sin quantidade_g válido: {item.get('alimento')}")
-            if not item.get("alimento"):
+            alimento = item.get("alimento")
+            if not alimento:
                 raise ValueError("Alimento sin nombre")
+            if restricted_ingredients:
+                hit = _find_restricted_ingredient(alimento, restricted_ingredients)
+                if hit:
+                    raise ValueError(f"Alimento '{alimento}' contiene el ingrediente restringido '{hit}'")
 
             kcal = item.get("kcal")
             if isinstance(kcal, (int, float)) and kcal > 0:
@@ -358,7 +378,7 @@ Responde SOLO con JSON:
         text = call_claude_with_retry(prompt, api_key, retries=0)
         try:
             parsed = json.loads(text)
-            _validate_day_json(parsed)
+            _validate_day_json(parsed, restricted_ingredients)
             return parsed
         except (json.JSONDecodeError, ValueError) as e:
             last_error = e
