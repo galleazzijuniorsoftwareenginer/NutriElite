@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import clsx from 'clsx'
 import { generateAcervoMenu, regenerateDay, streamWeeklyMenu, updateMenuDayManual } from '../../../api/menu'
 import { getPlanConfig, getRecipeMatches, savePlanConfig, type PlanConfig } from '../../../api/plans'
+import { horarioForTiempo } from '../mealSchedule'
 import { getRecipe } from '../../../api/recipes'
 import type { MenuDay, MenuItem, WeeklyMenu } from '../../../types'
 import { Card } from '../../../components/Card'
@@ -431,7 +432,12 @@ export function MenuStep({ plan, weeklyMenu, onMenuReady, onContinue }: Props) {
                   {displayDay.comidas.map((meal, mi) => (
                     <div key={mi} className="rounded-md border border-border p-3">
                       <div className="mb-1.5 flex items-center justify-between text-xs">
-                        <span className="font-semibold text-text">{meal.tiempo}</span>
+                        <span className="flex items-baseline gap-1.5">
+                          <span className="font-semibold text-text">{meal.tiempo}</span>
+                          {horarioForTiempo(meal.tiempo) && (
+                            <span className="text-[11px] font-normal text-text-3">· {horarioForTiempo(meal.tiempo)}</span>
+                          )}
+                        </span>
                         <span className="text-text-3">
                           {editMode ? meal.itens.reduce((a, it) => a + (Number(it.kcal) || 0), 0) : meal.kcal} kcal
                         </span>
@@ -495,11 +501,10 @@ export function MenuStep({ plan, weeklyMenu, onMenuReady, onContinue }: Props) {
                       ) : (
                         <ul className="flex flex-col gap-1">
                           {meal.itens.map((item, ii) => (
-                            <li key={ii} className="flex items-center justify-between text-xs text-text-2">
-                              <span>{item.alimento}</span>
-                              <span className="text-text-3">
-                                {item.quantidade_g}g · {item.kcal} kcal
-                              </span>
+                            <li key={ii} className="flex items-center gap-2 text-xs text-text-2">
+                              <span className="w-14 shrink-0 text-center font-medium text-text-3">{item.quantidade_g}g</span>
+                              <span className="flex-1">{item.alimento}</span>
+                              <span className="shrink-0 text-text-3">{item.kcal} kcal</span>
                             </li>
                           ))}
                         </ul>

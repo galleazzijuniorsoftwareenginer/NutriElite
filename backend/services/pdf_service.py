@@ -25,6 +25,13 @@ from reportlab.graphics.widgets.markers import makeMarker
 
 from backend.services.smae_calculation_service import SMAECalculationService
 from backend.services.shopping_list_service import build_shopping_list
+from backend.services.ai_menu_service import DEFAULT_MEAL_DISTRIBUTION
+
+_HORARIO_BY_TIEMPO = {slot["tiempo"]: slot["horario"] for slot in DEFAULT_MEAL_DISTRIBUTION}
+
+
+def _horario_for_tiempo(tiempo: str) -> str | None:
+    return _HORARIO_BY_TIEMPO.get(tiempo)
 
 # ---------- Paleta Aurora de Datos (backend/frontend/src/index.css) ----------
 ACCENT = colors.HexColor("#6d5bff")
@@ -408,21 +415,25 @@ def generate_plan_pdf(plan, menu_data=None, perfil_data=None, override_plan=None
         for dia in menu_data["semana"]:
             elements.append(Paragraph(dia["dia"], styles["day"]))
             for comida in dia.get("comidas", []):
+                tiempo = comida.get("tiempo", comida.get("tempo", ""))
+                horario = _horario_for_tiempo(tiempo)
+                tiempo_label = f"{tiempo} · {horario}" if horario else tiempo
                 elements.append(Paragraph(
-                    f"{comida.get('tiempo', comida.get('tempo', ''))} — {comida.get('kcal', '')} kcal",
+                    f"{tiempo_label} — {comida.get('kcal', '')} kcal",
                     styles["meal"],
                 ))
-                meal_rows = [["", "Alimento", "Cantidad", "Kcal"]]
+                meal_rows = [["", "Cantidad", "Alimento", "Kcal"]]
                 for item in comida.get("itens", comida.get("items", [])):
                     thumb = _fetch_thumbnail(item.get("imagen_url"))
                     qty = item.get("quantidade_g") or item.get("qty", "—")
-                    meal_rows.append([thumb or "", item.get("alimento", ""), f"{qty}g", f"{item.get('kcal', '—')} kcal"])
-                meal_table = Table(meal_rows, colWidths=[38, content_width - 38 - 90 - 80, 90, 80])
+                    meal_rows.append([thumb or "", f"{qty}g", item.get("alimento", ""), f"{item.get('kcal', '—')} kcal"])
+                meal_table = Table(meal_rows, colWidths=[38, 60, content_width - 38 - 60 - 80, 80])
                 meal_table.setStyle(TableStyle([
                     ("BACKGROUND", (0, 0), (-1, 0), ACCENT_2_LIGHT),
                     ("GRID", (0, 0), (-1, -1), 0.4, BORDER),
                     ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-                    ("ALIGN", (2, 1), (-1, -1), "CENTER"),
+                    ("ALIGN", (1, 1), (1, -1), "CENTER"),
+                    ("ALIGN", (3, 1), (3, -1), "CENTER"),
                     ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
                     ("TEXTCOLOR", (0, 0), (-1, -1), TEXT_DARK),
                 ]))
