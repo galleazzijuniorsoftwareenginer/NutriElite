@@ -167,7 +167,7 @@ export function RecipesPage() {
     <div className="flex flex-col gap-5">
       <div>
         <h1 className="font-display text-2xl font-semibold text-text">Recetas</h1>
-        <p className="text-sm text-text-2">Guarda tus recetas favoritas y úsalas en el próximo cardápio de un paciente.</p>
+        <p className="text-sm text-text-2">Guarda tus recetas favoritas y úsalas en el próximo menú de un paciente.</p>
         <button
           onClick={() => useTourStore.getState().start(RECIPES_TOUR_ID, recipesTourSteps)}
           className="mt-1 text-xs font-medium text-accent hover:underline"

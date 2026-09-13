@@ -60,7 +60,7 @@ function ProfessorView() {
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
       <Card className="flex flex-col gap-3">
-        <h2 className="text-sm font-semibold text-text">Nueva turma</h2>
+        <h2 className="text-sm font-semibold text-text">Nueva clase</h2>
         <div className="flex gap-2">
           <Input placeholder="Ej. Nutrición Clínica 2026-A" value={nombre} onChange={(e) => setNombre(e.target.value)} />
           <Button size="sm" loading={createMut.isPending} disabled={!nombre} onClick={() => createMut.mutate()}>
@@ -86,13 +86,13 @@ function ProfessorView() {
               </div>
             </button>
           ))}
-          {classrooms?.length === 0 && <p className="text-xs text-text-3">Aún no creaste ninguna turma.</p>}
+          {classrooms?.length === 0 && <p className="text-xs text-text-3">Aún no creaste ninguna clase.</p>}
         </div>
       </Card>
 
       <Card className="lg:col-span-2">
         {!selectedClassroom ? (
-          <p className="py-10 text-center text-sm text-text-3">Selecciona una turma para ver sus estudiantes.</p>
+          <p className="py-10 text-center text-sm text-text-3">Selecciona una clase para ver sus estudiantes.</p>
         ) : selectedStudent && activeStudent ? (
           <div>
             <button onClick={() => setSelectedStudent(null)} className="mb-3 text-xs font-medium text-accent-2 hover:underline">
@@ -128,11 +128,11 @@ function ProfessorView() {
                 variant="ghost"
                 className="text-danger"
                 onClick={async () => {
-                  if (await confirmAction({ message: '¿Deseas eliminar esta turma? Se perderá el vínculo con los estudiantes inscritos.', confirmLabel: 'Sí, eliminar' }))
+                  if (await confirmAction({ message: '¿Deseas eliminar esta clase? Se perderá el vínculo con los estudiantes inscritos.', confirmLabel: 'Sí, eliminar' }))
                     deleteMut.mutate(selectedClassroom)
                 }}
               >
-                Eliminar turma
+                Eliminar clase
               </Button>
             </div>
             {students?.length === 0 ? (
@@ -150,7 +150,7 @@ function ProfessorView() {
                       variant="ghost"
                       className="text-danger"
                       onClick={async () => {
-                        if (await confirmAction({ message: `¿Deseas quitar a ${s.username} de la turma?`, confirmLabel: 'Sí, quitar' }))
+                        if (await confirmAction({ message: `¿Deseas quitar a ${s.username} de la clase?`, confirmLabel: 'Sí, quitar' }))
                           removeStudentMut.mutate(s.user_id)
                       }}
                     >
@@ -177,7 +177,7 @@ function StudentView() {
     mutationFn: () => joinClassroom(code),
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ['my-classrooms'] })
-      setMessage(res.already_joined ? 'Ya estabas inscrito en esta turma.' : `Te uniste a "${res.classroom_name}" ✅`)
+      setMessage(res.already_joined ? 'Ya estabas inscrito en esta clase.' : `Te uniste a "${res.classroom_name}" ✅`)
       setCode('')
     },
     onError: () => setMessage('Código inválido.'),
@@ -186,7 +186,7 @@ function StudentView() {
   return (
     <div className="flex flex-col gap-4">
       <Card className="flex flex-col gap-3">
-        <h2 className="text-sm font-semibold text-text">Unirme a una turma</h2>
+        <h2 className="text-sm font-semibold text-text">Unirme a una clase</h2>
         <div className="flex gap-2">
           <Input placeholder="Código de 6 caracteres" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} maxLength={6} />
           <Button loading={joinMut.isPending} disabled={code.length !== 6} onClick={() => joinMut.mutate()}>
@@ -197,9 +197,9 @@ function StudentView() {
       </Card>
 
       <Card>
-        <h2 className="mb-3 text-sm font-semibold text-text">Mis turmas</h2>
+        <h2 className="mb-3 text-sm font-semibold text-text">Mis clases</h2>
         {classrooms?.length === 0 ? (
-          <p className="text-sm text-text-3">Aún no te inscribiste en ninguna turma.</p>
+          <p className="text-sm text-text-3">Aún no te inscribiste en ninguna clase.</p>
         ) : (
           <ul className="flex flex-col gap-2">
             {classrooms?.map((c) => (
@@ -223,8 +223,8 @@ export function ClassroomsPage() {
         <h1 className="font-display text-2xl font-semibold text-text">Salón de clase</h1>
         <p className="text-sm text-text-2">
           {role === 'student'
-            ? 'Únete a la turma de tu profesor con el código que te compartió.'
-            : 'Crea una turma, comparte el código y revisa el progreso de práctica de tus estudiantes.'}
+            ? 'Únete a la clase de tu profesor con el código que te compartió.'
+            : 'Crea una clase, comparte el código y revisa el progreso de práctica de tus estudiantes.'}
         </p>
       </div>
       {role === 'student' ? <StudentView /> : <ProfessorView />}

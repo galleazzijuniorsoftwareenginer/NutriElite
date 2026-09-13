@@ -237,7 +237,7 @@ export function PublicPlanPage() {
 
         {dias.length === 0 ? (
           <Card className="py-10 text-center text-sm text-text-3">
-            Tu nutricionista aún no generó el cardápio de esta semana.
+            Tu nutricionista aún no generó el menú de esta semana.
           </Card>
         ) : (
           <>

@@ -252,7 +252,7 @@ export function DashboardPage() {
           <p className="mt-2 text-sm text-deep-text-2">
             {plans && plans.length > 0
               ? 'Este es el resumen de tu actividad clínica.'
-              : 'Empieza generando tu primer plan — el cardápio semanal con IA se genera en segundos.'}
+              : 'Empieza generando tu primer plan — el menú semanal con IA se genera en segundos.'}
           </p>
         </div>
       </Card>

@@ -5,7 +5,7 @@ import { Logo } from './Logo'
 const STEPS = [
   { title: 'Registra a tus pacientes', desc: 'Guarda datos de contacto e historial para reutilizarlos en cada plan.' },
   { title: 'Calcula el plan en minutos', desc: 'TMB, GET, distribución SMAE y auditoría clínica en un solo flujo guiado.' },
-  { title: 'Genera el menú con IA', desc: 'Un cardápio semanal completo con platillos mexicanos, listo para exportar en PDF con tu marca.' },
+  { title: 'Genera el menú con IA', desc: 'Un menú semanal completo con platillos mexicanos, listo para exportar en PDF con tu marca.' },
 ]
 
 export function OnboardingModal({

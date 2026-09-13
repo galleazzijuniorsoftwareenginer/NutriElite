@@ -29,7 +29,7 @@ export const planWizardTourSteps: TourStep[] = [
   {
     target: '[data-tour="wizard-step-menu"]',
     title: '5. Menú IA',
-    body: 'Genera el cardápio semanal con IA o desde tu acervo de recetas, y edita cualquier alimento si hace falta.',
+    body: 'Genera el menú semanal con IA o desde tu acervo de recetas, y edita cualquier alimento si hace falta.',
   },
   {
     target: '[data-tour="wizard-step-resumen"]',

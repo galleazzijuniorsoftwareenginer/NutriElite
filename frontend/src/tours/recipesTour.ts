@@ -6,7 +6,7 @@ export const recipesTourSteps: TourStep[] = [
   {
     target: '[data-tour="recipes-tabs"]',
     title: 'Todas o tus favoritas',
-    body: 'Explora el acervo completo o solo las recetas que marcaste con ★ — útil para armar cardápios más rápido.',
+    body: 'Explora el acervo completo o solo las recetas que marcaste con ★ — útil para armar menús más rápido.',
   },
   {
     target: '[data-tour="recipes-search"]',

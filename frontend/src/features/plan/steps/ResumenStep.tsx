@@ -146,7 +146,7 @@ export function ResumenStep({ plan, carbPct, protPct, fatPct, kcalAdjustment, we
       <Card className="flex flex-col gap-3 lg:col-span-3">
         <h3 className="text-sm font-semibold text-text">Portal del paciente</h3>
         <p className="text-xs text-text-2">
-          Comparte un enlace donde tu paciente ve el cardápio de la semana, la lista de compras y puede
+          Comparte un enlace donde tu paciente ve el menú de la semana, la lista de compras y puede
           agendar su próxima cita según tu disponibilidad — sin necesidad de crear una cuenta. Se actualiza
           automáticamente si regeneras el menú.
         </p>
@@ -164,7 +164,7 @@ export function ResumenStep({ plan, carbPct, protPct, fatPct, kcalAdjustment, we
               </Button>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-[11px] text-text-3">Solo el calendario, sin el cardápio (para cuando aún no compartes la dieta):</span>
+              <span className="text-[11px] text-text-3">Solo el calendario, sin el menú (para cuando aún no compartes la dieta):</span>
               <Button size="sm" variant="ghost" onClick={handleCopyBookingOnly}>
                 {copiedBooking ? '✓ Copiado' : '📅 Link solo agendar'}
               </Button>
