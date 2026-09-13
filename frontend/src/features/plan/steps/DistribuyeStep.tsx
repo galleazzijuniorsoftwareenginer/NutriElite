@@ -6,6 +6,7 @@ import type { MealSlot } from '../../../types'
 import { Card } from '../../../components/Card'
 import { Button } from '../../../components/Button'
 import { Input } from '../../../components/Field'
+import { Tooltip } from '../../../components/Tooltip'
 import type { WizardPlanData } from '../planTypes'
 import { clampAdjustment, gramsFromPct } from '../planMath'
 import { buildSmaeRows } from '../smaeRows'
@@ -162,7 +163,9 @@ export function DistribuyeStep({ plan, carbPct, protPct, fatPct, kcalAdjustment,
                   <td className="text-text-2">{(carbG * factor).toFixed(1)}g</td>
                   <td className="text-text-2">{(fatG * factor).toFixed(1)}g</td>
                   <td>
-                    <button onClick={() => removeSlot(i)} className="text-danger hover:opacity-70">×</button>
+                    <Tooltip label="Quitar fila">
+                      <button onClick={() => removeSlot(i)} aria-label="Quitar fila" className="text-danger hover:opacity-70">×</button>
+                    </Tooltip>
                   </td>
                 </tr>
               )

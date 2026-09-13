@@ -1,5 +1,6 @@
 import { type ReactNode, useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { Tooltip } from './Tooltip'
 
 interface ModalProps {
   open: boolean
@@ -32,13 +33,15 @@ export function Modal({ open, onClose, title, children, width = 480 }: ModalProp
         {title && (
           <div className="flex shrink-0 items-center justify-between border-b border-border px-5 py-4">
             <h2 className="text-sm font-semibold text-text">{title}</h2>
-            <button
-              onClick={onClose}
-              className="text-text-3 hover:text-text text-lg leading-none"
-              aria-label="Fechar"
-            >
-              ×
-            </button>
+            <Tooltip label="Cerrar" placement="bottom">
+              <button
+                onClick={onClose}
+                className="text-text-3 hover:text-text text-lg leading-none"
+                aria-label="Cerrar"
+              >
+                ×
+              </button>
+            </Tooltip>
           </div>
         )}
         <div className="overflow-y-auto p-5">{children}</div>

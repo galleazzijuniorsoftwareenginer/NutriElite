@@ -9,6 +9,7 @@ import { Button } from '../../../components/Button'
 import { Input, Select } from '../../../components/Field'
 import { Spinner } from '../../../components/Spinner'
 import { LogoMark } from '../../../components/Logo'
+import { Tooltip } from '../../../components/Tooltip'
 import type { WizardPlanData } from '../planTypes'
 
 const DIAS_SEMANA = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
@@ -285,7 +286,9 @@ export function MenuStep({ plan, weeklyMenu, onMenuReady, onContinue }: Props) {
                   {config.restricted_ingredients.map((ing) => (
                     <span key={ing} className="flex items-center gap-1 rounded-full bg-danger-light px-2 py-0.5 text-[10px] font-medium text-danger">
                       {ing}
-                      <button onClick={() => removeRestricted(ing)} className="hover:opacity-70">×</button>
+                      <Tooltip label="Quitar restricción">
+                        <button onClick={() => removeRestricted(ing)} aria-label={`Quitar ${ing}`} className="hover:opacity-70">×</button>
+                      </Tooltip>
                     </span>
                   ))}
                 </div>
@@ -446,7 +449,9 @@ export function MenuStep({ plan, weeklyMenu, onMenuReady, onContinue }: Props) {
                                 />
                               </div>
                               <span className="shrink-0 text-[10px] text-text-3">kcal</span>
-                              <button onClick={() => removeItem(mi, ii)} className="shrink-0 text-danger hover:opacity-70">×</button>
+                              <Tooltip label="Quitar alimento">
+                                <button onClick={() => removeItem(mi, ii)} aria-label="Quitar alimento" className="shrink-0 text-danger hover:opacity-70">×</button>
+                              </Tooltip>
                             </div>
                           ))}
                           <Button size="sm" variant="ghost" className="w-fit" onClick={() => addItem(mi)}>

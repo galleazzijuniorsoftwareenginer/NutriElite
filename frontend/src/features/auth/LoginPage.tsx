@@ -5,6 +5,7 @@ import { FieldWrap, Input } from '../../components/Field'
 import { Button } from '../../components/Button'
 import { login, me } from '../../api/auth'
 import { useAuthStore } from '../../store/authStore'
+import { Tooltip } from '../../components/Tooltip'
 
 function EyeIcon({ open }: { open: boolean }) {
   return open ? (
@@ -95,15 +96,17 @@ export function LoginPage() {
               aria-invalid={!!error}
               aria-describedby={error ? 'login-error' : undefined}
             />
-            <button
-              type="button"
-              onClick={() => setShowPassword((v) => !v)}
-              className="absolute right-0 top-0 flex h-10 w-10 items-center justify-center rounded-md text-text-3 transition-colors hover:text-text-2 touch-manipulation focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 outline-none"
-              aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-              aria-pressed={showPassword}
-            >
-              <EyeIcon open={showPassword} />
-            </button>
+            <Tooltip label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'} placement="bottom">
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-0 top-0 flex h-10 w-10 items-center justify-center rounded-md text-text-3 transition-colors hover:text-text-2 touch-manipulation focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 outline-none"
+                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                aria-pressed={showPassword}
+              >
+                <EyeIcon open={showPassword} />
+              </button>
+            </Tooltip>
           </div>
         </FieldWrap>
         {error && (

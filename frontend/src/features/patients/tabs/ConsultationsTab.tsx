@@ -14,6 +14,7 @@ import { Card } from '../../../components/Card'
 import { Button } from '../../../components/Button'
 import { Modal } from '../../../components/Modal'
 import { FieldWrap, Input, Select } from '../../../components/Field'
+import { Tooltip as HoverTooltip } from '../../../components/Tooltip'
 import { confirmAction } from '../../../store/confirmStore'
 
 function ScheduleAppointmentForm({ patientId, onSaved }: { patientId: number; onSaved: () => void }) {
@@ -279,7 +280,9 @@ function NewConsultationForm({
               <Input placeholder="Nombre" value={lab.nombre} onChange={(e) => updateLab(i, 'nombre', e.target.value)} className="flex-1" />
               <Input placeholder="Valor" value={lab.valor} onChange={(e) => updateLab(i, 'valor', e.target.value)} className="w-20" />
               <Input placeholder="Unidad" value={lab.unidad} onChange={(e) => updateLab(i, 'unidad', e.target.value)} className="w-20" />
-              <Button type="button" size="sm" variant="ghost" className="text-danger" onClick={() => removeLab(i)}>×</Button>
+              <HoverTooltip label="Quitar valor">
+                <Button type="button" size="sm" variant="ghost" aria-label="Quitar valor" className="text-danger" onClick={() => removeLab(i)}>×</Button>
+              </HoverTooltip>
             </div>
           ))}
           <div className="flex items-center gap-2">

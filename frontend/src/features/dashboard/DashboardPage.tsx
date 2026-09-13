@@ -9,6 +9,7 @@ import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { Badge } from '../../components/Badge'
 import { Modal } from '../../components/Modal'
+import { Tooltip } from '../../components/Tooltip'
 import { useAuthStore } from '../../store/authStore'
 
 const GOAL_LABEL: Record<string, string> = {
@@ -84,19 +85,25 @@ function AppointmentCalendar({ appointments }: { appointments: Appointment[] }) 
       </div>
 
       <div className="mb-2 flex items-center justify-between">
-        <button
-          onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))}
-          className="rounded-md px-2 py-1 text-xs text-text-2 hover:bg-bg"
-        >
-          ←
-        </button>
+        <Tooltip label="Mes anterior">
+          <button
+            onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))}
+            aria-label="Mes anterior"
+            className="rounded-md px-2 py-1 text-xs text-text-2 hover:bg-bg"
+          >
+            ←
+          </button>
+        </Tooltip>
         <span className="text-xs font-semibold capitalize text-text">{monthLabel}</span>
-        <button
-          onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))}
-          className="rounded-md px-2 py-1 text-xs text-text-2 hover:bg-bg"
-        >
-          →
-        </button>
+        <Tooltip label="Mes siguiente">
+          <button
+            onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))}
+            aria-label="Mes siguiente"
+            className="rounded-md px-2 py-1 text-xs text-text-2 hover:bg-bg"
+          >
+            →
+          </button>
+        </Tooltip>
       </div>
 
       <div className="grid grid-cols-7 gap-1 text-center">
