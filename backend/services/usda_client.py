@@ -51,15 +51,25 @@ NUTRIENT_NAME_MAP: dict[str, list[str]] = {
     "vitamin_a_mcg": ["Vitamin A, RAE"],
 }
 
+class USDALookupError(Exception):
+    """Raised when the USDA request itself failed (network, timeout, rate
+    limit, 5xx) — as opposed to the request succeeding with zero results.
+    Callers must NOT cache this as "no match": a transient failure is not
+    evidence the food doesn't exist in USDA, and caching it as such would
+    permanently blacklist a perfectly common ingredient just because one
+    request happened to time out or get rate-limited."""
+
+
 def get_api_key() -> str:
     return os.environ.get("USDA_FDC_API_KEY", "")
 
 
 def search_food(query: str) -> dict | None:
     """Looks up `query` in FDC and returns the best-match food's raw JSON
-    (with its foodNutrients list), or None if no API key is configured or
-    no confident match was found. Never raises for network/API errors —
-    callers treat that the same as "no match" rather than crashing a request."""
+    (with its foodNutrients list), or None if the request succeeded but
+    found nothing (or no API key is configured — same as "nothing to look
+    up"). Raises USDALookupError if the request itself failed, so callers
+    can tell "confirmed absent" apart from "couldn't check right now"."""
     api_key = get_api_key()
     if not api_key or not query.strip():
         return None
@@ -78,8 +88,8 @@ def search_food(query: str) -> dict | None:
         data = resp.json()
         foods = data.get("foods") or []
         return foods[0] if foods else None
-    except (requests.RequestException, ValueError):
-        return None
+    except (requests.RequestException, ValueError) as e:
+        raise USDALookupError(str(e)) from e
 
 
 def extract_nutrients_per_100g(food: dict) -> dict:
