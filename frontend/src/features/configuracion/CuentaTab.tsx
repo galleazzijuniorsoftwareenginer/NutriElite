@@ -68,7 +68,7 @@ function AccountPreferencesCard() {
             className="h-4 w-8 shrink-0 accent-accent"
           />
         </label>
-        <FieldWrap label="Idioma">
+        <FieldWrap label="Idioma" hint="Próximamente: por ahora solo guarda tu preferencia, la interfaz sigue en español.">
           <Select value={form.locale} onChange={(e) => update('locale', e.target.value)}>
             <option value="es">Español</option>
             <option value="en">English</option>
