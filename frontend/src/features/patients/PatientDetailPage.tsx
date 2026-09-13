@@ -19,6 +19,8 @@ import { ClinicalRecordTab } from './tabs/ClinicalRecordTab'
 import { ConsultationsTab } from './tabs/ConsultationsTab'
 import { RenalTab } from './tabs/RenalTab'
 import { FoodLogTab } from './tabs/FoodLogTab'
+import { useTourStore } from '../../store/tourStore'
+import { PATIENT_DETAIL_TOUR_ID, patientDetailTourSteps } from '../../tours/patientDetailTour'
 
 const GOAL_LABEL: Record<string, string> = {
   cut: 'Pérdida de peso',
@@ -27,6 +29,7 @@ const GOAL_LABEL: Record<string, string> = {
 }
 
 const TABS = ['Planes', 'Ficha clínica', 'Consultas', 'Módulo renal', 'Diario alimentario'] as const
+const TAB_TOUR_IDS = ['patient-tab-planes', 'patient-tab-clinica', 'patient-tab-consultas', 'patient-tab-renal', 'patient-tab-diario']
 type Tab = (typeof TABS)[number]
 
 interface PatientPlansResponse {
@@ -165,6 +168,12 @@ export function PatientDetailPage() {
           <p className="text-sm text-text-2">
             {data.patient.email || 'Sin email'} {data.patient.phone && `· ${data.patient.phone}`}
           </p>
+          <button
+            onClick={() => useTourStore.getState().start(PATIENT_DETAIL_TOUR_ID, patientDetailTourSteps)}
+            className="mt-1 text-xs font-medium text-accent hover:underline"
+          >
+            Ver tutorial del expediente
+          </button>
         </div>
         <Button
           onClick={() =>
@@ -214,9 +223,10 @@ export function PatientDetailPage() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
         <div className="flex flex-col gap-4 lg:col-span-3">
           <div className="flex items-center gap-1.5 overflow-x-auto rounded-lg border border-border bg-surface p-1.5">
-            {TABS.map((t) => (
+            {TABS.map((t, i) => (
               <button
                 key={t}
+                data-tour={TAB_TOUR_IDS[i]}
                 onClick={() => setTab(t)}
                 className={clsx(
                   'flex-1 basis-0 rounded-md px-3 py-2.5 text-center text-sm font-medium transition-colors',

@@ -10,6 +10,8 @@ import { Badge } from '../../components/Badge'
 import { FieldWrap, Input, Select } from '../../components/Field'
 import { Modal } from '../../components/Modal'
 import { confirmAction } from '../../store/confirmStore'
+import { useTourStore } from '../../store/tourStore'
+import { PATIENTS_LIST_TOUR_ID, patientsListTourSteps } from '../../tours/patientsListTour'
 
 const STATUS_LABEL: Record<PatientStatus, string> = {
   activo: 'Activo',
@@ -327,12 +329,18 @@ export function PatientsPage() {
         <div>
           <h1 className="font-display text-2xl font-semibold text-text">Pacientes</h1>
           <p className="text-sm text-text-2">{patients?.length ?? 0} paciente(s) registrados</p>
+          <button
+            onClick={() => useTourStore.getState().start(PATIENTS_LIST_TOUR_ID, patientsListTourSteps)}
+            className="mt-1 text-xs font-medium text-accent hover:underline"
+          >
+            Ver tutorial de pacientes
+          </button>
         </div>
-        <Button onClick={openNew}>+ Nuevo paciente</Button>
+        <Button onClick={openNew} data-tour="patients-nuevo">+ Nuevo paciente</Button>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" data-tour="patients-filtros">
           <span className="text-xs font-medium text-text-3">Estado</span>
           <div className="inline-flex gap-0.5 rounded-full border border-border bg-bg p-1">
             {([
