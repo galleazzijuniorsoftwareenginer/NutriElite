@@ -1,9 +1,12 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import clsx from 'clsx'
 import { startCheckout } from '../../api/billing'
 import { Card } from '../../components/Card'
 import { Button } from '../../components/Button'
 import { Badge } from '../../components/Badge'
 import { useAuthStore } from '../../store/authStore'
+import { PreferenciasForm } from '../configuracion/PreferenciasForm'
 
 const FREE_FEATURES = ['3 planes por semana', 'Cálculo TMB/GET/SMAE', 'Exportación PDF básica']
 const PRO_FEATURES = [
@@ -79,6 +82,42 @@ export function BillingContent() {
   )
 }
 
+type Tab = 'suscripcion' | 'preferencias'
+
+const TABS: { key: Tab; label: string; hint: string }[] = [
+  { key: 'suscripcion', label: 'Suscripción', hint: 'Free vs Pro, facturación' },
+  { key: 'preferencias', label: 'Preferencias de plan', hint: 'Valores por defecto al calcular' },
+]
+
 export function BillingPage() {
-  return <BillingContent />
+  const [params] = useSearchParams()
+  const initial = (params.get('tab') as Tab) || 'suscripcion'
+  const [tab, setTab] = useState<Tab>(TABS.some((t) => t.key === initial) ? initial : 'suscripcion')
+
+  return (
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-[220px_1fr]">
+      <nav className="flex gap-1 overflow-x-auto lg:flex-col lg:overflow-visible">
+        {TABS.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={clsx(
+              'shrink-0 rounded-md px-3.5 py-2.5 text-left text-sm font-medium transition-colors lg:shrink',
+              tab === t.key ? 'bg-accent-light text-accent' : 'text-text-2 hover:bg-bg hover:text-text'
+            )}
+          >
+            <span className="block">{t.label}</span>
+            <span className={clsx('hidden text-[11px] font-normal lg:block', tab === t.key ? 'text-accent/70' : 'text-text-3')}>
+              {t.hint}
+            </span>
+          </button>
+        ))}
+      </nav>
+
+      <div className="min-w-0">
+        {tab === 'suscripcion' && <BillingContent />}
+        {tab === 'preferencias' && <PreferenciasForm />}
+      </div>
+    </div>
+  )
 }

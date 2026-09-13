@@ -69,7 +69,7 @@ export function AppShell() {
 
         <div className="flex shrink-0 flex-col gap-0.5 border-t border-border p-3">
           <NavLink
-            to="/configuracion?tab=suscripcion"
+            to="/plan-pro"
             className={({ isActive }) =>
               clsx(
                 'flex items-center gap-2.5 rounded-md px-3 py-2 text-[13px] font-medium transition-colors',
@@ -141,14 +141,14 @@ export function AppShell() {
                     Perfil
                   </NavLink>
                   <NavLink
-                    to="/configuracion?tab=preferencias"
+                    to="/configuracion?tab=cuenta"
                     onClick={() => setMenuOpen(false)}
                     className="block px-3.5 py-2 text-[13px] text-text hover:bg-bg"
                   >
                     Configuración
                   </NavLink>
                   <NavLink
-                    to="/configuracion?tab=suscripcion"
+                    to="/plan-pro"
                     onClick={() => setMenuOpen(false)}
                     className="block px-3.5 py-2 text-[13px] text-text hover:bg-bg"
                   >
