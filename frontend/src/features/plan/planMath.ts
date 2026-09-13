@@ -103,7 +103,7 @@ export const GOAL_LABEL: Record<Goal, string> = {
 export const FORMULA_LABEL: Record<string, string> = {
   mifflin: 'Mifflin-St Jeor',
   harris: 'Harris-Benedict',
-  schofield: 'Schofield (pediátrica)',
+  schofield: 'Schofield',
   katch: 'Katch-McArdle',
   cunningham: 'Cunningham',
 }
