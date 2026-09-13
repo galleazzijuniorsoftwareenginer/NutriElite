@@ -19,6 +19,7 @@ import { ClassroomsPage } from './features/classroom/ClassroomsPage'
 import { RecipesPage } from './features/recipes/RecipesPage'
 import { AgendaPage } from './features/agenda/AgendaPage'
 import { ConfiguracionPage } from './features/configuracion/ConfiguracionPage'
+import { LegalPage } from './features/legal/LegalPage'
 import { ConfirmDialogHost } from './components/ConfirmDialog'
 
 export function App() {
@@ -38,6 +39,7 @@ export function App() {
       <Route path="/redefinir-senha" element={<ResetPasswordPage />} />
       <Route path="/portal/:token" element={<PublicPlanPage />} />
       <Route path="/portal/:token/agendar" element={<PublicBookingOnlyPage />} />
+      <Route path="/legal" element={<LegalPage />} />
 
       <Route element={<ProtectedRoute />}>
         <Route element={<AppShell />}>

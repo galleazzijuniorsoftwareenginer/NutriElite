@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 import { Logo } from '../../components/Logo'
 import { LanguageSelector } from '../../components/LanguageSelector'
 
@@ -35,7 +36,12 @@ export function AuthLayout({ title, subtitle, children }: { title: string; subti
           </p>
         </div>
 
-        <p className="relative text-xs text-deep-text-2/70">© {new Date().getFullYear()} NutriElite</p>
+        <p className="relative text-xs text-deep-text-2/70">
+          © {new Date().getFullYear()} NutriElite ·{' '}
+          <Link to="/legal" className="hover:underline">
+            Aviso de Privacidad y Términos de Uso
+          </Link>
+        </p>
       </div>
 
       <div className="flex items-center justify-center px-6 py-12">

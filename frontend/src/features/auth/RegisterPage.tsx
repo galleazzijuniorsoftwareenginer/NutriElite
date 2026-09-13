@@ -79,6 +79,13 @@ export function RegisterPage() {
         <Button type="submit" loading={loading} className="w-full">
           Crear cuenta
         </Button>
+        <p className="text-center text-[11px] text-text-3">
+          Al crear una cuenta aceptas el{' '}
+          <Link to="/legal" className="font-medium text-accent hover:underline">
+            Aviso de Privacidad y los Términos de Uso
+          </Link>
+          .
+        </p>
       </form>
       <p className="mt-6 text-center text-xs text-text-2">
         ¿Ya tienes cuenta?{' '}
